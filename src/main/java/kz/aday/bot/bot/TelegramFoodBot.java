@@ -1,0 +1,49 @@
+package kz.aday.bot.bot;
+
+
+import kz.aday.bot.bot.dispatcher.CallbackDispatcher;
+import kz.aday.bot.bot.dispatcher.CommandDispatcher;
+import kz.aday.bot.bot.handler.ErrorHandler;
+import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
+import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
+
+
+public class TelegramFoodBot extends TelegramLongPollingBot {
+    private final CallbackDispatcher<CallbackHandler> callbackDispatcher;
+    private final CommandDispatcher<CommandHandler> commandDispatcher;
+    private final ErrorHandler errorHandler;
+    private final String chatBotName;
+
+    public TelegramFoodBot(String chatBotName, String token) {
+        super(token);
+        this.chatBotName = chatBotName;
+        this.callbackDispatcher = new CallbackDispatcher<>();
+        this.commandDispatcher = new CommandDispatcher<>();
+        this.errorHandler = new ErrorHandler();
+    }
+
+    @Override
+    public void onUpdateReceived(Update update) {
+        try {
+            if (update.hasMessage()) {
+                Message msg = update.getMessage();
+                String text = msg.getText();
+                if (text != null) {
+                    commandDispatcher.dispatch(update, this);
+                }
+            } else if (update.hasCallbackQuery()) {
+                callbackDispatcher.dispatch(update.getCallbackQuery(), this);
+            }
+        } catch (Exception e) {
+            errorHandler.handle(e, update, this);
+        }
+    }
+
+    @Override
+    public String getBotUsername() {
+        return chatBotName;
+    }
+}

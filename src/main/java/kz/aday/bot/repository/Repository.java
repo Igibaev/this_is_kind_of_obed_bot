@@ -5,6 +5,8 @@ import java.util.Collection;
 public interface Repository<T> {
     T getById(String id);
 
+    boolean existById(String id);
+
     Collection<T> getAll();
 
     void save(T t);

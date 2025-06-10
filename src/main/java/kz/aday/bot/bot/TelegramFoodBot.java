@@ -46,4 +46,13 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
     public String getBotUsername() {
         return chatBotName;
     }
+
+    public void addCallbackHandler(CallbackHandler handler) {
+        callbackDispatcher.addHandler(handler);
+    }
+
+    public void addCommandDispatcher(CommandHandler handler) {
+        commandDispatcher.addHandler(handler);
+    }
+
 }

@@ -15,9 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class MenuParser {
+public class MenuTextParser {
 
-    public LocalDateTime parseDeadline(String message) throws TelegramMessageException {
+    private MenuTextParser() {}
+
+    public static LocalDateTime parseDeadline(String message) throws TelegramMessageException {
         LocalTime deadline = TimeFormatterExtractor.extractTimes(message);
         if (deadline == null) {
             log.error("Deadline is missing [{}]", message);
@@ -26,7 +28,7 @@ public class MenuParser {
         return LocalDateTime.of(LocalDate.now(), deadline);
     }
 
-    public Menu parseMenu(String message) throws TelegramMessageException {
+    public static Menu parseMenu(String message) throws TelegramMessageException {
         Menu menu = new Menu();
         menu.setDeadline(parseDeadline(message));
 
@@ -60,18 +62,17 @@ public class MenuParser {
         return menu;
     }
 
-    private String removeNonLetterCharacters(String line) {
+    private static String removeNonLetterCharacters(String line) {
         StringBuilder stringBuilder = new StringBuilder();
         for (char letter: line.toCharArray()) {
-            if (Character.isLetter(letter)) {
-                // TODO: 03.06.2025 добавить уборку числе из текста
-                stringBuilder.append(" ");
+            if (!Character.isDigit(letter)) {
+                stringBuilder.append(letter);
             }
         }
-        return stringBuilder.toString();
+        return stringBuilder.toString().trim();
     }
 
-    private Category parseCategory(String line) {
+    private static Category parseCategory(String line) {
         if (line.contains(Category.BREAD.getValue())) return Category.BREAD;
         for (Category category: Category.values()) {
             if (line.toLowerCase().startsWith(category.getValue().toLowerCase())) {

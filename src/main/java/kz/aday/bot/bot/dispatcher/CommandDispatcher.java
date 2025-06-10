@@ -17,7 +17,7 @@ public class CommandDispatcher<T extends CommandHandler> extends AbstractDispatc
 
     public void dispatch(Update update, AbsSender sender) throws Exception {
         log.info("Dispatching command for update, chatId: {}", update != null && update.getMessage() != null ? update.getMessage().getChatId() : "unknown");
-        if (update == null || update.getMessage() == null || update.getMessage().getText() == null) {
+        if (update == null || update.getMessage() == null || update.getMessage().getText() == null || update.getMessage().getChatId() == null) {
             log.error("Invalid update or command text");
             throw new IllegalArgumentException("Некорректный update или текст команды");
         }

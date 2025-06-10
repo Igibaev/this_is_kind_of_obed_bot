@@ -16,7 +16,7 @@ public class CallbackDispatcher<T extends CallbackHandler> extends AbstractDispa
 
     public void dispatch(CallbackQuery callback, AbsSender sender) throws Exception {
         log.info("Dispatching callback for chatId: {}", callback != null && callback.getMessage() != null ? callback.getMessage().getChatId() : "unknown");
-        if (callback == null || callback.getData() == null) {
+        if (callback == null || callback.getData() == null || callback.getMessage() == null || callback.getMessage().getChatId() == null) {
             log.error("Invalid callback or callback data");
             throw new IllegalArgumentException("Callback or callback data is null");
         }

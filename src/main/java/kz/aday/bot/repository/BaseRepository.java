@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,26 +24,32 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Slf4j
-public abstract class AbstractRepository<T extends Id> implements Repository<T> {
+public class BaseRepository<T extends Id> implements Repository<T> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    public static final String BASE_PATH = System.getProperty("database.store"); // Путь к файлам
     private static final String JSON = ".json";
+    private Path BASE_PATH = Path.of(BotConfig.getBotStorePath()); // Путь к файлам
+    private final String storagePath; // Путь к файлам
     private final ObjectMapper objectMapper;
     private final Class<T> type;
     private final Map<String, T> database;
 
-    protected AbstractRepository(Map<String, T> database, Class<T> type) {
-        objectMapper = getObjectMapper();
+    public BaseRepository(Map<String, T> database, Class<T> type, String storagePath) {
+        this.storagePath = storagePath;
+        this.BASE_PATH = BASE_PATH.resolve(storagePath);
+        this.objectMapper = getObjectMapper();
         this.database = database;
         this.type = type;
         loadFromStorage();
     }
 
-    public abstract String getStoragePath();
-
     @Override
     public T getById(String id) {
         return database.get(id);
+    }
+
+    @Override
+    public boolean existById(String id) {
+        return database.containsKey(id);
     }
 
     @Override
@@ -63,10 +70,9 @@ public abstract class AbstractRepository<T extends Id> implements Repository<T> 
     }
 
     private void loadFromStorage() {
-        Path storage = Path.of(BASE_PATH + File.separator + getStoragePath());
-        if (Files.exists(storage)) {
-            log.info("Load storage [{}]", getStoragePath());
-            try (Stream<Path> pathStorage = Files.list(storage)) {
+        if (Files.exists(BASE_PATH)) {
+            log.info("Load storage [{}]", storagePath);
+            try (Stream<Path> pathStorage = Files.list(BASE_PATH)) {
                 pathStorage.forEach(path -> {
                     if (path.toFile().isFile()) {
                         try {
@@ -86,14 +92,13 @@ public abstract class AbstractRepository<T extends Id> implements Repository<T> 
             }
 
         } else {
-            log.info("Storage not exist [{}]", getStoragePath());
+            log.info("Storage not exist [{}]", storagePath);
         }
     }
 
     private void saveToStorage(T t) {
-        Path storage = Path.of(BASE_PATH + File.separator + getStoragePath());
-        createStorageIfNotExist(storage);
-        Path path = storage.resolve(Path.of(t.getId() + JSON));
+        createStorageIfNotExist(BASE_PATH);
+        Path path = BASE_PATH.resolve(Path.of(t.getId() + JSON));
         try {
             if (Files.exists(path)) {
                 log.info("File exist [{}]", path);
@@ -127,10 +132,9 @@ public abstract class AbstractRepository<T extends Id> implements Repository<T> 
 
 
     private void clearStorage() {
-        Path storage = Path.of(BASE_PATH + File.separator + getStoragePath());
         try {
-            Files.deleteIfExists(storage);
-            log.info("Storage was cleared [{}]", storage);
+            Files.deleteIfExists(BASE_PATH);
+            log.info("Storage was cleared [{}]", BASE_PATH);
         } catch (IOException e) {
             log.error("Failure when clear storage ", e);
             throw new RuntimeException(e);

@@ -1,19 +1,23 @@
 package kz.aday.bot.configuration;
 
 
-import lombok.Getter;
+import kz.aday.bot.service.MessageService;
+import kz.aday.bot.service.UserService;
 
 
-@Getter
 public class ServiceContainer {
-    private static final ServiceContainer INSTANCE = new ServiceContainer();
+    private static final UserService userService = new UserService();
+    private static final MessageService messageService = new MessageService();
 
-
-    public ServiceContainer() {
+    private ServiceContainer() {
     }
 
-    public static ServiceContainer getInstance() {
-        return INSTANCE;
+    public static UserService getUserService() {
+        return userService;
     }
 
+    public static MessageService getMessageService() {
+        return messageService;
+
+    }
 }

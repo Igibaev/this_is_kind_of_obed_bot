@@ -1,6 +1,7 @@
 package kz.aday.bot;
 
 import kz.aday.bot.bot.TelegramFoodBot;
+import kz.aday.bot.bot.handler.commandHamndlers.StartCommandHandler;
 import kz.aday.bot.configuration.BotConfig;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -13,11 +14,12 @@ public class TelegramFoodBotApplication {
     private static final BotConfig botConfig = new BotConfig();
     public static void main(String[] args) {
         try {
+            TelegramFoodBot telegramFoodBot = new TelegramFoodBot(botConfig.getBotName(), botConfig.getBotToken());
+            telegramFoodBot.addCommandDispatcher(new StartCommandHandler());
+
             TimeZone.setDefault(TimeZone.getTimeZone(botConfig.getBotTimeZone()));
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(
-                    new TelegramFoodBot(botConfig.getBotName(), botConfig.getBotToken())
-            );
+            botsApi.registerBot(telegramFoodBot);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

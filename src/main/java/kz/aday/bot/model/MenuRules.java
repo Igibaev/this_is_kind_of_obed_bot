@@ -24,6 +24,6 @@ public class MenuRules implements Id {
 
     @Override
     public String getId() {
-        return city.getValue();
+        return city.toString();
     }
 }

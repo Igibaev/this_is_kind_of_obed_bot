@@ -24,22 +24,6 @@ public class Order implements Id {
         return chatId.toString();
     }
 
-    public void addItemOrRemoveItem(Item item, Map<Category, Set<Category>> disjointCategoriesSet) throws TelegramMessageException {
-        if (orderItemList.contains(item)) {
-            removeItem(item);
-            return;
-        }
-        if (categoryItemList.contains(item.getCategory())) {
-            throw new TelegramMessageException("Допустимо выбирать по одному блюду из категории.");
-        }
-
-        Set<Category> disjointCategories = disjointCategoriesSet.get(item.getCategory());
-        if (disjointCategories != null && categoryItemList.containsAll(disjointCategories)) {
-            throw new TelegramMessageException("Ты уже выбрал, две категории, исключи одну из них чтобы выбрать "+item.getCategory());
-        }
-        addItem(item);
-    }
-
     private void addItem(Item item) {
         categoryItemList.add(item.getCategory());
         orderItemList.add(item);

@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 import java.util.HashSet;
 
 @Slf4j
-public class CommandDispatcher<T extends CommandHandler> extends AbstractDispatcher<T> {
+public class CommandDispatcher extends AbstractDispatcher<CommandHandler> {
 
     public CommandDispatcher() {
         super(new HashSet<>());

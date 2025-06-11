@@ -8,7 +8,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 import java.util.HashSet;
 
 @Slf4j
-public class CallbackDispatcher<T extends CallbackHandler> extends AbstractDispatcher<T> {
+public class CallbackDispatcher extends AbstractDispatcher<CallbackHandler> {
 
     public CallbackDispatcher() {
         super(new HashSet<>());
@@ -21,7 +21,7 @@ public class CallbackDispatcher<T extends CallbackHandler> extends AbstractDispa
             throw new IllegalArgumentException("Callback or callback data is null");
         }
 
-        for (T handler: handlers) {
+        for (CallbackHandler handler: handlers) {
             if (handler.canHandle(callback)) {
                 try {
                     log.debug("Processing callback data: [{}]", callback.getData());

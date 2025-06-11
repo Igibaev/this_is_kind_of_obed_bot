@@ -1,5 +1,6 @@
 package kz.aday.bot.model;
 
+import kz.aday.bot.bot.handler.stateHandlers.State;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class User implements Id {
     private Integer lastMessageId;
     private City city;
     private Role role;
+    private State state;
 
     @Override
     public String getId() {

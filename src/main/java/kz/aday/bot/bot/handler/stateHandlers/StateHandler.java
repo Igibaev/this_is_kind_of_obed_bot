@@ -1,6 +1,14 @@
-package kz.aday.bot.bot.handler.commandHamndlers;
+package kz.aday.bot.bot.handler.stateHandlers;
 
-
+import kz.aday.bot.configuration.ServiceContainer;
+import kz.aday.bot.model.User;
+import kz.aday.bot.service.MenuService;
+import kz.aday.bot.service.MessageSender;
+import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.UserService;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.bots.AbsSender;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
@@ -24,14 +32,23 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public abstract class CommandHandler {
+public abstract class StateHandler {
     protected final UserService userService = ServiceContainer.getUserService();
     protected final MessageSender messageService = ServiceContainer.getMessageService();
     protected final MenuService menuService = ServiceContainer.getMenuService();
     protected final OrderService orderService = ServiceContainer.getOrderService();
 
-    public abstract boolean canHandle(String command);
+    public boolean canHandle(String state, User user) {
+        if (user == null) {
+            return canHandle(state);
+        }
+        return canHandle(user.getState().toString());
+    }
+
+    public abstract boolean canHandle(String state);
+
     public abstract void handle(Update update, AbsSender sender) throws Exception;
+
 
     public Long getChatId(Update update) {
         return update.getMessage().getChatId();
@@ -103,5 +120,4 @@ public abstract class CommandHandler {
         user.setLastMessageId(sendedMessage.getMessageId());
         userService.save(user);
     }
-
 }

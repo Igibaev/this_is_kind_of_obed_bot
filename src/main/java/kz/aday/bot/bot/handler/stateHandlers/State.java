@@ -7,9 +7,10 @@ public enum State {
     // --- Стейты, требующие ввода данных ---
     CHOOSE_CITY("Выберите город", Type.INPUT),
     SET_USERNAME_THEN_CHOOSE_CITY("Введите имя и выберите город", Type.INPUT),
-    INPUT_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.INPUT), // Переименовано для ясности, что это ввод
+    SET_MENU("Установить меню", Type.INPUT),
 
     // --- Стейты-действия (кнопки меню) ---
+    SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
     PROFILE("Профиль", Type.ACTION),
     GET_ALL_ORDERS("Выгрузить заказы", Type.ACTION),
     PUBLISH_MENU("Опубликовать меню", Type.ACTION),

@@ -17,7 +17,7 @@ public class SetAdminCommandHandler extends AbstractHandler implements CommandHa
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         if (isUserExistAndReady(update)) {
-            String extractedChatId = update.getMessage().getText().replace("/setadmin", "");
+            String extractedChatId = update.getMessage().getText().replace("/setadmin", "").trim();
             if (userService.findByIdOptional(extractedChatId).filter(user -> user.getStatus() == Status.READY).isPresent()) {
                 User user = userService.findById(extractedChatId);
                 user.setRole(User.Role.ADMIN);

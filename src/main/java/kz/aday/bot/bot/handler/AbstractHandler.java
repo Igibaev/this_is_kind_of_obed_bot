@@ -140,7 +140,7 @@ public abstract class AbstractHandler {
         }
 
         if (user.getRole() == ADMIN) {
-            userMenuItems.add(State.INPUT_MESSAGE_TO_ALL_USERS.getDisplayName());
+            userMenuItems.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
             userMenuItems.add(State.GET_ALL_ORDERS.getDisplayName());
             if (isMenuExist) {
                 if (isMenuReady) {
@@ -148,6 +148,7 @@ public abstract class AbstractHandler {
                     userMenuItems.add(State.CHANGE_MENU.getDisplayName());
                 } else {
                     userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
+                    userMenuItems.add(State.CHANGE_MENU.getDisplayName());
                 }
             } else {
                 userMenuItems.add(State.CREATE_MENU.getDisplayName());

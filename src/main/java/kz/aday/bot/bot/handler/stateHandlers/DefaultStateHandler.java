@@ -8,7 +8,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 public class DefaultStateHandler extends AbstractHandler implements StateHandler {
     @Override
     public boolean canHandle(String state) {
-        return State.DEFAULT.toString().equals(state);
+        return State.DEFAULT.getDisplayName().equals(state);
     }
 
     @Override

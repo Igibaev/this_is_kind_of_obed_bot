@@ -11,7 +11,7 @@ public class SetCityStateHandler extends AbstractHandler implements StateHandler
 
     @Override
     public boolean canHandle(String state) {
-        return State.CHOOSE_CITY.toString().equals(state);
+        return State.CHOOSE_CITY.getDisplayName().equals(state);
     }
 
     @Override

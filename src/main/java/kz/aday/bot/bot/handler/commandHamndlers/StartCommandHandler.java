@@ -84,7 +84,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
                     );
                 }
             } else {
-                user.setState(State.DEFAULT);
+                user.setState(State.NONE);
                 sendMessageWithKeyboard(
                         user,
                         NAVIGATION_MENU,

@@ -23,7 +23,7 @@ public class MenuTextParser {
         LocalTime deadline = TimeFormatterExtractor.extractTimes(message);
         if (deadline == null) {
             log.error("Deadline is missing [{}]", message);
-            throw new TelegramMessageException("");
+            throw new TelegramMessageException("Дедлайн некорректный, "+ message);
         }
         return LocalDateTime.of(LocalDate.now(), deadline);
     }

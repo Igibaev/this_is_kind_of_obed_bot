@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class SetUsernameStateHandler extends AbstractHandler implements StateHandler {
     @Override
     public boolean canHandle(String state) {
-        return State.SET_USERNAME_THEN_CHOOSE_CITY.toString().equals(state);
+        return State.SET_USERNAME_THEN_CHOOSE_CITY.getDisplayName().equals(state);
     }
 
     @Override

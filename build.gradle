@@ -17,6 +17,7 @@ dependencies {
     implementation 'org.telegram:telegrambots:6.9.0'
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'ch.qos.logback:logback-classic:1.5.12'
+    implementation 'org.reflections:reflections:0.10.2'
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 

@@ -5,17 +5,20 @@ import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class DefaultStateHandler extends AbstractHandler implements StateHandler {
+public class EditUsernameStateHandler extends AbstractHandler implements StateHandler {
     @Override
     public boolean canHandle(String state) {
-        return State.DEFAULT.toString().equals(state);
+        return State.EDIT_USERNAME.getDisplayName().equals(state);
     }
 
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         User user = userService.findById(getChatId(update).toString());
-        sendMessageWithKeyboard(user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(update), sender);
+        user.setState(State.SET_USERNAME_THEN_CHOOSE_CITY);
+        sendMessage(user, CHANGE_NAME_MESSAGE, getMessageId(update), sender);
     }
 
-    private static final String NAVIGATION_MENU = "Меню навигации по боту.";
+    private static final String CHANGE_NAME_MESSAGE =
+            "Введи новое имя \n" +
+            "Чтобы отменить нажми /cancel";
 }

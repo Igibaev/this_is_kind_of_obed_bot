@@ -8,11 +8,14 @@ import kz.aday.bot.bot.handler.ErrorHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
+@Slf4j
 public class TelegramFoodBot extends TelegramLongPollingBot {
     private final CallbackDispatcher callbackDispatcher;
     private final CommandDispatcher commandDispatcher;
@@ -46,7 +49,12 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
                 callbackDispatcher.dispatch(update.getCallbackQuery(), this);
             }
         } catch (Exception e) {
-            errorHandler.handle(e, update, this);
+            try {
+                errorHandler.handle(e, update, this);
+            } catch (TelegramApiException ex) {
+                log.error("Critic error: ", ex);
+                throw new RuntimeException(ex);
+            }
         }
     }
 

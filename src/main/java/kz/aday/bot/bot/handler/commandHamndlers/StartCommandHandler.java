@@ -1,5 +1,6 @@
 package kz.aday.bot.bot.handler.commandHamndlers;
 
+import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.Item;
@@ -20,7 +21,7 @@ import java.util.List;
 import static kz.aday.bot.bot.handler.stateHandlers.State.SET_USERNAME_THEN_CHOOSE_CITY;
 
 @Slf4j
-public class StartCommandHandler extends CommandHandler {
+public class StartCommandHandler extends AbstractHandler implements CommandHandler {
 
     @Override
     public boolean canHandle(String command) {
@@ -29,14 +30,14 @@ public class StartCommandHandler extends CommandHandler {
 
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
-        if (isUserExist(update)) {
+        if (isUserExistAndReady(update)) {
             User user = userService.findById(getChatId(update).toString());
             if (isMenuReady(user.getCity())) {
                 if (isOrderExist(user)) {
                     Order order = orderService.findById(user.getId());
                     Menu menu = menuService.findById(user.getCity().toString());
                     if (order.getStatus() == Status.READY) {
-                        sendMessage(
+                        sendMessageWithKeyboard(
                                 user,
                                 CURRENT_ORDER,
                                 getMenuKeyboard(
@@ -52,7 +53,7 @@ public class StartCommandHandler extends CommandHandler {
                                 sender
                         );
                     } else {
-                        sendMessage(
+                        sendMessageWithKeyboard(
                                 user,
                                 CURRENT_PENDING_ORDER,
                                 getMenuKeyboard(
@@ -71,7 +72,7 @@ public class StartCommandHandler extends CommandHandler {
                     }
                 } else {
                     Menu menu = menuService.findById(user.getCity().toString());
-                    sendMessage(
+                    sendMessageWithKeyboard(
                             user,
                             String.format(MENU_TODAY, user.getCity().getValue()),
                             getMenuKeyboard(
@@ -84,7 +85,7 @@ public class StartCommandHandler extends CommandHandler {
                 }
             } else {
                 user.setState(State.DEFAULT);
-                sendMessage(
+                sendMessageWithKeyboard(
                         user,
                         NAVIGATION_MENU,
                         getUserMenuKeyboard(user),
@@ -96,6 +97,7 @@ public class StartCommandHandler extends CommandHandler {
             User createdUser = User.builder()
                     .chatId(getChatId(update))
                     .role(User.Role.USER)
+                    .status(Status.PENDING)
                     .build();
             createdUser.setState(SET_USERNAME_THEN_CHOOSE_CITY);
             userService.save(createdUser);
@@ -123,9 +125,6 @@ public class StartCommandHandler extends CommandHandler {
 
     private static final String CURRENT_ORDER =
             "Твой заказ.";
-
-    private static final String MENU_NOT_READY =
-            "Город:%s. Меню на сегодня еще не готово.";
 
     private static final String MENU_TODAY =
             "Город:%s. Вот что сегодня в меню! \n" +

@@ -17,6 +17,7 @@ public class User implements Id {
     private City city;
     private Role role;
     private State state;
+    private Status status;
 
     @Override
     public String getId() {

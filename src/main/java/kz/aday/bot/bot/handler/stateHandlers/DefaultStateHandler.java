@@ -21,7 +21,7 @@ public class DefaultStateHandler extends StateHandler {
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         User user = userService.findById(getChatId(update).toString());
-        sendMessage(user, NAVIGATION_MENU, getUserMenuKeyboard(user), sender);
+        sendMessage(user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(update), sender);
     }
 
     private ReplyKeyboard getUserMenuKeyboard(User user) {

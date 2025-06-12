@@ -15,11 +15,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static kz.aday.bot.bot.handler.stateHandlers.State.SET_USERNAME_THEN_CHOOSE_CITY;
-import static kz.aday.bot.model.User.Role.ADMIN;
 
 @Slf4j
 public class StartCommandHandler extends CommandHandler {
@@ -50,6 +48,7 @@ public class StartCommandHandler extends CommandHandler {
                                                 new UserButton("Вернуться", CallbackState.CANCEL.toString())
                                         )
                                 ),
+                                getMessageId(update),
                                 sender
                         );
                     } else {
@@ -66,6 +65,7 @@ public class StartCommandHandler extends CommandHandler {
                                                 new UserButton("Вернуться", CallbackState.CANCEL.toString())
                                         )
                                 ),
+                                getMessageId(update),
                                 sender
                         );
                     }
@@ -78,6 +78,7 @@ public class StartCommandHandler extends CommandHandler {
                                     menu.getItemList(),
                                     List.of(new UserButton("Отправить", CallbackState.SUBMIT_ORDER.name()))
                             ),
+                            getMessageId(update),
                             sender
                     );
                 }
@@ -87,6 +88,7 @@ public class StartCommandHandler extends CommandHandler {
                         user,
                         NAVIGATION_MENU,
                         getUserMenuKeyboard(user),
+                        getMessageId(update),
                         sender
                 );
             }
@@ -97,52 +99,8 @@ public class StartCommandHandler extends CommandHandler {
                     .build();
             createdUser.setState(SET_USERNAME_THEN_CHOOSE_CITY);
             userService.save(createdUser);
-            sendMessage(createdUser, START_MESSAGE_INPUT_NAME, sender);
+            sendMessage(createdUser, START_MESSAGE_INPUT_NAME, getMessageId(update), sender);
         }
-    }
-
-    private ReplyKeyboard getUserMenuKeyboard(User user) {
-        boolean isMenuExist = isMenuExist(user.getCity());
-        boolean isMenuReady = isMenuReady(user.getCity());
-        boolean isOrderExist = isOrderExist(user);
-        boolean isOrderReady = isOrderReady(user);
-
-        List<String> userMenuItems = new ArrayList<>();
-        userMenuItems.add(CallbackState.PROFILE.getDisplayName());
-        userMenuItems.add(CallbackState.EDIT_USERNAME.getDisplayName());
-        userMenuItems.add(CallbackState.TEMP_ORDER_FOR_USER.getDisplayName());
-
-        if (isMenuExist && isMenuReady) {
-            if (isOrderExist) {
-                if (isOrderReady) {
-                    userMenuItems.add(CallbackState.DELETE_ORDER.getDisplayName());
-                    userMenuItems.add(CallbackState.CHANGE_ORDER.getDisplayName());
-                    userMenuItems.add(CallbackState.GET_ORDER.getDisplayName());
-                } else {
-                    userMenuItems.add(CallbackState.SUBMIT_ORDER.getDisplayName());
-                    userMenuItems.add(CallbackState.CHANGE_ORDER.getDisplayName());
-                    userMenuItems.add(CallbackState.GET_ORDER.getDisplayName());
-                }
-            } else {
-                userMenuItems.add(CallbackState.CREATE_ORDER.getDisplayName());
-            }
-        }
-
-        if (user.getRole() == ADMIN) {
-            userMenuItems.add(CallbackState.INPUT_MESSAGE_TO_ALL_USERS.getDisplayName());
-            userMenuItems.add(CallbackState.GET_ALL_ORDERS.getDisplayName());
-            if (isMenuExist) {
-                if (isMenuReady) {
-                    userMenuItems.add(CallbackState.CLEAR_MENU.getDisplayName());
-                    userMenuItems.add(CallbackState.CHANGE_MENU.getDisplayName());
-                } else {
-                    userMenuItems.add(CallbackState.PUBLISH_MENU.getDisplayName());
-                }
-            } else {
-                userMenuItems.add(CallbackState.CREATE_MENU.getDisplayName());
-            }
-        }
-        return KeyboardUtil.createReplyKeyboard(userMenuItems);
     }
 
     private ReplyKeyboard getMenuKeyboard(List<Item> itemList, Order order, List<UserButton> buttons) {

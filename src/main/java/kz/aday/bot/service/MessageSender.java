@@ -16,7 +16,7 @@ public class MessageSender {
         return absSender.execute(sendMessage);
     }
 
-    private void deleteMessage(Long chatId, List<Integer> messagesIdList, AbsSender sender) {
+    public void deleteMessage(Long chatId, List<Integer> messagesIdList, AbsSender sender) {
         if (!messagesIdList.isEmpty()) {
             for (Integer messageId: messagesIdList) {
                 if (messageId == null) {

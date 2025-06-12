@@ -3,6 +3,7 @@ package kz.aday.bot;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.commandHamndlers.StartCommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.DefaultStateHandler;
+import kz.aday.bot.bot.handler.stateHandlers.SetCityStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.SetUsernameStateHandler;
 import kz.aday.bot.configuration.BotConfig;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -16,9 +17,8 @@ public class TelegramFoodBotApplication {
     public static void main(String[] args) {
         try {
             TelegramFoodBot telegramFoodBot = new TelegramFoodBot(botConfig.getBotName(), botConfig.getBotToken());
-            telegramFoodBot.addCommandHandler(new StartCommandHandler());
-            telegramFoodBot.addStateHandler(new SetUsernameStateHandler());
-            telegramFoodBot.addStateHandler(new DefaultStateHandler());
+            addCommands(telegramFoodBot);
+            addStates(telegramFoodBot);
 
             TimeZone.setDefault(TimeZone.getTimeZone(botConfig.getBotTimeZone()));
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -26,5 +26,15 @@ public class TelegramFoodBotApplication {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void addStates(TelegramFoodBot telegramFoodBot) {
+        telegramFoodBot.addStateHandler(new SetUsernameStateHandler());
+        telegramFoodBot.addStateHandler(new DefaultStateHandler());
+        telegramFoodBot.addStateHandler(new SetCityStateHandler());
+    }
+
+    private static void addCommands(TelegramFoodBot telegramFoodBot) {
+        telegramFoodBot.addCommandHandler(new StartCommandHandler());
     }
 }

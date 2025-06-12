@@ -54,6 +54,10 @@ public abstract class StateHandler {
         return update.getMessage().getChatId();
     }
 
+    public Integer getMessageId(Update update) {
+        return update.getMessage().getMessageId();
+    }
+
     boolean isUserExist(Update update) {
         return userService.findByIdOptional(getChatId(update).toString())
                 .filter(user -> user.getCity() != null)
@@ -100,23 +104,27 @@ public abstract class StateHandler {
         return false;
     }
 
-    public void sendMessage(User user, String text, ReplyKeyboard keyboard, AbsSender sender) throws TelegramApiException {
+    public void sendMessage(User user, String text, ReplyKeyboard keyboard, Integer lastUserSendedMessageId, AbsSender sender) throws TelegramApiException {
         SendMessage message = new SendMessage();
         message.setChatId(user.getChatId());
         message.setText(text);
         message.setReplyMarkup(keyboard);
         message.enableMarkdown(true);
         Message sendedMessage = messageService.sendMessage(message, sender);
+        messageService.deleteMessage(user.getChatId(), List.of(user.getLastMessageId(), lastUserSendedMessageId), sender);
+
         user.setLastMessageId(sendedMessage.getMessageId());
         userService.save(user);
     }
 
-    public void sendMessage(User user, String text, AbsSender sender) throws TelegramApiException {
+    public void sendMessage(User user, String text, Integer lastUserSendedMessageId, AbsSender sender) throws TelegramApiException {
         SendMessage message = new SendMessage();
         message.setChatId(user.getChatId());
         message.setText(text);
         message.enableMarkdown(true);
         Message sendedMessage = messageService.sendMessage(message, sender);
+        messageService.deleteMessage(user.getChatId(), List.of(user.getLastMessageId(), lastUserSendedMessageId), sender);
+
         user.setLastMessageId(sendedMessage.getMessageId());
         userService.save(user);
     }

@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.util;
 
 import java.time.LocalTime;

@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
 import kz.aday.bot.bot.handler.stateHandlers.State;

@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.commandHamndlers;
 
 import static kz.aday.bot.bot.handler.stateHandlers.State.SET_USERNAME_THEN_CHOOSE_CITY;

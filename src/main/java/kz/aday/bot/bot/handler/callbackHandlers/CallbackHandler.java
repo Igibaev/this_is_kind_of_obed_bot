@@ -4,6 +4,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public interface CallbackHandler {
-    void handle(CallbackQuery callback, AbsSender sender) throws Exception;
-    boolean canHandle(CallbackQuery callback);
+  void handle(CallbackQuery callback, AbsSender sender) throws Exception;
+
+  boolean canHandle(CallbackQuery callback);
 }

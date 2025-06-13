@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UserButton {
-    private String name;
-    private String callback;
+  private String name;
+  private String callback;
 }

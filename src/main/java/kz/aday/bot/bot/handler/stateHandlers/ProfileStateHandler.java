@@ -6,23 +6,23 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public class ProfileStateHandler extends AbstractHandler implements StateHandler {
-    @Override
-    public boolean canHandle(String state) {
-        return State.PROFILE.getDisplayName().equals(state);
-    }
+  @Override
+  public boolean canHandle(String state) {
+    return State.PROFILE.getDisplayName().equals(state);
+  }
 
-    @Override
-    public void handle(Update update, AbsSender sender) throws Exception {
-        if (isUserExist(update)) {
-            User user = userService.findById(getChatId(update).toString());
-            sendMessage(
-                    user,
-                    String.format(PROFILE_MESSAGE, user.getPreferedName(), user.getCity().getValue()),
-                    getMessageId(update),
-                    sender
-            );
-        }
+  @Override
+  public void handle(Update update, AbsSender sender) throws Exception {
+    if (isUserExist(update)) {
+      User user = userService.findById(getChatId(update).toString());
+      sendMessage(
+          user,
+          String.format(PROFILE_MESSAGE, user.getPreferedName(), user.getCity().getValue()),
+          getMessageId(update),
+          sender);
     }
+  }
 
-    private static final String PROFILE_MESSAGE = "Ваше имя: %s \nГород: %s \nВернуться в меню /return";
+  private static final String PROFILE_MESSAGE =
+      "Ваше имя: %s \nГород: %s \nВернуться в меню /return";
 }

@@ -11,20 +11,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User implements Id {
-    private Long chatId;
-    private String preferedName;
-    private Integer lastMessageId;
-    private City city;
-    private Role role;
-    private State state;
-    private Status status;
+  private Long chatId;
+  private String preferedName;
+  private Integer lastMessageId;
+  private City city;
+  private Role role;
+  private State state;
+  private Status status;
 
-    @Override
-    public String getId() {
-        return chatId.toString();
-    }
+  @Override
+  public String getId() {
+    return chatId.toString();
+  }
 
-    public enum Role {
-        ADMIN, USER;
-    }
+  public enum Role {
+    ADMIN,
+    USER;
+  }
 }

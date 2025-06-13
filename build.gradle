@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '8.1.1' // Для создания fat JAR
+    id 'com.diffplug.spotless' version '6.25.0' // Укажите последнюю версию
 
 }
 
@@ -26,6 +27,25 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+}
+
+spotless {
+    java {
+        // Используем google-java-format
+        googleJavaFormat()
+
+        // Опционально: можно указать конкретную версию
+        // googleJavaFormat('1.17.0')
+
+        // Удаление неиспользуемых импортов
+        removeUnusedImports()
+
+        // Упорядочивание импортов
+        importOrder()
+
+        // Применение стандартных шагов для лицензионных заголовков и т.д.
+        // licenseHeader '/* (C) 2024 My Company */' // пример
+    }
 }
 
 repositories {

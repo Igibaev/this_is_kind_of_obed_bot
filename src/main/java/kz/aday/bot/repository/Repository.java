@@ -3,15 +3,15 @@ package kz.aday.bot.repository;
 import java.util.Collection;
 
 public interface Repository<T> {
-    T getById(String id);
+  T getById(String id);
 
-    boolean existById(String id);
+  boolean existById(String id);
 
-    Collection<T> getAll();
+  Collection<T> getAll();
 
-    void save(T t);
+  void save(T t);
 
-    void clearAll();
+  void clearAll();
 
-    void clearStorage();
+  void clearStorage();
 }

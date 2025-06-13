@@ -1,6 +1,6 @@
 # .github/workflows/deploy.yml
 
-name: Build and Deploy on Raspberry Pi (Java 11)
+name: Build on Cloud, Deploy on Raspberry Pi (Java 11)
 
 on:
   push:
@@ -8,8 +8,9 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted
+  # --- ЗАДАЧA №1: СБОРКА НА БЫСТРОМ СЕРВЕРЕ GITHUB ---
+  build:
+    runs-on: ubuntu-latest # Используем облачный runner
 
     steps:
       - name: Checkout code
@@ -27,34 +28,33 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      # --- НОВЫЙ ШАГ: СОЗДАНИЕ ФАЙЛА КОНФИГУРАЦИИ ---
-      - name: Create Environment File
-        run: |
-          # Путь к файлу на Pi
-          ENV_FILE="/home/pi/Desktop/app/config.env"
-          echo "Creating environment file at $ENV_FILE"
+      - name: Upload JAR as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-jar # Имя артефакта
+          path: build/libs/*.jar
 
-          # Создаем файл, подставляя значения из GitHub Secrets
-          echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > $ENV_FILE
-          echo "BOT_NAME=${{ secrets.BOT_NAME }}" >> $ENV_FILE
-          echo "BOT_DATABASE_STORE=${{ secrets.BOT_DATABASE_STORE }}" >> $ENV_FILE
+  # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
+  deploy:
+    needs: build # Эта задача ждет завершения 'build'
+    runs-on: self-hosted # А вот эта выполняется на вашем Pi
 
-          # Устанавливаем правильные права доступа
-          chmod 600 $ENV_FILE
+    steps:
+      - name: Download JAR from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: bot-jar # Скачиваем артефакт с тем же именем
 
-          echo "Environment file created successfully."
-
-      # --- ОБНОВЛЕННЫЙ ШАГ ДЕПЛОЯ ---
       - name: Deploy and restart bot service
         run: |
           JAR_NAME="this_is_kind_of_obed_bot-1.0-SNAPSHOT.jar"
-          JAR_PATH="build/libs/$JAR_NAME"
           APP_DIR="/home/pi/Desktop/app"
 
           echo "Deploying new version..."
-          cp $JAR_PATH "$APP_DIR/$JAR_NAME"
-
+          # Перемещаем скачанный JAR в папку приложения
+          mv $JAR_NAME "$APP_DIR/$JAR_NAME"
+          
           echo "Restarting obed-bot service..."
           sudo systemctl restart obed-bot.service
-
+          
           echo "Deployment finished!"

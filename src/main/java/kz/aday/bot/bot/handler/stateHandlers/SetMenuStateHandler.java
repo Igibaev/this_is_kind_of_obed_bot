@@ -26,7 +26,7 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
         if (isUserExistAndReady(update)) {
             User user = userService.findById(getChatId(update).toString());
             if (user.getRole() == User.Role.USER) {
-                sendMessage(user, PERMISSION_DENIED, sender);
+                sendMessage(user, PERMISSION_DENIED, getMessageId(update),sender);
             } else {
                 LocalDateTime deadline = MenuTextParser.parseDeadline(update.getMessage().getText());
                 Menu menu = MenuTextParser.parseMenu(update.getMessage().getText());
@@ -48,6 +48,7 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
                         user,
                         String.format(MENU_PENDING, user.getCity().getValue()),
                         markup,
+                        getMessageId(update),
                         sender
                 );
             }

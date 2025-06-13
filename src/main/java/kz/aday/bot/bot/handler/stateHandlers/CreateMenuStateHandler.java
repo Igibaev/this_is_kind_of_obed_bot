@@ -1,13 +1,18 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.model.City;
+
+import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
+import kz.aday.bot.model.Menu;
+import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
+import kz.aday.bot.model.UserButton;
+import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class CreateMenuStateHandler extends AbstractHandler implements StateHandler {
     @Override
@@ -20,15 +25,59 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
         if (isUserExistAndReady(update)) {
             User user = userService.findById(getChatId(update).toString());
             if (user.getRole() == User.Role.USER) {
-                sendMessage(user, PERMISSION_DENIED, sender);
+                sendMessage(user, PERMISSION_DENIED, getMessageId(update),sender);
             } else {
-                user.setState(State.SET_MENU);
-                sendMessage(user, MENU_TEMPLATE, sender);
+                if (isMenuExist(user.getCity())) {
+                    Menu menu = menuService.findById(user.getCity().toString());
+                    if (menu.getStatus() == Status.READY) {
+                        InlineKeyboardMarkup markup = KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+                        KeyboardUtil.addButton(
+                                List.of(
+                                        new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())
+                                ),
+                                markup
+                        );
+                        sendMessageWithKeyboard(
+                                user,
+                                String.format(MENU_READY_MESSAGE, user.getCity().getValue()),
+                                markup,
+                                getMessageId(update),
+                                sender
+                        );
+                    } else {
+                        InlineKeyboardMarkup markup = KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+                        KeyboardUtil.addButton(
+                                List.of(
+                                        new UserButton("Опубликовать меню", CallbackState.SUBMIT_MENU.toString()),
+                                        new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())
+                                ),
+                                markup
+                        );
+                        sendMessageWithKeyboard(
+                                user,
+                                String.format(MENU_PENDING_MESSAGE, user.getCity().getValue()),
+                                markup,
+                                getMessageId(update),
+                                sender
+                        );
+                    }
+                } else {
+                    user.setState(State.SET_MENU);
+                    sendMessage(user, MENU_TEMPLATE, getMessageId(update),sender);
+                }
             }
         }
     }
 
     private static final String PERMISSION_DENIED = "Нет доступа к созданию меню";
+
+    private static final String MENU_READY_MESSAGE =
+            "Вот меню для города *%s*. Оно уже опубликовано. \n" +
+            "Чтобы отменить нажми /cancel";
+
+    private static final String MENU_PENDING_MESSAGE =
+            "Вот меню для города *%s*. Но оно не опубликовано.\n" +
+            "Чтобы отменить нажми /cancel";
 
     private static final String MENU_TEMPLATE =
             "Шаблон меню:\n" +

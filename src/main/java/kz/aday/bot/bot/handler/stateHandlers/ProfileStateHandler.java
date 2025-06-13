@@ -15,7 +15,12 @@ public class ProfileStateHandler extends AbstractHandler implements StateHandler
     public void handle(Update update, AbsSender sender) throws Exception {
         if (isUserExist(update)) {
             User user = userService.findById(getChatId(update).toString());
-            sendMessage(user, String.format(PROFILE_MESSAGE, user.getPreferedName(), user.getCity().getValue()), sender);
+            sendMessage(
+                    user,
+                    String.format(PROFILE_MESSAGE, user.getPreferedName(), user.getCity().getValue()),
+                    getMessageId(update),
+                    sender
+            );
         }
     }
 

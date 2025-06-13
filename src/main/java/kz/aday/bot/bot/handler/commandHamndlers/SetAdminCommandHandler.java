@@ -23,7 +23,7 @@ public class SetAdminCommandHandler extends AbstractHandler implements CommandHa
                 user.setRole(User.Role.ADMIN);
                 userService.save(user);
                 log.info("Set admin role to user, {}", userService.findById(extractedChatId).getPreferedName());
-                sendMessage(userService.findById(getChatId(update).toString()), "Ok", sender);
+                sendMessage(userService.findById(getChatId(update).toString()), "Ok", getMessageId(update), sender);
             }
         }
     }

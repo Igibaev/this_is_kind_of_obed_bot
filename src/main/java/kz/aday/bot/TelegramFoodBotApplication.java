@@ -3,6 +3,7 @@ package kz.aday.bot;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.configuration.BotConfig;
+import kz.aday.bot.scheduler.SchedulerService;
 import org.reflections.Reflections;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -15,6 +16,8 @@ public class TelegramFoodBotApplication {
     private static final BotConfig botConfig = new BotConfig();
     public static void main(String[] args) {
         try {
+            SchedulerService schedulerService = new SchedulerService();
+            schedulerService.start();
             TelegramFoodBot telegramFoodBot = new TelegramFoodBot(botConfig.getBotName(), botConfig.getBotToken());
             addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
 

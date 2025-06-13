@@ -66,7 +66,11 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     @Override
     public void clearAll() {
         database.clear();
-        clearStorage();
+    }
+
+    @Override
+    public void clearStorage() {
+        clearDatabaseStorage();
     }
 
     private void loadFromStorage() {
@@ -131,7 +135,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
 
 
-    private void clearStorage() {
+    private void clearDatabaseStorage() {
         try {
             Files.deleteIfExists(BASE_PATH);
             log.info("Storage was cleared [{}]", BASE_PATH);

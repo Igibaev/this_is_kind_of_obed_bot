@@ -157,10 +157,6 @@ public abstract class AbstractHandler {
         return KeyboardUtil.createReplyKeyboard(userMenuItems);
     }
 
-    public void sendMessageWithKeyboard(User user, String text, ReplyKeyboard keyboard, AbsSender sender) throws TelegramApiException {
-        sendMessageWithKeyboard(user, text, keyboard, null, sender);
-    }
-
     public void sendMessageWithKeyboard(User user, String text, ReplyKeyboard keyboard, Integer lastUserSendedMessageId, AbsSender sender) throws TelegramApiException {
         List<Integer> messagesToDelete = new ArrayList<>();
         if (lastUserSendedMessageId != null) messagesToDelete.add(lastUserSendedMessageId);
@@ -175,10 +171,6 @@ public abstract class AbstractHandler {
 
         user.setLastMessageId(sendedMessage.getMessageId());
         userService.save(user);
-    }
-
-    public void sendMessage(User user, String text, AbsSender sender) throws TelegramApiException {
-        sendMessage(user, text, null, sender);
     }
 
     public void sendMessage(User user, String text, Integer lastUserSendedMessageId, AbsSender sender) throws TelegramApiException {

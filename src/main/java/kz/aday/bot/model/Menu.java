@@ -2,9 +2,14 @@ package kz.aday.bot.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.List;
 import java.util.Optional;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,6 +31,9 @@ public class Menu implements Id {
   }
 
   public Optional<Item> getItemById(Integer itemId) {
-    return itemList.parallelStream().filter(item -> item.getId().equals(itemId)).findFirst();
+    return itemList.parallelStream().
+            filter(item -> item.getId()
+                    .equals(itemId))
+            .findFirst();
   }
 }

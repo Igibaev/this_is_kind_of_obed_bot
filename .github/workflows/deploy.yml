@@ -1,0 +1,60 @@
+# .github/workflows/deploy.yml
+
+name: Build and Deploy on Raspberry Pi (Java 11)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+      # --- НОВЫЙ ШАГ: СОЗДАНИЕ ФАЙЛА КОНФИГУРАЦИИ ---
+      - name: Create Environment File
+        run: |
+          # Путь к файлу на Pi
+          ENV_FILE="/home/pi/Desktop/app/config.env"
+          echo "Creating environment file at $ENV_FILE"
+
+          # Создаем файл, подставляя значения из GitHub Secrets
+          echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > $ENV_FILE
+          echo "BOT_NAME=${{ secrets.BOT_NAME }}" >> $ENV_FILE
+          echo "BOT_DATABASE_STORE=${{ secrets.BOT_DATABASE_STORE }}" >> $ENV_FILE
+
+          # Устанавливаем правильные права доступа
+          chmod 600 $ENV_FILE
+
+          echo "Environment file created successfully."
+
+      # --- ОБНОВЛЕННЫЙ ШАГ ДЕПЛОЯ ---
+      - name: Deploy and restart bot service
+        run: |
+          JAR_NAME="this_is_kind_of_obed_bot-1.0-SNAPSHOT.jar"
+          JAR_PATH="build/libs/$JAR_NAME"
+          APP_DIR="/home/pi/Desktop/app"
+
+          echo "Deploying new version..."
+          cp $JAR_PATH "$APP_DIR/$JAR_NAME"
+
+          echo "Restarting obed-bot service..."
+          sudo systemctl restart obed-bot.service
+
+          echo "Deployment finished!"

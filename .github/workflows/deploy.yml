@@ -47,7 +47,7 @@ jobs:
 
       - name: Deploy and restart bot service
         run: |
-          JAR_NAME="this_is_kind_of_obed_bot-1.0-SNAPSHOT.jar"
+          JAR_NAME="food_bot_telegram.jar"
           APP_DIR="/home/pi/Desktop/app"
 
           echo "Deploying new version..."

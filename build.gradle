@@ -1,4 +1,7 @@
 plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' // Для создания fat JAR
     id 'com.diffplug.spotless' version '6.25.0' // Укажите последнюю версию
 }
 

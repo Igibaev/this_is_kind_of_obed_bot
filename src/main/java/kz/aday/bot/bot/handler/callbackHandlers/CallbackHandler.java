@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;

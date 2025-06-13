@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
 import static kz.aday.bot.messages.Messages.RETURN_TO_MENU;

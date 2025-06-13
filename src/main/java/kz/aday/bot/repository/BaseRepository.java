@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.repository;
 
 import com.fasterxml.jackson.core.JsonGenerator;

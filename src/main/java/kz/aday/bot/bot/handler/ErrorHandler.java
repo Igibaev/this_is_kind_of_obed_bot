@@ -1,3 +1,4 @@
+/* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler;
 
 import lombok.extern.slf4j.Slf4j;

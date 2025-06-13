@@ -8,42 +8,39 @@ on:
       - main
 
 jobs:
-  # --- ЗАДАЧA №1: СБОРКА НА БЫСТРОМ СЕРВЕРЕ GITHUB ---
   build:
-    runs-on: ubuntu-latest # Используем облачный runner
-
+    runs-on: ubuntu-latest
     steps:
+      # Меняем v4 на v3
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3 # <--- ИЗМЕНЕНИЕ
 
+      # Для setup-java v4 пока совместим, но для надежности можно и его поменять на v3
       - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
+        uses: actions/setup-java@v3 # <--- ИЗМЕНЕНИЕ
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v3 # У этого экшена последняя версия v3, так что все хорошо
 
       - name: Build with Gradle
         run: ./gradlew clean build
 
+      # Меняем v4 на v3
       - name: Upload JAR as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3 # <--- ИЗМЕНЕНИЕ
         with:
-          name: bot-jar # Имя артефакта
+          name: bot-jar
           path: build/libs/*.jar
 
-  # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
   deploy:
-    needs: build # Эта задача ждет завершения 'build'
-    runs-on: self-hosted # А вот эта выполняется на вашем Pi
-
+    needs: build
+    runs-on: self-hosted
     steps:
+      # Меняем v4 на v3 - это самый важный шаг, так как именно здесь была ошибка
       - name: Download JAR from build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3 # <--- ГЛАВНОЕ ИЗМЕНЕНИЕ
         with:
-          name: bot-jar # Скачиваем артефакт с тем же именем
+          name: bot-jar
 
       - name: Deploy and restart bot service
         run: |

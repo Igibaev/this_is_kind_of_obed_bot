@@ -1,9 +1,5 @@
 plugins {
-    id 'java'
-    id 'application'
-    id 'com.github.johnrengelman.shadow' version '8.1.1' // Для создания fat JAR
     id 'com.diffplug.spotless' version '6.25.0' // Укажите последнюю версию
-
 }
 
 group 'kz.aday'
@@ -31,20 +27,17 @@ java {
 
 spotless {
     java {
-        // Используем google-java-format
-        googleJavaFormat()
+        target 'src/**/*.java'
 
-        // Опционально: можно указать конкретную версию
-        // googleJavaFormat('1.17.0')
+        licenseHeader '/* (C) 2024 Igibaev */'
 
-        // Удаление неиспользуемых импортов
+        googleJavaFormat('1.17.0')
+
         removeUnusedImports()
 
-        // Упорядочивание импортов
         importOrder()
 
-        // Применение стандартных шагов для лицензионных заголовков и т.д.
-        // licenseHeader '/* (C) 2024 My Company */' // пример
+        endWithNewline()
     }
 }
 

@@ -1,0 +1,12 @@
+# .pre-commit-config.yaml
+repos:
+  -   repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.6.0
+      hooks:
+        -   id: trailing-whitespace # Удаляет пробелы в конце строк
+        -   id: end-of-file-fixer  # Гарантирует пустую строку в конце файла
+
+  -   repo: https://github.com/jumanjihouse/pre-commit-hook-spotless
+      rev: 3.0.0
+      hooks:
+        -   id: spotless

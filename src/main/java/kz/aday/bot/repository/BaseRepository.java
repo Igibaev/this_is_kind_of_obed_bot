@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
-import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
 import lombok.extern.slf4j.Slf4j;
 

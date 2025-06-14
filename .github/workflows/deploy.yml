@@ -14,9 +14,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # Добавляем права на запись в кэш GitHub
-      actions: write
-
     outputs:
       image_name: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}
 
@@ -30,9 +27,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Setup Gradle and Cache Dependencies
-        # Этот экшен автоматически кэширует зависимости Gradle,
-        # что значительно ускоряет все последующие сборки.
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Check code formatting with Spotless
@@ -49,16 +44,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image with Cache
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest
-          # Включаем кэширование слоев Docker.
-          # Это сильно ускоряет пересборку образа при небольших изменениях в коде.
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
   deploy:

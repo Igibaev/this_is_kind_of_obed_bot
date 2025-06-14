@@ -83,7 +83,6 @@ jobs:
             --restart always \
             -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
             -e BOT_NAME=${{ secrets.BOT_NAME }} \
-            -e BOT_DATABASE_STORE="" \
             -e BOT_TIME_ZONE="Asia/Yekaterinburg" \
             --name $CONTAINER_NAME \
             $IMAGE_NAME

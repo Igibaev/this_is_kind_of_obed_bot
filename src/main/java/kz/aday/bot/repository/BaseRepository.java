@@ -27,7 +27,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
   private static final String JSON = ".json";
-  private Path BASE_PATH = Path.of(BotConfig.getBotStorePath()); // Путь к файлам
+  private Path BASE_PATH = Path.of("/"); // Путь к файлам
   private final String storagePath; // Путь к файлам
   private final ObjectMapper objectMapper;
   private final Class<T> type;

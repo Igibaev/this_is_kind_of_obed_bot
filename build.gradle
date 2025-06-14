@@ -49,7 +49,7 @@ repositories {
 }
 
 application {
-    mainClass = 'kz.aday.TelegramFoodBotApplication' // Укажите ваш главный класс
+    mainClass = 'kz.aday.bot.TelegramFoodBotApplication' // Укажите ваш главный класс
 }
 
 shadowJar {

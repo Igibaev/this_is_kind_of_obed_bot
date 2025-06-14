@@ -1,60 +1,79 @@
 # .github/workflows/deploy.yml
 
-name: Build on Cloud, Deploy on Raspberry Pi (Java 11)
+name: Build Docker Image, Deploy on Raspberry Pi
 
 on:
   push:
     branches:
       - main
 
+# Переменные окружения, чтобы не повторять имя образа
+env:
+  # Замените 'igibaev' и 'this_is_kind_of_obed_bot' на ваше имя пользователя и репозиторий
+  # Или используйте динамические переменные GitHub: ${{ github.repository_owner }}/${{ github.event.repository.name }}
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
 jobs:
-  # --- ЗАДАЧA №1: СБОРКА НА БЫСТРОМ СЕРВЕРЕ GITHUB ---
+  # --- ЗАДАЧА №1: СБОРКА DOCKER-ОБРАЗА В ОБЛАКЕ ---
   build:
-    runs-on: ubuntu-latest # Используем облачный runner
+    runs-on: ubuntu-latest # Используем быстрый облачный runner
+    permissions:
+      contents: read
+      packages: write # Даем права на запись в GitHub Packages (Container Registry)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          java-version: '11'
-          distribution: 'temurin'
+          registry: ghcr.io
+          username: ${{ github.actor }} # Имя пользователя, инициировавшего воркфлоу
+          password: ${{ secrets.GITHUB_TOKEN }} # Специальный токен, предоставляемый GitHub
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Build with Gradle
-        run: ./gradlew clean build
-
-      - name: Upload JAR as artifact
-        uses: actions/upload-artifact@v4
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
         with:
-          name: bot-jar # Имя артефакта
-          path: build/libs/*.jar
+          context: . # Использовать Dockerfile из корня проекта
+          push: true # Публиковать образ после сборки
+          tags: ${{ env.IMAGE_NAME }}:latest # Присвоить образу тег 'latest'
 
   # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
   deploy:
     needs: build # Эта задача ждет завершения 'build'
-    runs-on: self-hosted # А вот эта выполняется на вашем Pi
+    runs-on: self-hosted # А эта выполняется на вашем Pi
 
     steps:
-      - name: Download JAR from build job
-        uses: actions/download-artifact@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          name: bot-jar # Скачиваем артефакт с тем же именем
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy and restart bot service
+      - name: Deploy new version to Docker
         run: |
-          JAR_NAME="food_bot_telegram.jar"
-          APP_DIR="/home/pi/Desktop/app"
+          IMAGE_NAME="${{ env.IMAGE_NAME }}:latest"
+          CONTAINER_NAME="obed-bot"
 
-          echo "Deploying new version..."
-          # Перемещаем скачанный JAR в папку приложения
-          mv $JAR_NAME "$APP_DIR/$JAR_NAME"
+          echo "Pulling latest Docker image..."
+          docker pull $IMAGE_NAME
+
+          echo "Stopping and removing old container if it exists..."
+          docker stop $CONTAINER_NAME || true
+          docker rm $CONTAINER_NAME || true
+
+          echo "Starting new container..."
+          # Запускаем новый контейнер в фоновом режиме (-d)
+          # и настраиваем автоматический перезапуск (--restart always)
+          docker run \
+            -d \
+            --restart always \
+            --name $CONTAINER_NAME \
+            $IMAGE_NAME
           
-          echo "Restarting obed-bot service..."
-          sudo systemctl restart obed-bot.service
-          
+          echo "Cleaning up old images..."
+          docker image prune -f
+
           echo "Deployment finished!"

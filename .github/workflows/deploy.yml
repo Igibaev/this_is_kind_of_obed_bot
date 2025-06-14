@@ -1,3 +1,5 @@
+# .github/workflows/deploy.yml
+
 name: Build Docker Image, Deploy on Raspberry Pi
 
 on:
@@ -6,14 +8,13 @@ on:
       - main
 
 jobs:
-  # --- ЗАДАЧА №1: ПРОВЕРКА И СБОРКА DOCKER-ОБРАЗА В ОБЛАКЕ ---
+  # --- ЗАДАЧA №1: ПРОВЕРКА И СБОРКА DOCKER-ОБРАЗА В ОБЛАКЕ ---
   build:
-    runs-on: ubuntu-latest # Используем быстрый облачный runner
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Даем права на запись в GitHub Packages (Container Registry)
+      packages: write
     outputs:
-      # Определяем выходную переменную, чтобы задача 'deploy' могла использовать ее
       image_name: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}
 
     steps:
@@ -30,33 +31,30 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Check code formatting with Spotless
-        # Этот шаг проверяет форматирование. Если есть ошибки, воркфлоу остановится здесь.
         run: ./gradlew spotlessCheck
 
       - name: Convert repository name to lowercase
         id: string
-        # Этот шаг преобразует имя владельца и репозитория в нижний регистр.
-        # Это необходимо, так как имена Docker-образов должны быть в нижнем регистре.
         run: echo "DOCKER_IMAGE_NAME_LC=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }} # Имя пользователя, инициировавшего воркфлоу
-          password: ${{ secrets.GITHUB_TOKEN }} # Специальный токен, предоставляемый GitHub
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: . # Использовать Dockerfile из корня проекта
-          push: true # Публиковать образ после сборки
-          tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest # Присвоить образу тег 'latest'
+          context: .
+          push: true
+          tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest
 
   # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
   deploy:
-    needs: build # Эта задача ждет завершения 'build' и использует ее результат
-    runs-on: self-hosted # А эта выполняется на вашем Pi
+    needs: build
+    runs-on: self-hosted
 
     steps:
       - name: Log in to GitHub Container Registry
@@ -68,7 +66,6 @@ jobs:
 
       - name: Deploy new version to Docker
         run: |
-          # Используем имя образа, полученное из задачи 'build'
           IMAGE_NAME="${{ needs.build.outputs.image_name }}:latest"
           CONTAINER_NAME="obed-bot"
 
@@ -79,12 +76,15 @@ jobs:
           docker stop $CONTAINER_NAME || true
           docker rm $CONTAINER_NAME || true
 
-          echo "Starting new container..."
-          # Запускаем новый контейнер в фоновом режиме (-d)
-          # и настраиваем автоматический перезапуск (--restart always)
+          echo "Starting new container with environment variables..."
+          # Запускаем новый контейнер, передавая секреты как переменные окружения
           docker run \
             -d \
             --restart always \
+            -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
+            -e BOT_NAME=${{ secrets.BOT_NAME }} \
+            -e BOT_DATABASE_STORE="" \
+            -e BOT_TIME_ZONE="Asia/Yekaterinburg" \
             --name $CONTAINER_NAME \
             $IMAGE_NAME
           

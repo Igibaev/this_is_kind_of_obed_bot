@@ -13,17 +13,16 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public class TelegramFoodBotApplication {
-  private static final BotConfig botConfig = new BotConfig();
 
   public static void main(String[] args) {
     try {
       SchedulerService schedulerService = new SchedulerService();
       schedulerService.start();
       TelegramFoodBot telegramFoodBot =
-          new TelegramFoodBot(botConfig.getBotName(), botConfig.getBotToken());
+          new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
       addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
 
-      TimeZone.setDefault(TimeZone.getTimeZone(botConfig.getBotTimeZone()));
+      TimeZone.setDefault(TimeZone.getTimeZone(BotConfig.getBotTimeZone()));
       TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
       botsApi.registerBot(telegramFoodBot);
     } catch (TelegramApiException e) {

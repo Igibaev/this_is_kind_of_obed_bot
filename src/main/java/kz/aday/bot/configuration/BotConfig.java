@@ -11,9 +11,11 @@ public class BotConfig {
   private static String getProperty(String envVarName) {
     String value = System.getenv(envVarName);
     if (value == null || value.isBlank()) {
-      throw new IllegalStateException("Required environment variable '" + envVarName + "' is not set or is empty.");
+      throw new IllegalStateException(
+          "Required environment variable '" + envVarName + "' is not set or is empty.");
     }
-    log.debug("Successfully retrieved configuration for '{}' from environment variables.", envVarName);
+    log.debug(
+        "Successfully retrieved configuration for '{}' from environment variables.", envVarName);
     return value;
   }
 

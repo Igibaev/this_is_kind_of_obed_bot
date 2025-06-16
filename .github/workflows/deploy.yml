@@ -1,6 +1,4 @@
-# .github/workflows/deploy.yml
-
-name: Build Docker Image, Deploy on Raspberry Pi
+name: Build Docker Image, Deploy on Server
 
 on:
   push:
@@ -21,17 +19,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Set up JDK 21 # Изменено с JDK 11 на JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21' # Изменено на '21'
           distribution: 'temurin'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Check code formatting with Spotless
-        run: ./gradlew spotlessCheck
+      - name: Apply code formatting with Spotless # Изменено с проверки на применение форматирования
+        run: ./gradlew spotlessApply # Изменено с spotlessCheck на spotlessApply
 
       - name: Convert repository name to lowercase
         id: string
@@ -76,14 +74,15 @@ jobs:
           docker stop $CONTAINER_NAME || true
           docker rm $CONTAINER_NAME || true
 
-          echo "Starting new container with environment variables..."
-          # Запускаем новый контейнер, передавая секреты как переменные окружения
+          echo "Starting new container with environment variables and volume..."
+          # Запускаем новый контейнер, передавая секреты как переменные окружения и прокидывая волюм
           docker run \
             -d \
             --restart always \
             -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
             -e BOT_NAME=${{ secrets.BOT_NAME }} \
             -e BOT_TIME_ZONE="Asia/Yekaterinburg" \
+            -v ${{ secrets.EXTERNAL_VOLUME_PATH }}:/app/data  `# Добавлен волюм для сохранения данных` \
             --name $CONTAINER_NAME \
             $IMAGE_NAME
           

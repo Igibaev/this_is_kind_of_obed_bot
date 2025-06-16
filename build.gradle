@@ -24,8 +24,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 spotless {
@@ -34,18 +34,13 @@ spotless {
 
         licenseHeader '/* (C) 2024 Igibaev */'
 
-        googleJavaFormat('1.17.0')
-
+        googleJavaFormat('1.19.2') // Обновлено до 1.19.2 (совместимо с Java 21)
         removeUnusedImports()
 
         importOrder()
 
         endWithNewline()
     }
-}
-
-repositories {
-    mavenCentral()
 }
 
 application {

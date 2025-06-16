@@ -2,6 +2,8 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,7 +51,8 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
           List<Order> orders =
               orderService.findAll().stream()
                   .filter(o -> users.contains(o.getId()))
-                  .collect(Collectors.toList());
+                  .toList();
+
           if (orders.isEmpty()) {
             menuService.save(newMenu);
             InlineKeyboardMarkup markup =
@@ -71,25 +74,48 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
             List<Item> fromOldMenu =
                 oldMenu.getItemList().stream()
                     .filter(item -> newMenu.getItemList().contains(item))
-                    .collect(Collectors.toList());
+                    .toList();
 
-            if (fromOldMenu.isEmpty()) {
-              menuService.save(newMenu);
-              InlineKeyboardMarkup markup =
-                  KeyboardUtil.createInlineKeyboard(newMenu.getItemList(), CallbackState.NONE);
-              KeyboardUtil.addButton(
-                  List.of(
-                      new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
-                      new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
-                  markup);
-              sendMessageWithKeyboard(
-                  user,
-                  String.format(MENU_PENDING, user.getCity().getValue()),
-                  markup,
-                  getMessageId(update),
-                  sender);
-            } else {
+            menuService.save(newMenu);
+            InlineKeyboardMarkup markup =
+                KeyboardUtil.createInlineKeyboard(newMenu.getItemList(), CallbackState.NONE);
+            KeyboardUtil.addButton(
+                List.of(
+                    new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
+                    new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
+                markup);
+            sendMessageWithKeyboard(
+                user,
+                String.format(MENU_PENDING, user.getCity().getValue()),
+                markup,
+                getMessageId(update),
+                sender);
 
+            if (!fromOldMenu.isEmpty()) {
+              log.info("Check if users must be notified");
+              for (Order order : orders) {
+                log.debug("Order:{} should be changed?", order);
+                Iterator<Item> orderItems = order.getOrderItemList().iterator();
+                List<Item> bannedItems = new ArrayList<>(order.getOrderItemList().size());
+                while (orderItems.hasNext()) {
+                  Item item = orderItems.next();
+                  if (fromOldMenu.contains(item)) {
+                    log.debug("Order:{}. Removed item", item);
+                    bannedItems.add(item);
+                    orderItems.remove();
+                  }
+                }
+                if (!bannedItems.isEmpty()) {
+                  User userHasBannedItems = userService.findById(order.getId());
+                  log.debug("Send notification to user:{}", userHasBannedItems);
+                  sendMessageWithKeyboard(
+                      userHasBannedItems,
+                      String.format(NOTIFY_IF_USER_HAS_BANNED_ITEMS, bannedItems),
+                      markup,
+                      getMessageId(update),
+                      sender);
+                }
+              }
             }
           }
 
@@ -102,6 +128,11 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
   }
 
   private static final String PERMISSION_DENIED = "Нет доступа.";
+
+  private static final String NOTIFY_IF_USER_HAS_BANNED_ITEMS =
+      "Меню изменилось. Из вашего заказа были убраны след позиции %s. "
+          + "Выберите то что осталось в меню. "
+          + "Или нажмите /cancel чтобы оставить заказ без изменений или /delete его.";
 
   private static final String MENU_PENDING =
       "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";

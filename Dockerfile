@@ -1,6 +1,6 @@
 # --- ЭТАП СБОРКИ (Build Stage) ---
-# Используем базовый образ с JDK 11 и Gradle 8.8
-FROM gradle:8.8-jdk11 AS build
+# Используем базовый образ с JDK 17 и Gradle 8.8
+FROM gradle:8.8-jdk17 AS build
 
 # Указываем рабочую директорию внутри контейнера
 WORKDIR /home/gradle/project
@@ -13,8 +13,8 @@ COPY . .
 RUN gradle clean build -x test --no-daemon
 
 # --- ЭТАП ЗАПУСКА (Runtime Stage) ---
-# Используем минимальный базовый образ с Java 11 для экономии места
-FROM eclipse-temurin:11-jre-jammy
+# Используем минимальный базовый образ с Java 17 для экономии места
+FROM eclipse-temurin:17-jre-jammy
 
 # Указываем рабочую директорию для приложения
 WORKDIR /app

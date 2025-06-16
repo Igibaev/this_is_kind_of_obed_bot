@@ -24,20 +24,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-configure(allprojects) {
-    repositories downloadRepos
-    buildscript {
-        repositories downloadRepos
-    }
-
-    copy {
-        from 'git/hooks'
-        into '.git/hooks'
-    }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 spotless {

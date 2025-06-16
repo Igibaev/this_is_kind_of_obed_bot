@@ -58,12 +58,17 @@ public class CreateTempOrderStateHandler extends AbstractHandler implements Stat
                                     }
                                 }
                             }
-                            String tempOrderId = update.getMessage().getText();
-                            TempOrder tempOrder = new TempOrder(tempOrderId);
-                            tempOrder.setOrderItemList(items);
-                            tempOrder.setStatus(Status.READY);
-                            orderService.save(tempOrder);
-                            sendMessage(user, String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getId(), items), getMessageId(update), sender);
+                            String tempOrderId = orderId.toString();
+                            if (orderService.existsById(tempOrderId)) {
+                                String shortMenu = createShortMenuMessage(menu.getItemList());
+                                sendMessage(user, String.format("Заказ с таким именем уже существует %s.\n\n%s", tempOrderId, shortMenu), getMessageId(update), sender);
+                            } else {
+                                TempOrder tempOrder = new TempOrder(tempOrderId);
+                                tempOrder.setOrderItemList(items);
+                                tempOrder.setStatus(Status.READY);
+                                orderService.save(tempOrder);
+                                sendMessage(user, String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getId(), items), getMessageId(update), sender);
+                            }
                         }
                     } else {
                         user.setState(TEMP_ORDER_FOR_USER);

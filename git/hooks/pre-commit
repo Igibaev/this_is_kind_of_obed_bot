@@ -1,0 +1,15 @@
+#!/bin/sh
+
+FILES=$(git diff --cached --name-only --diff-filter=ACMR "*.java")
+
+[ -z "$FILES" ] && exit 0
+
+./gradlew spotlessApply
+
+RESULT=$?
+
+[ $RESULT -ne 0 ] && exit $RESULT
+
+git add $FILES
+
+exit 0

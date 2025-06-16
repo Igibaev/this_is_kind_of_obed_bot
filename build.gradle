@@ -28,6 +28,18 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+configure(allprojects) {
+    repositories downloadRepos
+    buildscript {
+        repositories downloadRepos
+    }
+
+    copy {
+        from 'git/hooks'
+        into '.git/hooks'
+    }
+}
+
 spotless {
     java {
         target 'src/**/*.java'

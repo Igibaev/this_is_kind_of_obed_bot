@@ -49,6 +49,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
         } else {
           user.setState(State.RANDOM_ORDER);
           Order order = new Order();
+          order.setUsername(user.getPreferedName());
           order.setChatId(user.getChatId());
           order.setStatus(Status.PENDING);
           orderService.save(order);

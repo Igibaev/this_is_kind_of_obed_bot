@@ -4,11 +4,13 @@ package kz.aday.bot.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import kz.aday.bot.exception.TelegramMessageException;
 import lombok.Data;
 
 @Data
-public class Report implements Id {
+public class Report {
   private City city;
   private Collection<Order> orderList;
   private Map<Item, Integer> itemsCount = new HashMap<>();
@@ -16,11 +18,6 @@ public class Report implements Id {
   public Report(City city, Collection<Order> orderList) {
     this.city = city;
     this.orderList = orderList;
-  }
-
-  @Override
-  public String getId() {
-    return city.toString();
   }
 
   public String printOrderReport() throws TelegramMessageException {

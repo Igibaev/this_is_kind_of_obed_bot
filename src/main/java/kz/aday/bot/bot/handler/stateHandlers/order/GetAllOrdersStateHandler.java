@@ -35,7 +35,6 @@ public class GetAllOrdersStateHandler extends AbstractHandler implements StateHa
           sendMessage(user, EMPTY_ORDERS, getMessageId(update), sender);
         } else {
           Report report = new Report(user.getCity(), orders);
-          reportService.save(report);
           sendMessage(
               user, REPORT_MESSAGE + report.printOrderReport(), getMessageId(update), sender);
         }

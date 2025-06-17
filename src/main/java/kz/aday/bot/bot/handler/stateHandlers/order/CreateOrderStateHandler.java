@@ -30,6 +30,7 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
           sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
         }
         Order order = new Order();
+        order.setUsername(user.getPreferedName());
         order.setChatId(user.getChatId());
         order.setStatus(Status.PENDING);
         orderService.save(order);

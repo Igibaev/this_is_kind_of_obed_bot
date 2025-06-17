@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
 
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,7 +28,7 @@ public class TempOrder extends Order  {
 
   @Override
   public String toString() {
-    return id + ": " + orderItemList;
+    return id + ": " + StringUtils.join(orderItemList, ",");
   }
 
 }

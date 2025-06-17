@@ -6,6 +6,7 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @AllArgsConstructor
@@ -24,6 +25,6 @@ public class Order implements Id {
 
   @Override
   public String toString() {
-    return username + ": " + orderItemList;
+    return username + ": " + StringUtils.join(orderItemList, ",");
   }
 }

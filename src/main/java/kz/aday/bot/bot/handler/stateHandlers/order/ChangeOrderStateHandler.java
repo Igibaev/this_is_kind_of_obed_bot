@@ -34,9 +34,9 @@ public class ChangeOrderStateHandler extends AbstractHandler implements StateHan
           ReplyKeyboard keyboard =
               KeyboardUtil.createInlineKeyboard(
                   List.of(
-                      new UserButton("Изменить заказ", CallbackState.CHANGE_ORDER.getDisplayName()),
-                      new UserButton("Удалить заказ", CallbackState.DELETE_ORDER.getDisplayName()),
-                      new UserButton("Отмена", CallbackState.CANCEL.getDisplayName())));
+                      new UserButton("Изменить заказ", CallbackState.CHANGE_ORDER.toString()),
+                      new UserButton("Удалить заказ", CallbackState.DELETE_ORDER.toString()),
+                      new UserButton("Отмена", CallbackState.CANCEL.toString())));
           sendMessageWithKeyboard(
               user,
               String.format(YOUR_ORDER_IS, order.getOrderItemList()),

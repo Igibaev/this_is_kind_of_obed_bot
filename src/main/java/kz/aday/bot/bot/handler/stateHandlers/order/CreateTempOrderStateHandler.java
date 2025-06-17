@@ -8,17 +8,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.TempOrder;
 import kz.aday.bot.model.User;
+import kz.aday.bot.model.UserButton;
+import kz.aday.bot.service.MenuRulesService;
+import kz.aday.bot.util.KeyboardUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public class CreateTempOrderStateHandler extends AbstractHandler implements StateHandler {
+
   @Override
   public boolean canHandle(String state) {
     return TEMP_ORDER_FOR_USER.getDisplayName().equals(state);
@@ -81,13 +88,23 @@ public class CreateTempOrderStateHandler extends AbstractHandler implements Stat
                     getMessageId(update),
                     sender);
               } else {
-                TempOrder tempOrder = new TempOrder(tempOrderId);
-                tempOrder.setOrderItemList(items);
-                tempOrder.setStatus(Status.READY);
-                orderService.save(tempOrder);
-                sendMessage(
+                TempOrder tempOrder = new TempOrder();
+                tempOrder.setId(tempOrderId);
+                tempOrder.setStatus(Status.PENDING);
+                for (Item item: items) {
+                  orderService.addItemToOrder(tempOrder, item, MenuRulesService.getMenuRule(user.getCity()));
+                }
+                tempOrderService.save(tempOrder);
+                ReplyKeyboard keyboard = KeyboardUtil.createInlineKeyboard(
+                        List.of(
+                                new UserButton("Потвердить", CallbackState.SUBMIT_TEMP_ORDER.toString() + ":" + tempOrderId),
+                                new UserButton("Отмена", CallbackState.CANCEL.toString())
+                        )
+                );
+                sendMessageWithKeyboard(
                     user,
                     String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getId(), items),
+                    keyboard,
                     getMessageId(update),
                     sender);
               }
@@ -121,7 +138,8 @@ public class CreateTempOrderStateHandler extends AbstractHandler implements Stat
   }
 
   private final String TEMP_ORDER_FOR_USER_READY_MESSAGE =
-      "Создали заказ для %s. %s. Если нужно будет удалить заказ или зменить, перейдите /templistorders.";
+      "Создали заказ для %s. %s. Чтобы отправить заказ нажмите, потвердить.\n" +
+      "Если нужно будет удалить заказ или изменить, перейдите /templistorders.";
 
   private final String TEMP_ORDER_FOR_USER_MESSAGE =
       "Данный функционал нужен чтобы заказывать сотрудникам кто приезжает в город в командировку, чтобы миновать шаг добавления в чат бот.\n"

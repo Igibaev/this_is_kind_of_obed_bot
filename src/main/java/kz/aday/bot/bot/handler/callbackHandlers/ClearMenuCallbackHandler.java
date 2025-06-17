@@ -1,13 +1,13 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.Menu;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class SubmitMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
+public class ClearMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
     @Override
     public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
         if (isUserExistAndReady(callback)) {
@@ -16,10 +16,11 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
                 sendMessage(user, PERMISSION_DENIED, getMessageId(callback), sender);
                 return;
             }
-            Menu menu = menuService.findById(user.getCity().toString());
-            menu.setStatus(Status.READY);
-            menuService.save(menu);
-            sendMessage(user, MENU_IS_PUBLISHED, getMessageId(callback), sender);
+            menuService.deleteById(user.getCity().toString());
+            orderService.findAll().forEach(order -> {
+                orderService.deleteById(order.getId());
+            });
+            sendMessage(user, MENU_WAS_DELETED, getMessageId(callback), sender);
         }
     }
 
@@ -29,11 +30,10 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
         if (data.length <= 0) {
             throw new IllegalArgumentException("There is no callback");
         }
-        return CallbackState.SUBMIT_MENU.toString().equals(data[0]);
+        return CallbackState.CLEAR_MENU.toString().equals(data[0]);
     }
-
-    private static final String MENU_IS_PUBLISHED = "Меню опубликовали.";
 
     private static final String PERMISSION_DENIED = "Нет доступа.";
 
+    private static final String MENU_WAS_DELETED = "Меню было удалено.";
 }

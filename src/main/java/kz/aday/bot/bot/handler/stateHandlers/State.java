@@ -14,21 +14,24 @@ public enum State {
   SET_CANCEL("Отменить", Type.INPUT),
 
   // --- Стейты-действия (кнопки меню) ---
-  SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
   PROFILE("Профиль", Type.ACTION),
-  GET_ALL_ORDERS("Выгрузить заказы", Type.ACTION),
-  PUBLISH_MENU("Опубликовать меню", Type.ACTION),
-  CREATE_MENU("Создать меню", Type.ACTION),
+  EDIT_USERNAME("Изменить имя и город", Type.ACTION),
+  SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
+
   CREATE_ORDER("Сделать заказ", Type.ACTION),
-  CLEAR_MENU("Очистить меню", Type.ACTION),
-  CHANGE_MENU("Изменить меню", Type.ACTION),
-  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION),
   GET_ORDER("Посмотреть заказ", Type.ACTION),
   CHANGE_ORDER("Изменить заказ", Type.ACTION),
   DELETE_ORDER("Удалить заказ", Type.ACTION),
   RANDOM_ORDER("Рандомный заказ", Type.ACTION),
-  EDIT_USERNAME("Изменить имя и город", Type.ACTION),
-  SUBMIT_ORDER("Потвердить заказ", Type.ACTION);
+  SUBMIT_ORDER("Потвердить заказ", Type.ACTION),
+
+  GET_ALL_ORDERS("Выгрузить заказы", Type.ACTION),
+  PUBLISH_MENU("Опубликовать меню", Type.ACTION),
+  CREATE_MENU("Создать меню", Type.ACTION),
+  CLEAR_MENU("Очистить меню", Type.ACTION),
+  CHANGE_MENU("Изменить меню", Type.ACTION),
+  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION);
+
 
   private final String displayName;
   private final Type type; // Добавляем поле для типа стейта

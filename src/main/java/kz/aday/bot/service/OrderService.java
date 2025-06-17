@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.service;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import kz.aday.bot.model.Category;
@@ -33,21 +34,21 @@ public class OrderService extends BaseService<Order> {
       order.getOrderItemList().add(item);
       return;
     }
-    Set<Category> disjointCategories = menuRules.getMenuRuleMap().get(item.getCategory());
-    if (disjointCategories != null && order.getCategoryItemList().containsAll(disjointCategories)) {
-      // если сработало правило, то мы удаляем какое нибудь из категории которые у него в заказе и
-      // добавляем новое выбранное
-      Item itemToRemove =
-          order.getOrderItemList().stream()
-              .filter(it -> it.getCategory().equals(disjointCategories.stream().findAny().get()))
-              .findFirst()
-              .get();
-      order.getOrderItemList().remove(itemToRemove);
-      order.getCategoryItemList().remove(itemToRemove.getCategory());
-      order.getOrderItemList().add(item);
-      order.getCategoryItemList().add(item.getCategory());
-      return;
-    }
+//    Set<Category> disjointCategories = menuRules.getMenuRuleMap().getOrDefault(item.getCategory(), Collections.emptySet());
+//    if (disjointCategories != null && order.getCategoryItemList().containsAll(disjointCategories)) {
+//      // если сработало правило, то мы удаляем какое нибудь из категории которые у него в заказе и
+//      // добавляем новое выбранное
+//      Item itemToRemove =
+//          order.getOrderItemList().stream()
+//              .filter(it -> it.getCategory().equals(disjointCategories.stream().findAny().get()))
+//              .findFirst()
+//              .get();
+//      order.getOrderItemList().remove(itemToRemove);
+//      order.getCategoryItemList().remove(itemToRemove.getCategory());
+//      order.getOrderItemList().add(item);
+//      order.getCategoryItemList().add(item.getCategory());
+//      return;
+//    }
     // если ничего не выбрал то просто добавляем выбранное
     order.getOrderItemList().add(item);
     order.getCategoryItemList().add(item.getCategory());

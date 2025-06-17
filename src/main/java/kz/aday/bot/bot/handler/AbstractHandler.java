@@ -21,6 +21,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.ReportService;
+import kz.aday.bot.service.TempOrderService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public abstract class AbstractHandler {
   protected final MenuService menuService = ServiceContainer.getMenuService();
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final ReportService reportService = ServiceContainer.getReportService();
-  protected final MenuRulesService menuRuleService = ServiceContainer.getMenuRuleService();
+  protected final TempOrderService tempOrderService = ServiceContainer.getTempOrderService();
 
   public Long getChatId(CallbackQuery update) {
     return update.getMessage().getChatId();

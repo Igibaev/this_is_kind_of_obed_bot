@@ -15,6 +15,12 @@ public abstract class BaseService<T extends Id> {
     this.repository = repository;
   }
 
+  public void deleteById(String id) {
+    log.debug("Attempting to delete entity by ID: {}", id);
+    repository.deleteById(id);
+    log.warn("Entity with ID {} was deleted.", id);
+  }
+
   public T findById(String id) {
     log.debug("Attempting to find entity by ID: {}", id);
     T entity = repository.getById(id);

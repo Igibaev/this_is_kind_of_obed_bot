@@ -14,5 +14,7 @@ public interface Repository<T> {
 
   void clearAll();
 
+  void deleteById(String id);
+
   void clearStorage();
 }

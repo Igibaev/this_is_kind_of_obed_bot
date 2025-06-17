@@ -40,5 +40,6 @@ public class CommandDispatcher extends AbstractDispatcher<CommandHandler> {
       }
     }
     log.warn("Unknown command: [{}]", text);
+    throw new RuntimeException(String.format("Неизвестная команда [%s]. Вернитесь в меню /return", update.getMessage().getText()));
   }
 }

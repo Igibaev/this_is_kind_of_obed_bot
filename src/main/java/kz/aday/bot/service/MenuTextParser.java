@@ -65,7 +65,7 @@ public class MenuTextParser {
   private static String removeNonLetterCharacters(String line) {
     StringBuilder stringBuilder = new StringBuilder();
     for (char letter : line.toCharArray()) {
-      if (!Character.isDigit(letter)) {
+      if (!Character.isDigit(letter) && letter != '.') {
         stringBuilder.append(letter);
       }
     }

@@ -18,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +28,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
   private static final String JSON = ".json";
-  private Path BASE_PATH = Path.of("/app/data/"); // Путь к файлам
+  private Path BASE_PATH = Path.of(BotConfig.getBotStorePath()); // Путь к файлам
   private final String storagePath; // Путь к файлам
   private final ObjectMapper objectMapper;
   private final Class<T> type;
@@ -65,6 +67,38 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   @Override
   public void clearAll() {
     database.clear();
+  }
+
+  @Override
+  public void deleteById(String id) {
+    database.remove(id);
+    deleteFromStorage(id);
+  }
+
+  private void deleteFromStorage(String id) {
+    if (Files.exists(BASE_PATH)) {
+      try (Stream<Path> pathStorage = Files.list(BASE_PATH)) {
+        pathStorage.forEach(
+                path -> {
+                  if (path.toFile().isFile() && path.getFileName().toString().equals(id)) {
+                    try {
+                      Files.delete(path);
+                      return;
+                    } catch (IOException e) {
+                      log.error("Can't by path.", path);
+                    }
+                  } else {
+                    log.warn("Path [{}] is not file, skip.", path);
+                  }
+                });
+      } catch (IOException e) {
+        log.error("Error apeard when loading storage ", e);
+        throw new RuntimeException(e);
+      }
+
+    } else {
+      log.info("Storage not exist [{}]", storagePath);
+    }
   }
 
   @Override

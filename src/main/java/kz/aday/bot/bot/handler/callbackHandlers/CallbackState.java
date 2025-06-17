@@ -13,6 +13,7 @@ public enum CallbackState {
   CHANGE_MENU("Изменить меню"),
   CLEAR_MENU("Очистить меню"),
 
+  SUBMIT_TEMP_ORDER("Потвердить временный заказ"),
   SUBMIT_ORDER("Потвердить заказ"),
   CHANGE_ORDER("Изменить заказ"),
   DELETE_ORDER("Удалить заказ");

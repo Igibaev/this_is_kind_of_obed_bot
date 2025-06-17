@@ -55,7 +55,7 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
     }
   }
 
-  private static final String PERMISSION_DENIED = "Нет доступа к созданию меню";
+  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_PENDING =
       "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";

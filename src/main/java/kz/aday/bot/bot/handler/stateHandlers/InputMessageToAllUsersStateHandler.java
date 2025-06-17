@@ -31,7 +31,7 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
           }
         } else {
           user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
-          sendMessage(user, INPUT_MESSAGE, getMessageId(update), sender);
+          sendMessage(user, String.format(INPUT_MESSAGE, user.getCity().getValue()), getMessageId(update), sender);
         }
       }
     }

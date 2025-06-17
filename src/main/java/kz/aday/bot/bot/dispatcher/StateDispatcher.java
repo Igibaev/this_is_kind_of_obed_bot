@@ -63,5 +63,7 @@ public class StateDispatcher extends AbstractDispatcher<StateHandler> {
       }
     }
     log.warn("Unknown state: [{}]", state);
+    throw new RuntimeException(String.format("Неизвестная команда [%s]. Вернитесь в меню /return", state));
+
   }
 }

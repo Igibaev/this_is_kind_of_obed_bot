@@ -14,9 +14,7 @@ public class DeleteOrderCallbackHandler extends AbstractHandler implements Callb
         if (isUserExistAndReady(callback)) {
             User user = userService.findById(getChatId(callback).toString());
             if (isOrderExist(user)) {
-                Order order = orderService.findById(user.getId());
-                order.setStatus(Status.DELETED);
-                orderService.save(order);
+                orderService.deleteById(user.getId());
                 sendMessage(user, ORDER_DELETED, getMessageId(callback), sender);
             }
         }

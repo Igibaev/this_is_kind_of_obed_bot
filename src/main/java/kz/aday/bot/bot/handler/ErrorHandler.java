@@ -23,10 +23,12 @@ public class ErrorHandler extends AbstractHandler {
     sendMessage(
         userService.findById(chatId),
         String.format(ERROR_MESSAGE, e.getMessage()),
-        update.getMessage().getMessageId(),
+        update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
   }
 
   private static final String ERROR_MESSAGE =
-      "Произошла ошибка:%s.\nЧтобы вернуться в меню нажми /return";
+      "Произошла ошибка: %s.";
+
+
 }

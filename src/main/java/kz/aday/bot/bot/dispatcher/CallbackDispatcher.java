@@ -29,9 +29,9 @@ public class CallbackDispatcher extends AbstractDispatcher<CallbackHandler> {
     }
 
     for (CallbackHandler handler : handlers) {
+      log.debug("Try proccess callback data: [{}]", callback.getData());
       if (handler.canHandle(callback)) {
         try {
-          log.debug("Processing callback data: [{}]", callback.getData());
           handler.handle(callback, sender);
           log.info("Callback handled successfully: [{}]", callback.getData());
           return;
@@ -42,5 +42,6 @@ public class CallbackDispatcher extends AbstractDispatcher<CallbackHandler> {
       }
     }
     log.warn("Unknown callback: [{}]", callback.getData());
+    throw new RuntimeException(String.format("Неизвестная команда [%s]. Вернитесь в меню /return", callback.getMessage().getText()));
   }
 }

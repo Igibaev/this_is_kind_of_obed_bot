@@ -16,6 +16,7 @@ import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
+import kz.aday.bot.service.MenuRulesService;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
@@ -38,12 +39,13 @@ public abstract class AbstractHandler {
   protected final MenuService menuService = ServiceContainer.getMenuService();
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final ReportService reportService = ServiceContainer.getReportService();
+  protected final MenuRulesService menuRuleService = ServiceContainer.getMenuRuleService();
 
   public Long getChatId(CallbackQuery update) {
     return update.getMessage().getChatId();
   }
 
-  boolean isUserExistAndReady(CallbackQuery update) {
+  public boolean isUserExistAndReady(CallbackQuery update) {
     return userService
         .findByIdOptional(getChatId(update).toString())
         .filter(user -> user.getStatus() == Status.READY)
@@ -60,6 +62,10 @@ public abstract class AbstractHandler {
 
   public Integer getMessageId(Update update) {
     return update.getMessage().getMessageId();
+  }
+
+  public Integer getMessageId(CallbackQuery callbackQuery) {
+    return callbackQuery.getMessage().getMessageId();
   }
 
   public boolean isUserExistAndReady(Update update) {
@@ -81,6 +87,14 @@ public abstract class AbstractHandler {
     if (isMenuExist(city)) {
       Menu menu = menuService.findById(city.toString());
       return menu.getStatus() == Status.READY;
+    }
+    return false;
+  }
+
+  public boolean isDeadLinePassed(City city) {
+    if (isMenuExist(city)) {
+      Menu menu = menuService.findById(city.toString());
+      return menu.isDeadlinePassed();
     }
     return false;
   }
@@ -122,9 +136,9 @@ public abstract class AbstractHandler {
     List<String> userMenuItems = new ArrayList<>();
     userMenuItems.add(State.PROFILE.getDisplayName());
     userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
-    userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
 
     if (isMenuExist && isMenuReady) {
+      userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
       if (isOrderExist) {
         if (isOrderReady) {
           userMenuItems.add(State.DELETE_ORDER.getDisplayName());

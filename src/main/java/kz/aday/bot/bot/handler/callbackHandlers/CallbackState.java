@@ -9,7 +9,6 @@ public enum CallbackState {
 
   CANCEL("Отменить/Вернуться"),
 
-  SUBMIT("Потвердить"),
   SUBMIT_MENU("Опубликовать меню"),
   CHANGE_MENU("Изменить меню"),
   CLEAR_MENU("Очистить меню"),

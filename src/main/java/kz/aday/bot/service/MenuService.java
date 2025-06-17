@@ -2,14 +2,11 @@
 package kz.aday.bot.service;
 
 import java.util.concurrent.ConcurrentHashMap;
-import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.repository.BaseRepository;
 
 public class MenuService extends BaseService<Menu> {
   public MenuService() {
     super(new BaseRepository<>(new ConcurrentHashMap<>(), Menu.class, "menu"));
-    Menu menu = new Menu();
-    menu.setCity(City.ASTANA);
   }
 }

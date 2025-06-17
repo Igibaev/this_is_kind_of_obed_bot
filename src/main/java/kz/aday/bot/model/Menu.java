@@ -29,4 +29,8 @@ public class Menu implements Id {
   public Optional<Item> getItemById(Integer itemId) {
     return itemList.parallelStream().filter(item -> item.getId().equals(itemId)).findFirst();
   }
+
+  public boolean isDeadlinePassed() {
+    return LocalDateTime.now().isAfter(deadline);
+  }
 }

@@ -22,16 +22,6 @@ public class Order implements Id {
     return chatId.toString();
   }
 
-  private void addItem(Item item) {
-    categoryItemList.add(item.getCategory());
-    orderItemList.add(item);
-  }
-
-  public void removeItem(Item item) {
-    categoryItemList.remove(item.getCategory());
-    orderItemList.remove(item);
-  }
-
   @Override
   public String toString() {
     return username + ": " + orderItemList;

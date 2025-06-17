@@ -5,5 +5,6 @@ public enum Status {
   READY,
   PENDING,
   DEADLINE,
+  DELETED,
   OVER_CHANGING
 }

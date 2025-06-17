@@ -1,5 +1,5 @@
 /* (C) 2024 Igibaev */
-package kz.aday.bot.bot.handler.stateHandlers;
+package kz.aday.bot.bot.handler.stateHandlers.menu;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
+import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -49,9 +51,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                   .map(User::getId)
                   .collect(Collectors.toSet());
           List<Order> orders =
-              orderService.findAll().stream()
-                  .filter(o -> users.contains(o.getId()))
-                  .toList();
+              orderService.findAll().stream().filter(o -> users.contains(o.getId())).toList();
 
           if (orders.isEmpty()) {
             menuService.save(newMenu);
@@ -60,7 +60,8 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
             KeyboardUtil.addButton(
                 List.of(
                     new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
+                    new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())
+                ),
                 markup);
             sendMessageWithKeyboard(
                 user,

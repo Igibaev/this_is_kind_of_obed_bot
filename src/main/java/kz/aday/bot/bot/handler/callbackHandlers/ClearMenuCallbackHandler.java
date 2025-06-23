@@ -1,8 +1,6 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.bot.handler.stateHandlers.State;
-import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -18,7 +16,7 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
             }
             menuService.deleteById(user.getCity().toString());
             orderService.findAll().forEach(order -> {
-                orderService.deleteById(order.getId());
+                orderService.deleteById(order.getChatId());
             });
             sendMessage(user, MENU_WAS_DELETED, getMessageId(callback), sender);
         }

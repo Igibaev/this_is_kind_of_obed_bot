@@ -12,19 +12,19 @@ import org.apache.commons.lang3.StringUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Order implements Id {
-  private Long chatId;
+  private String chatId;
   private String username;
   private Status status;
   private Set<Item> orderItemList = new HashSet<>(5);
   private Set<Category> categoryItemList = new HashSet<>(5);
 
   @Override
-  public String getId() {
-    return chatId.toString();
+  public String toString() {
+    return username + ": " + StringUtils.join(orderItemList, ",");
   }
 
   @Override
-  public String toString() {
-    return username + ": " + StringUtils.join(orderItemList, ",");
+  public String getId() {
+    return chatId;
   }
 }

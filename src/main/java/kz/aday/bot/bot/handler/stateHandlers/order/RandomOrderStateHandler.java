@@ -50,7 +50,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
           user.setState(State.RANDOM_ORDER);
           Order order = new Order();
           order.setUsername(user.getPreferedName());
-          order.setChatId(user.getChatId());
+          order.setChatId(user.getChatId().toString());
           order.setStatus(Status.PENDING);
           orderService.save(order);
           ReplyKeyboard keyboard =

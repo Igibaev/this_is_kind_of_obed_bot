@@ -12,8 +12,8 @@ import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
+import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.model.TempOrder;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.service.MenuRulesService;
@@ -21,7 +21,6 @@ import kz.aday.bot.util.KeyboardUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public class CreateTempOrderStateHandler extends AbstractHandler implements StateHandler {
@@ -88,13 +87,14 @@ public class CreateTempOrderStateHandler extends AbstractHandler implements Stat
                     getMessageId(update),
                     sender);
               } else {
-                TempOrder tempOrder = new TempOrder();
-                tempOrder.setId(tempOrderId);
+                Order tempOrder = new Order();
+                tempOrder.setChatId(tempOrderId);
+                tempOrder.setUsername(tempOrderId);
                 tempOrder.setStatus(Status.PENDING);
                 for (Item item: items) {
                   orderService.addItemToOrder(tempOrder, item, MenuRulesService.getMenuRule(user.getCity()));
                 }
-                tempOrderService.save(tempOrder);
+                orderService.save(tempOrder);
                 ReplyKeyboard keyboard = KeyboardUtil.createInlineKeyboard(
                         List.of(
                                 new UserButton("Потвердить", CallbackState.SUBMIT_TEMP_ORDER.toString() + ":" + tempOrderId),
@@ -103,7 +103,7 @@ public class CreateTempOrderStateHandler extends AbstractHandler implements Stat
                 );
                 sendMessageWithKeyboard(
                     user,
-                    String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getId(), items),
+                    String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getChatId(), items),
                     keyboard,
                     getMessageId(update),
                     sender);

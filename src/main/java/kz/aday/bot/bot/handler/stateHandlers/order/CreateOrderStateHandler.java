@@ -31,7 +31,7 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
         }
         Order order = new Order();
         order.setUsername(user.getPreferedName());
-        order.setChatId(user.getChatId());
+        order.setChatId(user.getChatId().toString());
         order.setStatus(Status.PENDING);
         orderService.save(order);
         sendMessageWithKeyboard(

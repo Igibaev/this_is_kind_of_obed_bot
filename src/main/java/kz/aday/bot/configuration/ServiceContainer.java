@@ -4,7 +4,6 @@ package kz.aday.bot.configuration;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
-import kz.aday.bot.service.TempOrderService;
 import kz.aday.bot.service.UserService;
 
 public class ServiceContainer {
@@ -12,7 +11,6 @@ public class ServiceContainer {
   private static final MessageSender messageService = new MessageSender();
   private static final OrderService orderService = new OrderService();
   private static final MenuService menuService = new MenuService();
-  private static final TempOrderService tempOrderService = new TempOrderService();
 
   private ServiceContainer() {}
 
@@ -32,7 +30,4 @@ public class ServiceContainer {
     return menuService;
   }
 
-    public static TempOrderService getTempOrderService() {
-    return tempOrderService;
-    }
 }

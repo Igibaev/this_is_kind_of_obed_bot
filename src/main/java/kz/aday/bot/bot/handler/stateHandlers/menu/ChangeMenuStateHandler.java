@@ -51,7 +51,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                   .map(User::getId)
                   .collect(Collectors.toSet());
           List<Order> orders =
-              orderService.findAll().stream().filter(o -> users.contains(o.getId())).toList();
+              orderService.findAll().stream().filter(o -> users.contains(o.getChatId())).toList();
 
           if (orders.isEmpty()) {
             menuService.save(newMenu);
@@ -107,7 +107,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                   }
                 }
                 if (!bannedItems.isEmpty()) {
-                  User userHasBannedItems = userService.findById(order.getId());
+                  User userHasBannedItems = userService.findById(order.getChatId());
                   log.debug("Send notification to user:{}", userHasBannedItems);
                   sendMessageWithKeyboard(
                       userHasBannedItems,

@@ -46,7 +46,7 @@ public class MenuTextParser {
       Category category = parseCategory(line);
       if (category != null) {
         if (category == Category.BREAD) {
-          itemList.add(new Item(counter++, "", category));
+          itemList.add(new Item(counter++, category.getValue(), category));
           continue;
         }
         currentCategory = category;

@@ -4,9 +4,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.model.TempOrder;
 import kz.aday.bot.model.User;
-import kz.aday.bot.service.TempOrderService;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -16,12 +14,12 @@ public class SubmitTempOrderCallbackHandler extends AbstractHandler implements C
         if (isUserExistAndReady(callback)) {
             User user = userService.findById(getChatId(callback).toString());
             Menu menu = menuService.findById(user.getCity().toString());
-            TempOrder order = tempOrderService.findById(getOrderId(callback));
+            Order order = orderService.findById(getOrderId(callback));
             if (menu.isDeadlinePassed()) {
                 sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(callback), sender);
             }
             order.setStatus(Status.READY);
-            tempOrderService.save(order);
+            orderService.save(order);
             sendMessage(user, String.format(ORDER_SENDED, order.getOrderItemList()), getMessageId(callback), sender);
         }
     }

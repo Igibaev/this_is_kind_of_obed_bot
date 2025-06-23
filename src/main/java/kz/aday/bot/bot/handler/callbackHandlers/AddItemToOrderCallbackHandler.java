@@ -11,7 +11,6 @@ import kz.aday.bot.service.MenuRulesService;
 import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 import java.util.List;
@@ -39,7 +38,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
         order = new Order();
         order.setUsername(user.getPreferedName());
         order.setStatus(Status.PENDING);
-        order.setChatId(user.getChatId());
+        order.setChatId(user.getChatId().toString());
       }
 
       if (menu.isDeadlinePassed()) {

@@ -115,6 +115,9 @@ public class BaseRepository<T extends Id> implements Repository<T> {
               if (path.toFile().isFile()) {
                 try {
                   T item = objectMapper.readValue(path.toFile(), type);
+                  System.out.println(path);
+                  System.out.println(type);
+                  System.out.println(item);
                   database.put(item.getId(), item);
                 } catch (IOException e) {
                   log.warn("Failed to parse json file [{}], skip.", path);

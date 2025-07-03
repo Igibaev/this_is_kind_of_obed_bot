@@ -32,10 +32,10 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
   public void handle(Update update, AbsSender sender) throws Exception {
     if (isUserExistAndReady(update)) {
       User user = userService.findById(getChatId(update).toString());
-      if (isMenuReady(user.getCity())) {
+      Menu menu = menuService.findById(user.getCity().toString());
+      if (menu != null && menu.getStatus() == Status.READY && !menu.isDeadlinePassed()) {
         if (isOrderExist(user)) {
           Order order = orderService.findById(user.getId());
-          Menu menu = menuService.findById(user.getCity().toString());
           if (order.getStatus() == Status.READY) {
             sendMessageWithKeyboard(
                 user,
@@ -65,7 +65,6 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
                 sender);
           }
         } else {
-          Menu menu = menuService.findById(user.getCity().toString());
           sendMessageWithKeyboard(
               user,
               String.format(MENU_TODAY, user.getCity().getValue()),

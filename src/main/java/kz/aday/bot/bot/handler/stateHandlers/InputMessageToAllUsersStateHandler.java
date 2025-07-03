@@ -29,6 +29,8 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
           for (User u : allUsers) {
             sendMessage(u, update.getMessage().getText(), getMessageId(update), sender);
           }
+          user.setState(State.NONE);
+          userService.save(user);
         } else {
           user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
           sendMessage(user, String.format(INPUT_MESSAGE, user.getCity().getValue()), getMessageId(update), sender);

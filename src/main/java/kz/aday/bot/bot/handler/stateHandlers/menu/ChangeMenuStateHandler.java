@@ -132,8 +132,8 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
 
   private static final String NOTIFY_IF_USER_HAS_BANNED_ITEMS =
       "Меню изменилось. Из вашего заказа были убраны след позиции %s. "
-          + "Выберите то что осталось в меню. "
-          + "Или нажмите /cancel чтобы оставить заказ без изменений или /delete его.";
+      + "Выберите то что осталось в меню. "
+      + "Или нажмите /cancel чтобы оставить заказ без изменений или удалите его /delete.";
 
   private static final String MENU_PENDING =
       "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";

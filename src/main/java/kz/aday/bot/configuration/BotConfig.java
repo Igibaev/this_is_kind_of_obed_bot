@@ -32,7 +32,7 @@ public class BotConfig {
   }
 
   public static String getBotStorePath() {
-    return getProperty("EXTERNAL_VOLUME_PATH");
+    return "/app/data";
   }
 }
 

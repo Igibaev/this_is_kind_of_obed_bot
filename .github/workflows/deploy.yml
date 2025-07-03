@@ -102,6 +102,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug secrets
+        run: |
+          echo "Available secrets:"
+          echo "BOT_TOKEN: ${{ secrets.BOT_TOKEN != null }}"
+          echo "BOT_NAME: ${{ secrets.BOT_NAME != null }}"
+          echo "EXTERNAL_VOLUME_PATH: ${{ secrets.EXTERNAL_VOLUME_PATH != null }}"
+
       - name: Deploy new version to Docker
         run: |
           IMAGE_NAME="${{ needs.build.outputs.image_name }}:latest"

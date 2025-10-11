@@ -42,6 +42,8 @@ public class CallbackDispatcher extends AbstractDispatcher<CallbackHandler> {
       }
     }
     log.warn("Unknown callback: [{}]", callback.getData());
-    throw new RuntimeException(String.format("Неизвестная команда [%s]. Вернитесь в меню /return", callback.getMessage().getText()));
+    throw new RuntimeException(
+        String.format(
+            "Неизвестная команда [%s]. Вернитесь в меню /return", callback.getMessage().getText()));
   }
 }

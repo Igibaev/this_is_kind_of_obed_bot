@@ -60,8 +60,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
             KeyboardUtil.addButton(
                 List.of(
                     new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())
-                ),
+                    new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
                 markup);
             sendMessageWithKeyboard(
                 user,
@@ -132,8 +131,8 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
 
   private static final String NOTIFY_IF_USER_HAS_BANNED_ITEMS =
       "Меню изменилось. Из вашего заказа были убраны след позиции %s. "
-      + "Выберите то что осталось в меню. "
-      + "Или нажмите /cancel чтобы оставить заказ без изменений или удалите его /delete.";
+          + "Выберите то что осталось в меню. "
+          + "Или нажмите /cancel чтобы оставить заказ без изменений или удалите его /delete.";
 
   private static final String MENU_PENDING =
       "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";

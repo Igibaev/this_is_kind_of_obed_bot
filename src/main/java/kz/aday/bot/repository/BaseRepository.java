@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
-
 import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
 import lombok.extern.slf4j.Slf4j;
@@ -79,18 +78,18 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     if (Files.exists(BASE_PATH)) {
       try (Stream<Path> pathStorage = Files.list(BASE_PATH)) {
         pathStorage.forEach(
-                path -> {
-                  if (path.toFile().isFile() && path.getFileName().toString().equals(id)) {
-                    try {
-                      Files.delete(path);
-                      return;
-                    } catch (IOException e) {
-                      log.error("Can't by path.", path);
-                    }
-                  } else {
-                    log.warn("Path [{}] is not file, skip.", path);
-                  }
-                });
+            path -> {
+              if (path.toFile().isFile() && path.getFileName().toString().equals(id)) {
+                try {
+                  Files.delete(path);
+                  return;
+                } catch (IOException e) {
+                  log.error("Can't by path.", path);
+                }
+              } else {
+                log.warn("Path [{}] is not file, skip.", path);
+              }
+            });
       } catch (IOException e) {
         log.error("Error apeard when loading storage ", e);
         throw new RuntimeException(e);
@@ -115,9 +114,6 @@ public class BaseRepository<T extends Id> implements Repository<T> {
               if (path.toFile().isFile()) {
                 try {
                   T item = objectMapper.readValue(path.toFile(), type);
-                  System.out.println(path);
-                  System.out.println(type);
-                  System.out.println(item);
                   database.put(item.getId(), item);
                 } catch (IOException e) {
                   log.warn("Failed to parse json file [{}], skip.", path);

@@ -23,11 +23,13 @@ public class MenuTextParser {
     LocalTime deadline = TimeFormatterExtractor.extractTimes(message);
     if (deadline == null) {
       log.error("Deadline is missing [{}]", deadline);
-      throw new TelegramMessageException("Дедлайн некорректный, исправьте сообщение и отправьте заново.");
+      throw new TelegramMessageException(
+          "Дедлайн некорректный, исправьте сообщение и отправьте заново.");
     }
     if (deadline.isBefore(LocalTime.now())) {
       log.error("Deadline is passed [{}]", deadline);
-      throw new TelegramMessageException("Дедлайн не может быть в прошлом, исправьте сообщение и отправьте заново." + deadline);
+      throw new TelegramMessageException(
+          "Дедлайн не может быть в прошлом, исправьте сообщение и отправьте заново." + deadline);
     }
     return LocalDateTime.of(LocalDate.now(), deadline);
   }
@@ -39,7 +41,7 @@ public class MenuTextParser {
     List<Item> itemList = new ArrayList<>();
     Category currentCategory = null;
     String[] lines = message.split("\n");
-    lines[lines.length -1] = "";
+    lines[lines.length - 1] = "";
     int counter = 0;
     for (String line : lines) {
       if (line.isBlank()) {

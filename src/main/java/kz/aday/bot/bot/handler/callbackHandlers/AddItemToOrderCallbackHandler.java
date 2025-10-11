@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.util.List;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -12,8 +13,6 @@ import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-
-import java.util.List;
 
 public class AddItemToOrderCallbackHandler extends AbstractHandler implements CallbackHandler {
 
@@ -49,19 +48,16 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
                 item ->
                     orderService.addItemToOrder(
                         order, item, MenuRulesService.getMenuRule(user.getCity())));
-        InlineKeyboardMarkup keyboard = KeyboardUtil.createInlineKeyboard(
-                menu.getItemList(),
-                order.getOrderItemList(),
-                CallbackState.ADD_ITEM_TO_ORDER
-        );
+        InlineKeyboardMarkup keyboard =
+            KeyboardUtil.createInlineKeyboard(
+                menu.getItemList(), order.getOrderItemList(), CallbackState.ADD_ITEM_TO_ORDER);
         KeyboardUtil.addButton(
-                List.of(
-                        new UserButton("Потвердить", CallbackState.SUBMIT_ORDER.toString()),
-                        new UserButton("Отменить", CallbackState.CANCEL.toString())
-                ),
-                keyboard
-        );
-        sendMessageWithKeyboard(user, CREATING_ORDER_MESSAGE, keyboard, getMessageId(callback), sender);
+            List.of(
+                new UserButton("Потвердить", CallbackState.SUBMIT_ORDER.toString()),
+                new UserButton("Отменить", CallbackState.CANCEL.toString())),
+            keyboard);
+        sendMessageWithKeyboard(
+            user, CREATING_ORDER_MESSAGE, keyboard, getMessageId(callback), sender);
         orderService.save(order);
       }
     }

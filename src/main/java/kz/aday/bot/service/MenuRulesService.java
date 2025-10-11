@@ -4,16 +4,14 @@ package kz.aday.bot.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.MenuRules;
-import kz.aday.bot.repository.BaseRepository;
 
 public class MenuRulesService {
   private static final Map<City, MenuRules> menuRulesMap = new HashMap<>();
 
-  public MenuRulesService() {
+  static {
     MenuRules astana = new MenuRules();
     Map<Category, Set<Category>> astanaRules = new HashMap<>();
     astanaRules.put(Category.FIRST, Set.of(Category.BAKERY, Category.SECOND));
@@ -24,6 +22,7 @@ public class MenuRulesService {
 
     MenuRules almata = new MenuRules();
     Map<Category, Set<Category>> almataRules = new HashMap<>();
+    almata.setMenuRuleMap(almataRules);
     menuRulesMap.put(City.ALMATA, almata);
   }
 

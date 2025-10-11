@@ -27,8 +27,5 @@ public class ErrorHandler extends AbstractHandler {
         sender);
   }
 
-  private static final String ERROR_MESSAGE =
-      "Произошла ошибка: %s.";
-
-
+  private static final String ERROR_MESSAGE = "Произошла ошибка: %s.";
 }

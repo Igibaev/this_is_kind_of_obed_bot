@@ -5,7 +5,9 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
+import lombok.Getter;
 
+@Getter
 public class ServiceContainer {
   private static final UserService userService = new UserService();
   private static final MessageSender messageService = new MessageSender();
@@ -29,5 +31,4 @@ public class ServiceContainer {
   public static MenuService getMenuService() {
     return menuService;
   }
-
 }

@@ -4,8 +4,6 @@ package kz.aday.bot.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import kz.aday.bot.exception.TelegramMessageException;
 import lombok.Data;
 

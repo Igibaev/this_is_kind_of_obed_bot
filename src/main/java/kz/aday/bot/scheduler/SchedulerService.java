@@ -1,17 +1,15 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.scheduler;
 
-import kz.aday.bot.configuration.ServiceContainer;
-import kz.aday.bot.service.MenuService;
-import kz.aday.bot.service.OrderService;
-
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import kz.aday.bot.configuration.ServiceContainer;
+import kz.aday.bot.service.MenuService;
+import kz.aday.bot.service.OrderService;
 
 public class SchedulerService {
   private final MenuService menuService = ServiceContainer.getMenuService();

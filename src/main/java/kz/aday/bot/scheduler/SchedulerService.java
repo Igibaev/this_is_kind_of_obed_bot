@@ -75,15 +75,17 @@ public class SchedulerService {
     }
   }
 
-  /** Отправить уведомления за 15 минут до дедлайна */
+  /** Отправить уведомления за 10 минут до дедлайна */
   private void sendDeadlineIsNearNotification() {
     log.debug("send deadline isNearNotification");
     for (Menu menu : menuService.findAll()) {
       if (menu.isDeadlineNear() && !menu.isDeadlinePassed()) {
         for (User user : userService.findAll()) {
-          Order order = orderService.findById(user.getId());
-          if (!order.isOrderReady() && order.getStatus() != Status.DELETED) {
-            sendMessagetoUser(menu, userService.findById(order.getId()), telegramFoodBot);
+          if (orderService.existsById(user.getId())) {
+            Order order = orderService.findById(user.getId());
+            if (!order.isOrderReady() && order.getStatus() != Status.DELETED) {
+              sendMessagetoUser(menu, userService.findById(order.getId()), telegramFoodBot);
+            }
           }
         }
       }

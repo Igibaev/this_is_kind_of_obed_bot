@@ -34,8 +34,7 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
             user.setState(State.NONE);
             String message = update.getMessage().getText();
             if (message.equals("Да")) {
-              order.setStatus(Status.DELETED);
-              orderService.save(order);
+              orderService.deleteById(order.getId());
               sendMessage(user, ORDER_WAS_DELETED, getMessageId(update), sender);
             } else {
               sendMessage(user, RETURN_TO_MENU, getMessageId(update), sender);

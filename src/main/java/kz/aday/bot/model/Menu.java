@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,6 @@ public class Menu implements Id {
   }
 
   public boolean isDeadlineNear() {
-    return LocalDateTime.now().minusMinutes(10).isAfter(deadline);
+    return LocalDateTime.now().plusMinutes(10).isAfter(deadline);
   }
 }

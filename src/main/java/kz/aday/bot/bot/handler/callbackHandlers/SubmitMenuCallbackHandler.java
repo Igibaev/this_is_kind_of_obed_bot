@@ -5,10 +5,12 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
+import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 public class SubmitMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
+
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
     if (isUserExistAndReady(callback)) {
@@ -21,6 +23,15 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
       menu.setStatus(Status.READY);
       menuService.save(menu);
       sendMessage(user, MENU_IS_PUBLISHED, getMessageId(callback), sender);
+      for (User userToNotificate: userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
+        sendMessageWithKeyboard(
+                userToNotificate,
+                NEW_MENU_IS_PUBLISHED,
+                KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
+                userToNotificate.getLastMessageId(),
+                sender
+        );
+      }
     }
   }
 
@@ -36,4 +47,7 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
   private static final String MENU_IS_PUBLISHED = "Меню опубликовали.";
 
   private static final String PERMISSION_DENIED = "Нет доступа.";
+
+  private static final String NEW_MENU_IS_PUBLISHED = "Новое меню доступно для заказа.";
+
 }

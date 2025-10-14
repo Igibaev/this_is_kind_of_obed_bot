@@ -33,4 +33,8 @@ public class Menu implements Id {
   public boolean isDeadlinePassed() {
     return LocalDateTime.now().isAfter(deadline);
   }
+
+  public boolean isDeadlineNear() {
+    return LocalDateTime.now().minusMinutes(10).isAfter(deadline);
+  }
 }

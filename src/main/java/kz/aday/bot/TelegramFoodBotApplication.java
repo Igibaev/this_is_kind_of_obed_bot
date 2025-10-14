@@ -16,12 +16,11 @@ public class TelegramFoodBotApplication {
 
   public static void main(String[] args) {
     try {
-      System.out.println("FDfsfsdfd");
-      SchedulerService schedulerService = new SchedulerService();
-      schedulerService.start();
       TelegramFoodBot telegramFoodBot =
-          new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
+              new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
       addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
+      SchedulerService schedulerService = new SchedulerService(telegramFoodBot);
+      schedulerService.start();
 
       TimeZone.setDefault(TimeZone.getTimeZone(BotConfig.getBotTimeZone()));
       TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);

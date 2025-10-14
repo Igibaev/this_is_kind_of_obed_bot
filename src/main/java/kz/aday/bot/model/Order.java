@@ -27,4 +27,8 @@ public class Order implements Id {
   public String getId() {
     return chatId;
   }
+
+  public boolean isOrderReady() {
+    return status == Status.READY;
+  }
 }

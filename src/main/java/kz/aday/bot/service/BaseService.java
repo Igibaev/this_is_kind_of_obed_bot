@@ -73,7 +73,7 @@ public abstract class BaseService<T extends Id> {
   public void deleteAll() {
     log.warn(
         "Clearing all entities from the repository."); // WARN, так как это деструктивная операция
-    repository.clearAll();
+    repository.clearLastWeek();
     log.info("All entities cleared.");
   }
 }

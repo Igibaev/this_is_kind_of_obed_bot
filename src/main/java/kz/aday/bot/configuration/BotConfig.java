@@ -19,35 +19,20 @@ public class BotConfig {
     return value;
   }
 
-  //  public static String getBotToken() {
-  //    return getProperty("BOT_TOKEN");
-  //  }
-  //
-  //  public static String getBotName() {
-  //    return getProperty("BOT_NAME");
-  //  }
-  //
-  //  public static String getBotTimeZone() {
-  //    return getProperty("BOT_TIME_ZONE");
-  //  }
-  //
-  //  public static String getBotStorePath() {
-  //    return "/app/data";
-  //  }
+    public static String getBotToken() {
+      return getProperty("BOT_TOKEN");
+    }
 
-  public static String getBotToken() {
-    return "659629361:AAHpPiJ1qEBQ1P5xOeLSL_LvKL36nXFFRCE";
-  }
+    public static String getBotName() {
+      return getProperty("BOT_NAME");
+    }
 
-  public static String getBotName() {
-    return "@SBFGisAstana_bot";
-  }
+    public static String getBotTimeZone() {
+      return getProperty("BOT_TIME_ZONE");
+    }
 
-  public static String getBotTimeZone() {
-    return "asia/Novosibirsk";
-  }
+    public static String getBotStorePath() {
+      return "/app/data";
+    }
 
-  public static String getBotStorePath() {
-    return "/Users/aigibaev/Desktop/Projects/this_is_kind_of_obed_bot/data";
-  }
 }

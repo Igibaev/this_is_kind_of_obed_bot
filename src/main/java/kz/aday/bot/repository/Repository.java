@@ -12,7 +12,7 @@ public interface Repository<T> {
 
   void save(T t);
 
-  void clearAll();
+  void clearLastWeek();
 
   void deleteById(String id);
 

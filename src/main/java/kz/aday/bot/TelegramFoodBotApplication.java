@@ -16,6 +16,7 @@ public class TelegramFoodBotApplication {
 
   public static void main(String[] args) {
     try {
+      System.out.println("FDfsfsdfd");
       SchedulerService schedulerService = new SchedulerService();
       schedulerService.start();
       TelegramFoodBot telegramFoodBot =

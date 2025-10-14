@@ -1,15 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
-import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.model.Menu;
-import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
-import kz.aday.bot.model.User;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 //
-//public class SubmitTempOrderCallbackHandler extends AbstractHandler implements CallbackHandler {
+// public class SubmitTempOrderCallbackHandler extends AbstractHandler implements CallbackHandler {
 //  @Override
 //  public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
 //    if (isUserExistAndReady(callback)) {
@@ -45,4 +38,4 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 //  private String getOrderId(CallbackQuery callback) {
 //    return callback.getData().split(":")[1];
 //  }
-//}
+// }

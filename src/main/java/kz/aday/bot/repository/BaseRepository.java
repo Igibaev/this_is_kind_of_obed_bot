@@ -3,20 +3,14 @@ package kz.aday.bot.repository;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.nio.file.*;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
@@ -24,18 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BaseRepository<T extends Id> implements Repository<T> {
+
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter DATE_FOLDER_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private static final String JSON = ".json";
-  private Path BASE_PATH = Path.of(BotConfig.getBotStorePath()); // Путь к файлам
-  private final String storagePath; // Путь к файлам
+
+  private final Path BASE_PATH;
   private final ObjectMapper objectMapper;
   private final Class<T> type;
-  private final Map<String, T> database;
+  private final Map<BaseRepoKey, T> database;
 
-  public BaseRepository(Map<String, T> database, Class<T> type, String storagePath) {
-    this.storagePath = storagePath;
-    this.BASE_PATH = BASE_PATH.resolve(storagePath);
+  public BaseRepository(Map<BaseRepoKey, T> database, Class<T> type, String storagePath) {
+    this.BASE_PATH = Path.of(BotConfig.getBotStorePath()).resolve(storagePath);
     this.objectMapper = getObjectMapper();
     this.database = database;
     this.type = type;
@@ -44,135 +40,172 @@ public class BaseRepository<T extends Id> implements Repository<T> {
 
   @Override
   public T getById(String id) {
-    return database.get(id);
+    return database.get(createRepoKey(id));
   }
 
   @Override
   public boolean existById(String id) {
-    return database.containsKey(id);
+    return database.containsKey(createRepoKey(id));
   }
 
   @Override
   public Collection<T> getAll() {
-    return database.values();
+    return database.entrySet().stream()
+        .filter(e -> e.getKey().getDate().isEqual(LocalDate.now()))
+        .map(Map.Entry::getValue)
+        .collect(Collectors.toList());
   }
 
   @Override
   public void save(T t) {
     saveToStorage(t);
-    database.put(t.getId(), t);
-  }
-
-  @Override
-  public void clearAll() {
-    database.clear();
+    database.put(createRepoKey(t.getId()), t);
   }
 
   @Override
   public void deleteById(String id) {
-    database.remove(id);
+    database.remove(createRepoKey(id));
     deleteFromStorage(id);
   }
 
-  private void deleteFromStorage(String id) {
-    if (Files.exists(BASE_PATH)) {
-      try (Stream<Path> pathStorage = Files.list(BASE_PATH)) {
-        pathStorage.forEach(
-            path -> {
-              if (path.toFile().isFile() && path.getFileName().toString().equals(id)) {
-                try {
-                  Files.delete(path);
-                  return;
-                } catch (IOException e) {
-                  log.error("Can't by path.", path);
-                }
-              } else {
-                log.warn("Path [{}] is not file, skip.", path);
-              }
-            });
-      } catch (IOException e) {
-        log.error("Error apeard when loading storage ", e);
-        throw new RuntimeException(e);
-      }
-
-    } else {
-      log.info("Storage not exist [{}]", storagePath);
-    }
+  @Override
+  public void clearLastWeek() {
+    clearStorage();
   }
 
   @Override
   public void clearStorage() {
-    clearDatabaseStorage();
+    clearOldFolders();
   }
 
   private void loadFromStorage() {
-    if (Files.exists(BASE_PATH)) {
-      log.info("Load storage [{}]", storagePath);
-      try (Stream<Path> pathStorage = Files.list(BASE_PATH)) {
-        pathStorage.forEach(
-            path -> {
-              if (path.toFile().isFile()) {
-                try {
-                  T item = objectMapper.readValue(path.toFile(), type);
-                  database.put(item.getId(), item);
-                } catch (IOException e) {
-                  log.warn("Failed to parse json file [{}], skip.", path);
-                  throw new RuntimeException(e);
-                }
-              } else {
-                log.warn("Path [{}] is not file, skip.", path);
-              }
-            });
-      } catch (IOException e) {
-        log.error("Error apeard when loading storage ", e);
-        throw new RuntimeException(e);
-      }
+    if (!Files.exists(BASE_PATH)) {
+      log.info("Storage not exist [{}]", BASE_PATH);
+      return;
+    }
 
-    } else {
-      log.info("Storage not exist [{}]", storagePath);
+    log.info("Load storage [{}]", BASE_PATH);
+    try (Stream<Path> dateFolders = Files.list(BASE_PATH)) {
+      for (Path dateFolder : dateFolders.toList()) {
+        if (Files.isDirectory(dateFolder)
+            && dateFolder
+                .getFileName()
+                .toString()
+                .equals(LocalDate.now().format(DATE_FOLDER_FORMATTER))) {
+          try (Stream<Path> files = Files.list(dateFolder)) {
+            files.forEach(
+                path -> {
+                  if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
+                    try {
+                      T item = objectMapper.readValue(path.toFile(), type);
+                      database.put(createRepoKey(item.getId()), item);
+                    } catch (IOException e) {
+                      log.warn("Failed to parse [{}], skip.", path);
+                    }
+                  }
+                });
+          }
+        }
+      }
+    } catch (IOException e) {
+      log.error("Error loading storage", e);
+      throw new RuntimeException(e);
     }
   }
 
   private void saveToStorage(T t) {
-    createStorageIfNotExist(BASE_PATH);
-    Path path = BASE_PATH.resolve(Path.of(t.getId() + JSON));
+    Path todayPath = getTodayFolderPath();
+    createStorageIfNotExist(todayPath);
+
+    Path file = todayPath.resolve(t.getId() + JSON);
     try {
-      if (Files.exists(path)) {
-        log.info("File exist [{}]", path);
-        Files.delete(path);
-        log.info("Delete file [{}]", path);
+      if (Files.exists(file)) {
+        Files.delete(file);
       }
-      log.info("Create file and save [{}]", path);
-      Files.createFile(path);
-      objectMapper.writer().withDefaultPrettyPrinter().writeValue(path.toFile(), t);
+      objectMapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), t);
+      log.info("Saved [{}]", file);
     } catch (Exception e) {
-      log.error("Failure when save to storage ", e);
+      log.error("Failure saving file [{}]", file, e);
       throw new RuntimeException(e);
+    }
+  }
+
+  private void deleteFromStorage(String id) {
+    Path todayPath = getTodayFolderPath();
+    if (!Files.exists(todayPath)) {
+      log.info("No folder for today [{}]", todayPath);
+      return;
+    }
+
+    Path file = todayPath.resolve(id + JSON);
+    try {
+      if (Files.exists(file)) {
+        Files.delete(file);
+        log.info("Deleted [{}]", file);
+      } else {
+        log.info("File [{}] not found", file);
+      }
+    } catch (IOException e) {
+      log.error("Failure deleting file [{}]", file, e);
     }
   }
 
   private void createStorageIfNotExist(Path storage) {
-    if (Files.exists(storage)) {
-      log.info("Storage [{}] exist", storage);
-    } else {
-      log.info("Create storage [{}]", storage);
-      try {
+    try {
+      if (!Files.exists(storage)) {
         Files.createDirectories(storage);
-      } catch (IOException e) {
-        log.error("Failure create storage", e);
-        throw new RuntimeException(e);
+        log.info("Created storage folder [{}]", storage);
       }
+    } catch (IOException e) {
+      log.error("Failure create storage [{}]", storage, e);
+      throw new RuntimeException(e);
     }
   }
 
-  private void clearDatabaseStorage() {
-    try {
-      Files.deleteIfExists(BASE_PATH);
-      log.info("Storage was cleared [{}]", BASE_PATH);
+  private void clearOldFolders() {
+    if (!Files.exists(BASE_PATH)) return;
+
+    LocalDate today = LocalDate.now();
+    try (Stream<Path> folders = Files.list(BASE_PATH)) {
+      folders
+          .filter(Files::isDirectory)
+          .forEach(
+              folder -> {
+                String name = folder.getFileName().toString();
+                try {
+                  LocalDate folderDate = LocalDate.parse(name, DATE_FOLDER_FORMATTER);
+                  if (folderDate.isBefore(today.minusDays(7))) {
+                    deleteRecursively(folder);
+                    log.info("Deleted old folder [{}]", folder);
+                  }
+                } catch (Exception e) {
+                  log.warn("Skip non-date folder [{}]", folder);
+                }
+              });
     } catch (IOException e) {
-      log.error("Failure when clear storage ", e);
+      log.error("Failure clearing old storage", e);
       throw new RuntimeException(e);
     }
+  }
+
+  private void deleteRecursively(Path path) throws IOException {
+    if (Files.isDirectory(path)) {
+      try (Stream<Path> entries = Files.list(path)) {
+        for (Path entry : entries.toList()) {
+          deleteRecursively(entry);
+        }
+      }
+    }
+    Files.deleteIfExists(path);
+  }
+
+  private Path getTodayFolderPath() {
+    String dateFolder = LocalDate.now().format(DATE_FOLDER_FORMATTER);
+    return BASE_PATH.resolve(dateFolder);
+  }
+
+  private static BaseRepoKey createRepoKey(String id) {
+    return new BaseRepoKey(id, LocalDate.now());
   }
 
   private ObjectMapper getObjectMapper() {

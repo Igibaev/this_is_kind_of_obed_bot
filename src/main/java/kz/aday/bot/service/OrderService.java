@@ -36,7 +36,9 @@ public class OrderService extends BaseService<Order> {
     }
     Set<Category> disjointCategories =
         menuRules.getMenuRuleMap().getOrDefault(item.getCategory(), Collections.emptySet());
-    if (disjointCategories != null && !disjointCategories.isEmpty() && order.getCategoryItemList().containsAll(disjointCategories) ) {
+    if (disjointCategories != null
+        && !disjointCategories.isEmpty()
+        && order.getCategoryItemList().containsAll(disjointCategories)) {
       // если сработало правило, то мы удаляем какое нибудь из категории которые у него взаказе и
       // добавляем новое выбранное
       Item itemToRemove =

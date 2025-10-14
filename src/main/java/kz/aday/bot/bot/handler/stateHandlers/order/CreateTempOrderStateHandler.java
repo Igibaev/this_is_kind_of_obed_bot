@@ -1,27 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers.order;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
-import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.model.Item;
-import kz.aday.bot.model.Menu;
-import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
-import kz.aday.bot.model.User;
-import kz.aday.bot.model.UserButton;
-import kz.aday.bot.service.MenuRulesService;
-import kz.aday.bot.util.KeyboardUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 //
-//public class CreateTempOrderStateHandler extends AbstractHandler implements StateHandler {
+// public class CreateTempOrderStateHandler extends AbstractHandler implements StateHandler {
 //
 //  @Override
 //  public boolean canHandle(String state) {
@@ -103,7 +84,8 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 //                            new UserButton("Отмена", CallbackState.CANCEL.toString())));
 //                sendMessageWithKeyboard(
 //                    user,
-//                    String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getChatId(), items),
+//                    String.format(TEMP_ORDER_FOR_USER_READY_MESSAGE, tempOrder.getChatId(),
+// items),
 //                    keyboard,
 //                    getMessageId(update),
 //                    sender);
@@ -133,7 +115,8 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 //          .append("\n");
 //    }
 //    stringBuilder.append(
-//        "Отправьте это сотруднику, а потом отправьте следующим сообщением, то что он выбрал и имя его. Пример: (Иванов 1 5 0)");
+//        "Отправьте это сотруднику, а потом отправьте следующим сообщением, то что он выбрал и имя
+// его. Пример: (Иванов 1 5 0)");
 //    return stringBuilder.toString();
 //  }
 //
@@ -142,6 +125,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 //          + "Если нужно будет удалить заказ или изменить, перейдите /templistorders.";
 //
 //  private final String TEMP_ORDER_FOR_USER_MESSAGE =
-//      "Данный функционал нужен чтобы заказывать сотрудникам кто приезжает в город в командировку, чтобы миновать шаг добавления в чат бот.\n"
+//      "Данный функционал нужен чтобы заказывать сотрудникам кто приезжает в город в командировку,
+// чтобы миновать шаг добавления в чат бот.\n"
 //          + "Чтобы посмотреть список заказов нажмите /templistorders.\n\n";
-//}
+// }

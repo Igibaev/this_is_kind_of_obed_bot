@@ -30,7 +30,7 @@ public enum State {
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),
   CHANGE_MENU("Изменить меню", Type.ACTION);
-//  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION);
+  //  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION);
 
   private final String displayName;
   private final Type type; // Добавляем поле для типа стейта

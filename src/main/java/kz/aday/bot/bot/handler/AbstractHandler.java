@@ -134,7 +134,7 @@ public abstract class AbstractHandler {
     userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
 
     if (isMenuExist && isMenuReady) {
-//      userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
+      //      userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
       if (isOrderExist) {
         if (isOrderReady) {
           userMenuItems.add(State.DELETE_ORDER.getDisplayName());

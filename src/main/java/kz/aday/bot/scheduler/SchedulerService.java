@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,8 @@ public class SchedulerService {
   private final MenuService menuService = ServiceContainer.getMenuService();
   private final OrderService orderService = ServiceContainer.getOrderService();
   private final TelegramFoodBot telegramFoodBot;
+
+  private final Map<String, Boolean> handledNotifications = new ConcurrentHashMap<>();
 
   private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
@@ -69,6 +73,7 @@ public class SchedulerService {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
         sendMenuIsClosedNotification(menu.getCity());
+        handledNotifications.clear();
       }
     }
   }
@@ -91,8 +96,9 @@ public class SchedulerService {
         for (User user : userService.findAll()) {
           if (orderService.existsById(user.getId())) {
             Order order = orderService.findById(user.getId());
-            if (!order.isOrderReady() && order.getStatus() != Status.DELETED) {
+            if (!order.isOrderReady() && order.getStatus() != Status.DELETED && !handledNotifications.containsKey(user.getId())) {
               sendMessageWithMenuToUser(menu, userService.findById(order.getId()), telegramFoodBot);
+              handledNotifications.put(user.getId(), true);
             }
           }
         }

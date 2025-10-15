@@ -19,28 +19,29 @@ public class FeedBackCommandHandler extends AbstractHandler implements CommandHa
     @Override
     public boolean canHandle(String command) {
         // всегда false потому что удобнее любое сообщение которое написали боту чтобы оно пересылалось мне
-        return false;
+        if (command.trim().equalsIgnoreCase("/feedback")) {
+            return false;
+        }
+        return command.startsWith("/feedback");
     }
 
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         if (update.hasMessage()) {
-            if (update.getMessage().hasText() && update.getMessage().getText().isBlank()) {
-                log.info("Skip empty feedback command");
-                return;
-            }
+            Message message = update.getMessage();
+            log.info("Message received: [{}]", message);
+            ForwardMessage forward = new ForwardMessage();
+            forward.setChatId(mainUserChatId);                 // тебе
+            forward.setFromChatId(message.getChatId().toString()); // от кого
+            forward.setMessageId(message.getMessageId());
 
-            if (update.getMessage().hasText() || update.getMessage().hasAudio() || update.getMessage().hasVideo() || update.getMessage().hasPhoto()) {
-                Message message = update.getMessage();
-
-                ForwardMessage forward = new ForwardMessage();
-                forward.setChatId(mainUserChatId);                 // тебе
-                forward.setFromChatId(message.getChatId().toString()); // от кого
-                forward.setMessageId(message.getMessageId());
-
+            try {
                 log.info("Send feedback to user");
-                sender.execute(forward);
+                sender.executeAsync(forward);
+            } catch (Exception e) {
+                log.error("Error while send feedback to user", e);
             }
+
         }
     }
 }

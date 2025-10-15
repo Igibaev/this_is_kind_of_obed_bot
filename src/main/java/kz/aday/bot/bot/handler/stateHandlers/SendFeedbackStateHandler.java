@@ -2,12 +2,14 @@ package kz.aday.bot.bot.handler.stateHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.configuration.BotConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+@Slf4j
 public class SendFeedbackStateHandler extends AbstractHandler implements StateHandler {
     private final String mainUserChatId;
 
@@ -29,19 +31,22 @@ public class SendFeedbackStateHandler extends AbstractHandler implements StateHa
                 || message.hasAudio() || message.hasDocument() || message.hasVoice()
                 || message.hasAnimation() || message.hasSticker();
 
-        if (!hasContent) return;
+        if (!hasContent) {
+            log.info("No feedback found");
+            return;
+        }
 
         // пересылаем оригинальное сообщение тебе
         ForwardMessage forward = new ForwardMessage();
         forward.setChatId(mainUserChatId);
         forward.setFromChatId(message.getChatId().toString());
         forward.setMessageId(message.getMessageId());
-        sender.execute(forward);
+        sender.executeAsync(forward);
 
         // подтверждение пользователю
         SendMessage confirm = new SendMessage();
         confirm.setChatId(message.getChatId().toString());
         confirm.setText("✅ Спасибо! Сообщение отправлено разработчику.");
-        sender.execute(confirm);
+        sender.executeAsync(confirm);
     }
 }

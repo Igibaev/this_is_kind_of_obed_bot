@@ -3,6 +3,7 @@ package kz.aday.bot.bot.dispatcher;
 
 import java.util.HashSet;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHamndlers.FeedBackCommandHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -39,6 +40,20 @@ public class CommandDispatcher extends AbstractDispatcher<CommandHandler> {
         return; // Выходим после обработки команды
       }
     }
+
+    try {
+      CommandHandler commandHandler = handlers.stream().filter(handler -> handler instanceof FeedBackCommandHandler)
+              .findFirst()
+              .orElse(null);
+      if (commandHandler != null) {
+        log.info("Command [{}] handler: [{}]", text, commandHandler);
+        commandHandler.handle(update, sender);
+        log.info("Command [{}] handler: [{}]", text, commandHandler);
+      }
+    } catch (Exception e) {
+      log.error("Skip feedback command: [{}]", text, e);
+    }
+
     log.warn("Unknown command: [{}]", text);
     throw new RuntimeException(
         String.format(

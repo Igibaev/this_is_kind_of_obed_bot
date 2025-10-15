@@ -2,11 +2,13 @@ package kz.aday.bot.bot.handler.commandHamndlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.configuration.BotConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+@Slf4j
 public class FeedBackCommandHandler extends AbstractHandler implements CommandHandler {
     private final String mainUserChatId;
 
@@ -16,19 +18,29 @@ public class FeedBackCommandHandler extends AbstractHandler implements CommandHa
 
     @Override
     public boolean canHandle(String command) {
-        return command.startsWith("/feedback");
+        // всегда false потому что удобнее любое сообщение которое написали боту чтобы оно пересылалось мне
+        return false;
     }
 
     @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         if (update.hasMessage()) {
-            Message message = update.getMessage();
-            ForwardMessage forward = new ForwardMessage();
-            forward.setChatId(mainUserChatId);                 // тебе
-            forward.setFromChatId(message.getChatId().toString()); // от кого
-            forward.setMessageId(message.getMessageId());
+            if (update.getMessage().hasText() && update.getMessage().getText().isBlank()) {
+                log.info("Skip empty feedback command");
+                return;
+            }
 
-            sender.execute(forward);
+            if (update.getMessage().hasText() || update.getMessage().hasAudio() || update.getMessage().hasVideo() || update.getMessage().hasPhoto()) {
+                Message message = update.getMessage();
+
+                ForwardMessage forward = new ForwardMessage();
+                forward.setChatId(mainUserChatId);                 // тебе
+                forward.setFromChatId(message.getChatId().toString()); // от кого
+                forward.setMessageId(message.getMessageId());
+
+                log.info("Send feedback to user");
+                sender.execute(forward);
+            }
         }
     }
 }

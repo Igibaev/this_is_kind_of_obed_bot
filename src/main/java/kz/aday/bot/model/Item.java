@@ -29,6 +29,6 @@ public class Item {
 
   @Override
   public String toString() {
-    return name;
+    return id + " " + name + " " + category;
   }
 }

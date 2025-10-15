@@ -7,7 +7,6 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.Update;

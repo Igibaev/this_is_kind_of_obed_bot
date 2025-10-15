@@ -3,7 +3,6 @@ package kz.aday.bot.service;
 
 import java.util.concurrent.ConcurrentHashMap;
 import kz.aday.bot.model.User;
-import kz.aday.bot.repository.BaseRepository;
 import kz.aday.bot.repository.UserRepository;
 
 public class UserService extends BaseService<User> {

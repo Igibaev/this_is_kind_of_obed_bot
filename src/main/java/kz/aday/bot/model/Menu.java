@@ -1,8 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,5 +37,9 @@ public class Menu implements Id {
 
   public boolean isDeadlineNear() {
     return LocalDateTime.now().plusMinutes(10).isAfter(deadline);
+  }
+
+  public String getDeadlineAsText() {
+    return deadline.format(DateTimeFormatter.ofPattern("HH:mm"));
   }
 }

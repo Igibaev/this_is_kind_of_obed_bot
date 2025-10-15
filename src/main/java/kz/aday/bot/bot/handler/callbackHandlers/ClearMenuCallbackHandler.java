@@ -37,5 +37,5 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
 
   private static final String PERMISSION_DENIED = "Нет доступа.";
 
-  private static final String MENU_WAS_DELETED = "Меню было удалено.";
+  private static final String MENU_WAS_DELETED = "Меню и все заказы были удалены.";
 }

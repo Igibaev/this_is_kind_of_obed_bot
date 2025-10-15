@@ -17,6 +17,7 @@ public enum State {
   PROFILE("Профиль", Type.ACTION),
   EDIT_USERNAME("Изменить имя и город", Type.ACTION),
   SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
+  WHO_WILL_COME_TO_OFFICE("Посмотреть кто придет в офис", Type.ACTION),
 
   CREATE_ORDER("Сделать заказ", Type.ACTION),
   GET_ORDER("Посмотреть заказ", Type.ACTION),
@@ -30,7 +31,8 @@ public enum State {
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),
   CHANGE_MENU("Изменить меню", Type.ACTION),
-  SEND_FEEDBACK("Отправить фидбэк", Type.INPUT);
+  SEND_FEEDBACK("Отправить фидбэк", Type.INPUT),
+  CHANGE_DEADLINE("Изменить дедлайн меню", Type.INPUT);
   //  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION);
 
   private final String displayName;

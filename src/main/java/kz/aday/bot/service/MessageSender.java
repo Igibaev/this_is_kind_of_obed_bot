@@ -14,6 +14,15 @@ public class MessageSender {
 
   public Message sendMessage(SendMessage sendMessage, AbsSender absSender)
       throws TelegramApiException {
+    if (sendMessage != null) {
+      if (!(sendMessage.getText().contains("/return")
+          || sendMessage.getText().contains("/menu")
+          || sendMessage.getText().contains("/cancel"))) {
+        sendMessage.setText(
+            String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));
+        return absSender.execute(sendMessage);
+      }
+    }
     return absSender.execute(sendMessage);
   }
 

@@ -28,10 +28,10 @@ public class ErrorHandler extends AbstractHandler {
         sender);
 
     sendMessage(
-            userService.findById(BotConfig.getMainUserChatId()),
-            String.format(ERROR_MESSAGE, e.getMessage()),
-            update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
-            sender);
+        userService.findById(BotConfig.getMainUserChatId()),
+        String.format(ERROR_MESSAGE, e.getMessage()),
+        update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
+        sender);
   }
 
   private static final String ERROR_MESSAGE = "Произошла ошибка: %s.";

@@ -17,7 +17,7 @@ public class TelegramFoodBotApplication {
   public static void main(String[] args) {
     try {
       TelegramFoodBot telegramFoodBot =
-              new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
+          new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
       addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
       SchedulerService schedulerService = new SchedulerService(telegramFoodBot);
       schedulerService.start();

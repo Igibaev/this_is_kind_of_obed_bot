@@ -38,7 +38,8 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
                 markup);
             sendMessageWithKeyboard(
                 user,
-                String.format(MENU_READY_MESSAGE, user.getCity().getValue()),
+                String.format(
+                    MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
@@ -48,11 +49,12 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
             KeyboardUtil.addButton(
                 List.of(
                     new UserButton("Опубликовать меню", CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())),
+                    new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString()),
+                    new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString())),
                 markup);
             sendMessageWithKeyboard(
                 user,
-                String.format(MENU_MESSAGE, user.getCity().getValue()),
+                String.format(MENU_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
@@ -70,8 +72,10 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
       "Меню не создано, сначала создайте меню. Чтобы вернуться нажмите \return";
 
   private static final String MENU_READY_MESSAGE =
-      "Вот меню для города *%s*. Оно уже опубликовано. \n" + "Чтобы отменить нажми /cancel";
+      "Вот меню для города *%s*. Оно уже опубликовано. \n"
+          + "Дедлайн до: *%s* \n"
+          + "Чтобы отменить нажми /cancel";
 
   private static final String MENU_MESSAGE =
-      "Вот меню для города *%s*.\n" + "Чтобы отменить нажми /cancel";
+      "Вот меню для города *%s*.\n" + "Дедлайн до: *%s* \n" + "Чтобы отменить нажми /cancel";
 }

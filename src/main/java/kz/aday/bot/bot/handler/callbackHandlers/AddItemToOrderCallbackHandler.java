@@ -35,6 +35,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
         order = orderService.findById(user.getId());
       } else {
         order = new Order();
+        order.setCity(user.getCity());
         order.setUsername(user.getPreferedName());
         order.setStatus(Status.PENDING);
         order.setChatId(user.getChatId().toString());
@@ -54,7 +55,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
         KeyboardUtil.addButton(
             List.of(
                 new UserButton("Потвердить", CallbackState.SUBMIT_ORDER.toString()),
-                new UserButton("Отменить", CallbackState.CANCEL.toString())),
+                new UserButton("Отменить", CallbackState.DELETE_ORDER.toString())),
             keyboard);
         sendMessageWithKeyboard(
             user, CREATING_ORDER_MESSAGE, keyboard, getMessageId(callback), sender);

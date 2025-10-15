@@ -68,7 +68,10 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
         } else {
           sendMessageWithKeyboard(
               user,
-              String.format(MENU_TODAY , user.getCity().getValue(), menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
+              String.format(
+                  MENU_TODAY,
+                  user.getCity().getValue(),
+                  menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
               getMenuKeyboard(
                   menu.getItemList(),
                   List.of(new UserButton("Отправить", CallbackState.SUBMIT_ORDER.name()))),
@@ -116,9 +119,9 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
   private static final String CURRENT_ORDER = "Твой заказ.";
 
   private static final String MENU_TODAY =
-      "Город: *%s*. Вот что сегодня в меню! \n" +
-      "Дедлайн до: *%s* \n" +
-      "Чтобы отменить заказ нажми /cancel";
+      "Город: *%s*. Вот что сегодня в меню! \n"
+          + "Дедлайн до: *%s* \n"
+          + "Чтобы отменить заказ нажми /cancel";
 
   private static final String START_MESSAGE_INPUT_NAME =
       "Добро пожаловать! \n"

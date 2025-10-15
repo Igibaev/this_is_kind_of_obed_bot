@@ -125,7 +125,10 @@ public abstract class AbstractHandler {
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {
     boolean isMenuExist = isMenuExist(user.getCity());
-    Status menuStatus = isMenuExist(user.getCity()) ? menuService.findById(user.getCity().toString()).getStatus() : null;
+    Status menuStatus =
+        isMenuExist(user.getCity())
+            ? menuService.findById(user.getCity().toString()).getStatus()
+            : null;
     boolean isMenuReady = isMenuReady(user.getCity());
     boolean isOrderExist = isOrderExist(user);
     boolean isOrderReady = isOrderReady(user);
@@ -133,6 +136,7 @@ public abstract class AbstractHandler {
     List<String> userMenuItems = new ArrayList<>();
     userMenuItems.add(State.PROFILE.getDisplayName());
     userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
+    userMenuItems.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
 
     if (isMenuExist && isMenuReady) {
       //      userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
@@ -148,6 +152,7 @@ public abstract class AbstractHandler {
         }
       } else {
         userMenuItems.add(State.CREATE_ORDER.getDisplayName());
+        userMenuItems.add(State.RANDOM_ORDER.getDisplayName());
       }
     } else {
       if (user.getRole() != ADMIN) {

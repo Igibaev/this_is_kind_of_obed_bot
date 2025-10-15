@@ -23,7 +23,7 @@ public class Report {
       throw new TelegramMessageException("");
     }
     StringBuilder report = new StringBuilder();
-    report.append(city).append("\n");
+    report.append(String.format("*%s*", city.getValue())).append("\n");
     report.append("\n");
     orderList.forEach(
         order -> {

@@ -51,7 +51,10 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                   .map(User::getId)
                   .collect(Collectors.toSet());
           List<Order> orders =
-              orderService.findAll().stream().filter(o -> users.contains(o.getChatId())).toList();
+              orderService.findAll().stream()
+                  .filter(o -> o.getCity() == user.getCity())
+                  .filter(o -> users.contains(o.getChatId()))
+                  .toList();
 
           if (orders.isEmpty()) {
             menuService.save(newMenu);

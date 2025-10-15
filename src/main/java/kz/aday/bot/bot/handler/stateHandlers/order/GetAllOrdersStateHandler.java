@@ -28,6 +28,7 @@ public class GetAllOrdersStateHandler extends AbstractHandler implements StateHa
       } else {
         List<Order> orders =
             orderService.findAll().stream()
+                .filter(o -> o.getCity() == user.getCity())
                 .filter(o -> o.getStatus() == Status.READY)
                 .collect(Collectors.toList());
 

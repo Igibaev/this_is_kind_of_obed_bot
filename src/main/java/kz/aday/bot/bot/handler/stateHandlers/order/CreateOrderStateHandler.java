@@ -30,6 +30,7 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
           sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
         }
         Order order = new Order();
+        order.setCity(user.getCity());
         order.setUsername(user.getPreferedName());
         order.setChatId(user.getChatId().toString());
         order.setStatus(Status.PENDING);
@@ -40,6 +41,8 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             getMessageId(update),
             sender);
+      } else {
+        sendMessage(user, MENU_IS_NOT_READY_TODAY, getMessageId(update), sender);
       }
     }
   }
@@ -47,4 +50,6 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
   private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";
 
   private static final String CHOOSE_ITEM_MESSAGE = "Выберите что хотите заказать:";
+
+  private static final String MENU_IS_NOT_READY_TODAY = "Меню на сегодня еще не готово. /return";
 }

@@ -49,6 +49,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
         } else {
           user.setState(State.RANDOM_ORDER);
           Order order = new Order();
+          order.setCity(user.getCity());
           order.setUsername(user.getPreferedName());
           order.setChatId(user.getChatId().toString());
           order.setStatus(Status.PENDING);
@@ -65,7 +66,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
   private Set<Item> randomOrder(List<Item> itemList) {
     Set<Item> items = new HashSet<>();
     for (int i = 0; i < 3; i++) {
-      int randomId = Randomizer.getRandom().nextInt() * itemList.size();
+      int randomId = Randomizer.getRandom().nextInt(itemList.size());
       itemList.stream()
           .filter(item -> item.getId().equals(randomId))
           .findFirst()

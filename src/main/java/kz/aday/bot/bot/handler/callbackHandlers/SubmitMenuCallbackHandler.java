@@ -1,15 +1,15 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.format.DateTimeFormatter;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-
-import java.time.format.DateTimeFormatter;
 
 public class SubmitMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
 
@@ -22,17 +22,31 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
         return;
       }
       Menu menu = menuService.findById(user.getCity().toString());
+      if (menu.isDeadlinePassed()) {
+        sendMessage(
+            user,
+            String.format(
+                MENU_IS_ALREADY_EXPIRED, menu.getCity().getValue(), menu.getDeadlineAsText()),
+            user.getLastMessageId(),
+            sender);
+        user.setState(State.CHANGE_DEADLINE);
+        userService.save(user);
+        return;
+      }
       menu.setStatus(Status.READY);
       menuService.save(menu);
       sendMessage(user, MENU_IS_PUBLISHED, getMessageId(callback), sender);
-      for (User userToNotificate: userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
+      for (User userToNotificate :
+          userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
         sendMessageWithKeyboard(
-                userToNotificate,
-                String.format(NEW_MENU_IS_PUBLISHED, menu.getCity().getValue(), menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
-                KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
-                userToNotificate.getLastMessageId(),
-                sender
-        );
+            userToNotificate,
+            String.format(
+                NEW_MENU_IS_PUBLISHED,
+                menu.getCity().getValue(),
+                menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
+            KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
+            userToNotificate.getLastMessageId(),
+            sender);
       }
     }
   }
@@ -50,9 +64,9 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
 
   private static final String PERMISSION_DENIED = "Нет доступа.";
 
-  private static final String NEW_MENU_IS_PUBLISHED =
-          "Новое меню доступно для заказа.\n" +
-          "Город: *%s* \n" +
-          "Дедлайн до: *%s* ";
+  private static final String MENU_IS_ALREADY_EXPIRED =
+      "У меню: *%s* \nдедлайн уже прошел *%s*.\n" + "Введите время дедлайна в формате HH:MM";
 
+  private static final String NEW_MENU_IS_PUBLISHED =
+      "Новое меню доступно для заказа.\n" + "Город: *%s* \n" + "Дедлайн до: *%s* ";
 }

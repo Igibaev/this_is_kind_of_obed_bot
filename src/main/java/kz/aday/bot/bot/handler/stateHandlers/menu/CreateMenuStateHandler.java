@@ -34,11 +34,18 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
             InlineKeyboardMarkup markup =
                 KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
             KeyboardUtil.addButton(
-                List.of(new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())),
+                List.of(
+                    new UserButton(
+                        CallbackState.CHANGE_MENU.getDisplayName(),
+                        CallbackState.CHANGE_MENU.toString()),
+                    new UserButton(
+                        CallbackState.CLEAR_MENU.getDisplayName(),
+                        CallbackState.CLEAR_MENU.toString())),
                 markup);
             sendMessageWithKeyboard(
                 user,
-                String.format(MENU_READY_MESSAGE, user.getCity().getValue()),
+                String.format(
+                    MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
@@ -47,12 +54,20 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
                 KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
             KeyboardUtil.addButton(
                 List.of(
-                    new UserButton("Опубликовать меню", CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())),
+                    new UserButton(
+                        CallbackState.SUBMIT_MENU.getDisplayName(),
+                        CallbackState.SUBMIT_MENU.toString()),
+                    new UserButton(
+                        CallbackState.CHANGE_MENU.getDisplayName(),
+                        CallbackState.CHANGE_MENU.toString()),
+                    new UserButton(
+                        CallbackState.CLEAR_MENU.getDisplayName(),
+                        CallbackState.CLEAR_MENU.toString())),
                 markup);
             sendMessageWithKeyboard(
                 user,
-                String.format(MENU_PENDING_MESSAGE, user.getCity().getValue()),
+                String.format(
+                    MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
@@ -68,10 +83,12 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
   private static final String PERMISSION_DENIED = "Нет доступа к созданию меню";
 
   private static final String MENU_READY_MESSAGE =
-      "Вот меню для города *%s*. Оно уже опубликовано. \n" + "Чтобы отменить нажми /cancel";
+      "Вот меню для города *%s*.  Дедлайн до *%s*. \n Оно уже опубликовано. \n"
+          + "Чтобы отменить нажми /cancel";
 
   private static final String MENU_PENDING_MESSAGE =
-      "Вот меню для города *%s*. Но оно не опубликовано.\n" + "Чтобы отменить нажми /cancel";
+      "Вот меню для города *%s*. Дедлайн до *%s*. \n Но оно не опубликовано.\n"
+          + "Чтобы отменить нажми /cancel";
 
   private static final String MENU_TEMPLATE =
       "Шаблон меню:\n"

@@ -14,13 +14,14 @@ import org.apache.commons.lang3.StringUtils;
 public class Order implements Id {
   private String chatId;
   private String username;
+  private City city;
   private Status status;
   private Set<Item> orderItemList = new HashSet<>(5);
   private Set<Category> categoryItemList = new HashSet<>(5);
 
   @Override
   public String toString() {
-    return username + ": " + StringUtils.join(orderItemList, ",");
+    return String.format("*%s*: [%s]", username, StringUtils.join(orderItemList, ","));
   }
 
   @Override

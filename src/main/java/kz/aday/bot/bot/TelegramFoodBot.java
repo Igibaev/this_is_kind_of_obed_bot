@@ -7,6 +7,8 @@ import kz.aday.bot.bot.dispatcher.StateDispatcher;
 import kz.aday.bot.bot.handler.ErrorHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHamndlers.FeedBackCommandHandler;
+import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -14,12 +16,15 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.nio.file.Path;
+
 @Slf4j
 public class TelegramFoodBot extends TelegramLongPollingBot {
   private final CallbackDispatcher callbackDispatcher;
   private final CommandDispatcher commandDispatcher;
   private final StateDispatcher stateDispatcher;
   private final ErrorHandler errorHandler;
+  private final SendFeedbackStateHandler sendFeedbackStateHandler;
   private final String chatBotName;
 
   public TelegramFoodBot(String chatBotName, String token) {
@@ -29,6 +34,7 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
     this.commandDispatcher = new CommandDispatcher();
     this.stateDispatcher = new StateDispatcher();
     this.errorHandler = new ErrorHandler();
+    this.sendFeedbackStateHandler = new SendFeedbackStateHandler();
   }
 
   @Override
@@ -43,6 +49,8 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
           } else {
             stateDispatcher.dispatch(update, this);
           }
+        } else {
+          sendFeedbackStateHandler.handle(update, this);
         }
       } else if (update.hasCallbackQuery()) {
         callbackDispatcher.dispatch(update.getCallbackQuery(), this);

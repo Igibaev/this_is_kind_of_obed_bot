@@ -10,19 +10,17 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 @Slf4j
-public class SendFeedbackStateHandler extends AbstractHandler implements StateHandler {
+public class SendFeedbackStateHandler {
     private final String mainUserChatId;
 
     public SendFeedbackStateHandler() {
         this.mainUserChatId = BotConfig.getMainUserChatId();
     }
 
-    @Override
     public boolean canHandle(String state) {
         return State.SEND_FEEDBACK.getDisplayName().equals(state);
     }
 
-    @Override
     public void handle(Update update, AbsSender sender) throws Exception {
         if (!update.hasMessage()) return;
         Message message = update.getMessage();

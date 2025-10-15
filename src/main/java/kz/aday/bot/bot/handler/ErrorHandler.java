@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler;
 
+import kz.aday.bot.configuration.BotConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -25,6 +26,12 @@ public class ErrorHandler extends AbstractHandler {
         String.format(ERROR_MESSAGE, e.getMessage()),
         update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
+
+    sendMessage(
+            userService.findById(BotConfig.getMainUserChatId()),
+            String.format(ERROR_MESSAGE, e.getMessage()),
+            update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
+            sender);
   }
 
   private static final String ERROR_MESSAGE = "Произошла ошибка: %s.";

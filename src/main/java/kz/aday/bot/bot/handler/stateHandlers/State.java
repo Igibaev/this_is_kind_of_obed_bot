@@ -29,7 +29,8 @@ public enum State {
   PUBLISH_MENU("Опубликовать меню", Type.ACTION),
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),
-  CHANGE_MENU("Изменить меню", Type.ACTION);
+  CHANGE_MENU("Изменить меню", Type.ACTION),
+  SEND_FEEDBACK("Отправить фидбэк", Type.INPUT);
   //  TEMP_ORDER_FOR_USER("Заказать для сотрудника", Type.ACTION);
 
   private final String displayName;

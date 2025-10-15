@@ -125,6 +125,7 @@ public abstract class AbstractHandler {
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {
     boolean isMenuExist = isMenuExist(user.getCity());
+    Status menuStatus = isMenuExist(user.getCity()) ? menuService.findById(user.getCity().toString()).getStatus() : null;
     boolean isMenuReady = isMenuReady(user.getCity());
     boolean isOrderExist = isOrderExist(user);
     boolean isOrderReady = isOrderReady(user);
@@ -148,6 +149,10 @@ public abstract class AbstractHandler {
       } else {
         userMenuItems.add(State.CREATE_ORDER.getDisplayName());
       }
+    } else {
+      if (user.getRole() != ADMIN) {
+        userMenuItems.add(State.CREATE_ORDER.getDisplayName());
+      }
     }
 
     if (user.getRole() == ADMIN) {
@@ -158,8 +163,12 @@ public abstract class AbstractHandler {
           userMenuItems.add(State.CLEAR_MENU.getDisplayName());
           userMenuItems.add(State.CHANGE_MENU.getDisplayName());
         } else {
-          userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
-          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
+          if (menuStatus != null && menuStatus.equals(Status.PENDING)) {
+            userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
+            userMenuItems.add(State.CHANGE_MENU.getDisplayName());
+          } else {
+            userMenuItems.add(State.CREATE_MENU.getDisplayName());
+          }
         }
       } else {
         userMenuItems.add(State.CREATE_MENU.getDisplayName());

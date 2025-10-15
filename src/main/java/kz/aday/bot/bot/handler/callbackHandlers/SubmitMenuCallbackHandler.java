@@ -9,6 +9,8 @@ import kz.aday.bot.util.KeyboardUtil;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+import java.time.format.DateTimeFormatter;
+
 public class SubmitMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
 
   @Override
@@ -26,7 +28,7 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
       for (User userToNotificate: userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
         sendMessageWithKeyboard(
                 userToNotificate,
-                NEW_MENU_IS_PUBLISHED,
+                String.format(NEW_MENU_IS_PUBLISHED, menu.getCity().getValue(), menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
                 KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
                 userToNotificate.getLastMessageId(),
                 sender
@@ -48,6 +50,9 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
 
   private static final String PERMISSION_DENIED = "Нет доступа.";
 
-  private static final String NEW_MENU_IS_PUBLISHED = "Новое меню доступно для заказа.";
+  private static final String NEW_MENU_IS_PUBLISHED =
+          "Новое меню доступно для заказа.\n" +
+          "Город: *%s* \n" +
+          "Дедлайн до: *%s* ";
 
 }

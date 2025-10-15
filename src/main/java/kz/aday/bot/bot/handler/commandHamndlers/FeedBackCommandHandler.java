@@ -1,6 +1,7 @@
 package kz.aday.bot.bot.handler.commandHamndlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.BotConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
@@ -9,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 @Slf4j
-public class FeedBackCommandHandler extends AbstractHandler implements CommandHandler {
+public class FeedBackCommandHandler extends AbstractHandler implements StateHandler {
     private final String mainUserChatId;
 
     public FeedBackCommandHandler() {
@@ -18,7 +19,6 @@ public class FeedBackCommandHandler extends AbstractHandler implements CommandHa
 
     @Override
     public boolean canHandle(String command) {
-        // всегда false потому что удобнее любое сообщение которое написали боту чтобы оно пересылалось мне
         return false;
     }
 

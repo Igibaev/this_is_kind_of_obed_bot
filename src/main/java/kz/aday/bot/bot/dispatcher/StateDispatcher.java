@@ -2,6 +2,9 @@
 package kz.aday.bot.bot.dispatcher;
 
 import java.util.HashSet;
+
+import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHamndlers.FeedBackCommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
@@ -62,6 +65,21 @@ public class StateDispatcher extends AbstractDispatcher<StateHandler> {
         return;
       }
     }
+
+    try {
+      StateHandler stateHandler = handlers.stream().filter(handler -> handler instanceof FeedBackCommandHandler)
+              .findFirst()
+              .orElse(null);
+      if (stateHandler != null) {
+        log.info("State [{}] handler: [{}]", state, stateHandler);
+        stateHandler.handle(update, sender);
+        log.info("State [{}] handler: [{}]", state, stateHandler);
+        return;
+      }
+    } catch (Exception e) {
+      log.error("Skip feedback state handler: [{}]", state, e);
+    }
+
     log.warn("Unknown state: [{}]", state);
     throw new RuntimeException(
         String.format("Неизвестная команда [%s]. Вернитесь в меню /return", state));

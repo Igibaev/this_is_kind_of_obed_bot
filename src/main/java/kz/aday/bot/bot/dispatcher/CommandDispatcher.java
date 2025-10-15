@@ -41,19 +41,6 @@ public class CommandDispatcher extends AbstractDispatcher<CommandHandler> {
       }
     }
 
-    try {
-      CommandHandler commandHandler = handlers.stream().filter(handler -> handler instanceof FeedBackCommandHandler)
-              .findFirst()
-              .orElse(null);
-      if (commandHandler != null) {
-        log.info("Command [{}] handler: [{}]", text, commandHandler);
-        commandHandler.handle(update, sender);
-        log.info("Command [{}] handler: [{}]", text, commandHandler);
-      }
-    } catch (Exception e) {
-      log.error("Skip feedback command: [{}]", text, e);
-    }
-
     log.warn("Unknown command: [{}]", text);
     throw new RuntimeException(
         String.format(

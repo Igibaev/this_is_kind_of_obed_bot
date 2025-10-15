@@ -116,8 +116,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
   private static final String CURRENT_ORDER = "Твой заказ.";
 
   private static final String MENU_TODAY =
-      "Город: %s. Вот что сегодня в меню! \n" +
-      "%s \n" +
+      "Город: *%s*. Вот что сегодня в меню! \n" +
+      "Дедлайн до: *%s* \n" +
       "Чтобы отменить заказ нажми /cancel";
 
   private static final String START_MESSAGE_INPUT_NAME =

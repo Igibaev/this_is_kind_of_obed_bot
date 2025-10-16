@@ -17,6 +17,7 @@ public class MessageSender {
     if (sendMessage != null) {
       if (!(sendMessage.getText().contains("/return")
           || sendMessage.getText().contains("/menu")
+          || sendMessage.getText().contains("/start")
           || sendMessage.getText().contains("/cancel"))) {
         sendMessage.setText(
             String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));

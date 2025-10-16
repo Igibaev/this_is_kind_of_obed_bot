@@ -20,6 +20,16 @@ public class ErrorHandler extends AbstractHandler {
         chatId = getChatId(update.getCallbackQuery()).toString();
       }
     }
+    if (!isUserExistAndReady(update)) {
+      sendMessage(
+          userService.findById(chatId),
+          GO_TO_START_COMMAND,
+          update.hasCallbackQuery()
+              ? getMessageId(update.getCallbackQuery())
+              : getMessageId(update),
+          sender);
+      return;
+    }
 
     sendMessage(
         userService.findById(chatId),
@@ -35,4 +45,6 @@ public class ErrorHandler extends AbstractHandler {
   }
 
   private static final String ERROR_MESSAGE = "Произошла ошибка: %s.";
+  private static final String GO_TO_START_COMMAND =
+      "Чтобы начать взаимодейcтвовать с ботом, завершите команду /start.";
 }

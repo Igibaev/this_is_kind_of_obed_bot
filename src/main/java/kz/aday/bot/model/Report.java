@@ -4,7 +4,6 @@ package kz.aday.bot.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import kz.aday.bot.exception.TelegramMessageException;
 import lombok.Data;
 
 @Data
@@ -18,9 +17,9 @@ public class Report {
     this.orderList = orderList;
   }
 
-  public String printOrderReport() throws TelegramMessageException {
+  public String printOrderReport() {
     if (orderList.isEmpty()) {
-      throw new TelegramMessageException("");
+      return "";
     }
     StringBuilder report = new StringBuilder();
     report.append(String.format("*%s*", city.getValue())).append("\n");

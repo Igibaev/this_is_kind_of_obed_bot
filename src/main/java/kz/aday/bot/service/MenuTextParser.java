@@ -29,7 +29,9 @@ public class MenuTextParser {
     if (deadline.isBefore(LocalTime.now())) {
       log.error("Deadline is passed [{}]", deadline);
       throw new TelegramMessageException(
-          "Дедлайн не может быть в прошлом, исправьте сообщение и отправьте заново." + deadline);
+          "Дедлайн "
+              + deadline
+              + " не может быть в прошлом, исправьте сообщение и отправьте заново.");
     }
     return LocalDateTime.of(LocalDate.now(), deadline);
   }
@@ -63,6 +65,11 @@ public class MenuTextParser {
           itemList.add(item);
         }
       }
+    }
+    if (itemList.isEmpty()) {
+      log.error("Menu is missing");
+      throw new TelegramMessageException(
+          "Меню пустое. Отправьте исправленный текст согласно шаблону.");
     }
     menu.setItemList(itemList);
     menu.setStatus(Status.PENDING);

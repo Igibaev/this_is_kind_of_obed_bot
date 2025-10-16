@@ -1,14 +1,12 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers.menu;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Menu;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.service.MenuTextParser;
@@ -30,10 +28,13 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
       } else {
-        LocalDateTime deadline = MenuTextParser.parseDeadline(update.getMessage().getText());
-        Menu menu = MenuTextParser.parseMenu(update.getMessage().getText());
-        menu.setDeadline(deadline);
-        menu.setStatus(Status.PENDING);
+        Menu menu = null;
+        try {
+          menu = MenuTextParser.parseMenu(update.getMessage().getText());
+        } catch (Exception e) {
+          sendMessage(user, e.getMessage(), getMessageId(update), sender);
+          return;
+        }
         menu.setCity(user.getCity());
         menuService.save(menu);
 

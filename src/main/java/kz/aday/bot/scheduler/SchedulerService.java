@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,8 +47,8 @@ public class SchedulerService {
   public void start() {
     planCleanTask();
     executorService.scheduleAtFixedRate(
-        this::sendDeadlineIsNearNotification, 0, 5, TimeUnit.SECONDS);
-    executorService.scheduleAtFixedRate(this::closeMenu, 0, 5, TimeUnit.SECONDS);
+        this::sendDeadlineIsNearNotification, 0, 1, TimeUnit.SECONDS);
+    executorService.scheduleAtFixedRate(this::closeMenu, 0, 1, TimeUnit.SECONDS);
   }
 
   private void planCleanTask() {
@@ -95,16 +96,21 @@ public class SchedulerService {
   private void sendDeadlineIsNearNotification() {
     log.debug("send deadline isNearNotification");
     for (Menu menu : menuService.findAll()) {
-      if (menu.isDeadlineNear() && !menu.isDeadlinePassed()) {
+      if (menu.getStatus() == Status.READY && menu.isDeadlineNear() && !menu.isDeadlinePassed()) {
         for (User user : userService.findAll()) {
+          if (user.getCity() != menu.getCity()) continue;
+          if (handledNotifications.containsKey(user.getId())) {
+            continue;
+          }
           if (orderService.existsById(user.getId())) {
             Order order = orderService.findById(user.getId());
-            if (!order.isOrderReady()
-                && order.getStatus() != Status.DELETED
-                && !handledNotifications.containsKey(user.getId())) {
-              sendMessageWithMenuToUser(menu, userService.findById(order.getId()), telegramFoodBot);
+            if (order.getStatus() != Status.PENDING) {
+              sendMessageWithMenuToUser(menu, order.getOrderItemList(), user, telegramFoodBot);
               handledNotifications.put(user.getId(), true);
             }
+          } else {
+            sendMessageWithMenuToUser(menu, user, telegramFoodBot);
+            handledNotifications.put(user.getId(), true);
           }
         }
       }
@@ -136,6 +142,28 @@ public class SchedulerService {
     message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER);
     message.setReplyMarkup(
         KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER));
+    message.enableMarkdown(true);
+    try {
+      Message sendedMessage = messageSender.sendMessage(message, absSender);
+      messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);
+
+      user.setLastMessageId(sendedMessage.getMessageId());
+      userService.save(user);
+    } catch (TelegramApiException e) {
+      log.error("Skip sending deadline notification: {}\n {}", e.getMessage(), e);
+    }
+  }
+
+  private void sendMessageWithMenuToUser(
+      Menu menu, Set<Item> orderItems, User user, AbsSender absSender) {
+    List<Integer> messagesToDelete = new ArrayList<>();
+    if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
+    SendMessage message = new SendMessage();
+    message.setChatId(user.getChatId());
+    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER);
+    message.setReplyMarkup(
+        KeyboardUtil.createInlineKeyboard(
+            menu.getItemList(), orderItems, CallbackState.ADD_ITEM_TO_ORDER));
     message.enableMarkdown(true);
     try {
       Message sendedMessage = messageSender.sendMessage(message, absSender);

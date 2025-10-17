@@ -32,7 +32,7 @@ public class BotConfig {
   }
 
   public static String getBotStorePath() {
-    return "/Users/aigibaev/Desktop/Projects/this_is_kind_of_obed_bot/data";
+    return "/app/data";
   }
 
   public static String getMainUserChatId() {

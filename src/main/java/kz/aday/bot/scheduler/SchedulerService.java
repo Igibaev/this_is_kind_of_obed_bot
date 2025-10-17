@@ -3,6 +3,8 @@ package kz.aday.bot.scheduler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,13 +76,29 @@ public class SchedulerService {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
         sendMenuIsClosedNotification(menu.getCity());
-        sendReportToAdmins(menu);
+        sendReportToAdmins(menu.getCity());
         handledNotifications.clear();
       }
     }
   }
 
-  private void sendReportToAdmins(Menu menu) {}
+    private void sendReportToAdmins(City city) {
+    for (User user : userService.findAll()) {
+      if (user.getCity() == city && user.getRole() == User.Role.ADMIN) {
+        List<Order> orders =
+            orderService.findAll().stream()
+                .filter(o -> o.getCity() == user.getCity())
+                .filter(o -> o.getStatus() == Status.READY)
+                .collect(Collectors.toList());
+        if (orders.isEmpty()) {
+          sendMessageToUser(EMPTY_ORDERS, user,  telegramFoodBot);
+        } else {
+          Report report = new Report(user.getCity(), orders);
+          sendMessageToUser(REPORT_MESSAGE + report.printOrderReport(), user, telegramFoodBot);
+        }
+      }
+    }
+  }
 
   /** Отправить уведомления о том что дедлайн прошел меню закрыто */
   private void sendMenuIsClosedNotification(City city) {
@@ -123,6 +141,7 @@ public class SchedulerService {
     SendMessage message = new SendMessage();
     message.setChatId(user.getChatId());
     message.setText(messageText);
+	message.enableMarkdown(true);
     try {
       Message sendedMessage = messageSender.sendMessage(message, absSender);
       messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);
@@ -133,6 +152,10 @@ public class SchedulerService {
       log.error("Skip sending deadline notification: {}\n {}", e.getMessage(), e);
     }
   }
+
+  private static final String EMPTY_ORDERS = "Список заказов пуст.";
+
+  private static final String REPORT_MESSAGE = "Список заказов.\n";
 
   private void sendMessageWithMenuToUser(Menu menu, User user, AbsSender absSender) {
     List<Integer> messagesToDelete = new ArrayList<>();

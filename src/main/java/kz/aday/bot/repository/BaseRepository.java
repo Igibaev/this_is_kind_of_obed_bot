@@ -174,7 +174,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
                 String name = folder.getFileName().toString();
                 try {
                   LocalDate folderDate = LocalDate.parse(name, DATE_FOLDER_FORMATTER);
-                  if (folderDate.isBefore(today.minusDays(7))) {
+                  if (folderDate.isBefore(today.minusDays(30))) {
                     deleteRecursively(folder);
                     log.info("Deleted old folder [{}]", folder);
                   }

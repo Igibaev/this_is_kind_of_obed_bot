@@ -50,6 +50,7 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
                 getMessageId(update),
                 sender);
           } else {
+            if (menu.getStatus() == Status.PENDING) {
             InlineKeyboardMarkup markup =
                 KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
             KeyboardUtil.addButton(
@@ -71,6 +72,10 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
                 markup,
                 getMessageId(update),
                 sender);
+	     } else {
+	               user.setState(State.SET_MENU);
+          sendMessage(user, MENU_TEMPLATE, getMessageId(update), sender);
+             }
           }
         } else {
           user.setState(State.SET_MENU);

@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
 public interface Repository<T> {
@@ -8,7 +9,7 @@ public interface Repository<T> {
 
   boolean existById(String id);
 
-  Collection<T> getAll();
+  Collection<T> getAll(LocalDate date);
 
   void save(T t);
 

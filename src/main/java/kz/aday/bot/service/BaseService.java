@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.service;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
 import kz.aday.bot.model.Id;
@@ -52,7 +53,7 @@ public abstract class BaseService<T extends Id> {
 
   public Collection<T> findAll() {
     log.debug("Retrieving all entities.");
-    Collection<T> entities = repository.getAll();
+    Collection<T> entities = repository.getAll(LocalDate.now());
     log.debug("Retrieved {} entities.", entities.size());
     return entities;
   }

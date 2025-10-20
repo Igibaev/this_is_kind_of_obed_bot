@@ -19,16 +19,23 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
   public void handle(Update update, AbsSender sender) throws Exception {
     if (isUserExistAndReady(update)) {
       User user = userService.findById(getChatId(update).toString());
-      if (isMenuExist(user.getCity()) && isMenuReady(user.getCity()) && isOrderExist(user)) {
+      if (isOrderExist(user)) {
         Order order = orderService.findById(user.getId());
         sendMessage(
-            user,
-            String.format(YOUR_ORDER_IS, order.getOrderItemList()),
-            getMessageId(update),
-            sender);
+                user,
+                String.format(YOUR_ORDER_IS, order.getOrderItemList()),
+                getMessageId(update),
+                sender);
+      } else {
+        sendMessage(
+                user,
+                ORDER_IS_EMPTY,
+                getMessageId(update),
+                sender);
       }
     }
   }
 
   private static final String YOUR_ORDER_IS = "Твой заказ %s.";
+  private static final String ORDER_IS_EMPTY = "Твой заказ пуст.";
 }

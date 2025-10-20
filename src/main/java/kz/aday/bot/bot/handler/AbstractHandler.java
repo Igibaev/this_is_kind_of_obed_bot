@@ -137,47 +137,46 @@ public abstract class AbstractHandler {
     userMenuItems.add(State.PROFILE.getDisplayName());
     userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
     userMenuItems.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
-
-    if (isMenuExist && isMenuReady) {
-      //      userMenuItems.add(State.TEMP_ORDER_FOR_USER.getDisplayName());
-      if (isOrderExist) {
-        if (isOrderReady) {
-          userMenuItems.add(State.DELETE_ORDER.getDisplayName());
-          userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
-          userMenuItems.add(State.GET_ORDER.getDisplayName());
-        } else {
-          userMenuItems.add(State.SUBMIT_ORDER.getDisplayName());
-          userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
-          userMenuItems.add(State.GET_ORDER.getDisplayName());
-        }
-      } else {
-        userMenuItems.add(State.CREATE_ORDER.getDisplayName());
-        userMenuItems.add(State.RANDOM_ORDER.getDisplayName());
-      }
-    } else {
-      if (user.getRole() != ADMIN) {
-        userMenuItems.add(State.CREATE_ORDER.getDisplayName());
-      }
-    }
-
     if (user.getRole() == ADMIN) {
       userMenuItems.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
-      userMenuItems.add(State.GET_ALL_ORDERS.getDisplayName());
-      if (isMenuExist) {
-        if (isMenuReady) {
+    }
+
+
+    if (isMenuExist) {
+      if (menuStatus == Status.READY) {
+        if (user.getRole() == ADMIN) {
           userMenuItems.add(State.CLEAR_MENU.getDisplayName());
           userMenuItems.add(State.CHANGE_MENU.getDisplayName());
-        } else {
-          if (menuStatus != null && menuStatus.equals(Status.PENDING)) {
-            userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
-            userMenuItems.add(State.CHANGE_MENU.getDisplayName());
-          } else {
-            userMenuItems.add(State.CREATE_MENU.getDisplayName());
-          }
         }
-      } else {
-        userMenuItems.add(State.CREATE_MENU.getDisplayName());
+        if (isOrderExist) {
+          if (isOrderReady) {
+            userMenuItems.add(State.DELETE_ORDER.getDisplayName());
+            userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
+            userMenuItems.add(State.GET_ORDER.getDisplayName());
+          } else {
+            userMenuItems.add(State.SUBMIT_ORDER.getDisplayName());
+            userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
+            userMenuItems.add(State.GET_ORDER.getDisplayName());
+          }
+        } else {
+          userMenuItems.add(State.CREATE_ORDER.getDisplayName());
+          userMenuItems.add(State.RANDOM_ORDER.getDisplayName());
+        }
+      } else if (menuStatus == Status.DEADLINE) {
+          userMenuItems.add(State.GET_ORDER.getDisplayName());
+          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
+          if (user.getRole() == ADMIN) {
+            userMenuItems.add(State.GET_TODAY_ORDERS.getDisplayName());
+          }
+      } else if (menuStatus == Status.PENDING) {
+        if (user.getRole() == ADMIN) {
+          userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
+          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
+        }
       }
+    } else {
+      userMenuItems.add(State.CREATE_ORDER.getDisplayName());
+      userMenuItems.add(State.CREATE_MENU.getDisplayName());
     }
     return KeyboardUtil.createReplyKeyboard(userMenuItems);
   }

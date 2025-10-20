@@ -26,7 +26,7 @@ public enum State {
   RANDOM_ORDER("Рандомный заказ", Type.ACTION),
   SUBMIT_ORDER("Потвердить заказ", Type.ACTION),
 
-  GET_ALL_ORDERS("Выгрузить заказы", Type.ACTION),
+  GET_TODAY_ORDERS("Выгрузить заказы", Type.ACTION),
   PUBLISH_MENU("Опубликовать меню", Type.ACTION),
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),

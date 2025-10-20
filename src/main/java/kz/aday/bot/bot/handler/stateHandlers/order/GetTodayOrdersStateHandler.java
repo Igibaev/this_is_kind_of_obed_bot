@@ -13,10 +13,10 @@ import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class GetAllOrdersStateHandler extends AbstractHandler implements StateHandler {
+public class GetTodayOrdersStateHandler extends AbstractHandler implements StateHandler {
   @Override
   public boolean canHandle(String state) {
-    return State.GET_ALL_ORDERS.getDisplayName().equals(state);
+    return State.GET_TODAY_ORDERS.getDisplayName().equals(state);
   }
 
   @Override
@@ -29,6 +29,7 @@ public class GetAllOrdersStateHandler extends AbstractHandler implements StateHa
         List<Order> orders =
             orderService.findAll().stream()
                 .filter(o -> o.getCity() == user.getCity())
+                .filter(o -> !o.getOrderItemList().isEmpty())
                 .filter(o -> o.getStatus() == Status.READY)
                 .collect(Collectors.toList());
 

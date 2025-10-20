@@ -1,18 +1,49 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.service;
 
-import java.util.Collections;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import kz.aday.bot.model.Category;
-import kz.aday.bot.model.Item;
-import kz.aday.bot.model.MenuRules;
-import kz.aday.bot.model.Order;
+import java.util.stream.Collectors;
+
+import kz.aday.bot.model.*;
 import kz.aday.bot.repository.BaseRepository;
 
 public class OrderService extends BaseService<Order> {
   public OrderService() {
     super(new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, "order"));
+  }
+
+  public String getAllOrdersGropedByDate(City city) {
+    StringBuilder result = new StringBuilder();
+    LocalDate from = LocalDate.now().minusDays(30);
+    while (from.isBefore(LocalDate.now())) {
+      List<Order> orderList = repository.getAll(from).stream().filter(o -> o.getCity() == city).toList();
+      result.append(printAttendanceSheetByOrders(orderList, from));
+      from = from.plusDays(1);
+    }
+    return result.toString();
+  }
+
+  private String printAttendanceSheetByOrders(Collection<Order> orders, LocalDate date) {
+    if (orders.isEmpty()) {
+      return String.format("*%s* никто не пришёл.\n", date.toString());
+    }
+    long peopleCount = orders.stream()
+            .filter(order -> order.getStatus() == Status.READY)
+            .filter(o -> !o.getOrderItemList().isEmpty())
+            .count();
+    String peopleList = orders.stream()
+            .filter(order -> order.getStatus() == Status.READY)
+            .filter(o -> !o.getOrderItemList().isEmpty())
+            .map(Order::getUsername)
+            .collect(Collectors.joining(","));
+    return String.format(
+            "*%s* в офисе заказли еду:*%s*\n%s\n",
+            date.toString(),
+            peopleCount,
+            peopleList
+    );
   }
 
   public void addItemToOrder(Order order, Item item, MenuRules menuRules) {

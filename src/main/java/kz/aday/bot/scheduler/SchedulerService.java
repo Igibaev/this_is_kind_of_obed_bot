@@ -76,19 +76,20 @@ public class SchedulerService {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
         sendMenuIsClosedNotification(menu.getCity());
-        sendReportToAdmins(menu.getCity());
+        sendReportToUsers(menu.getCity());
         handledNotifications.clear();
       }
     }
   }
 
-    private void sendReportToAdmins(City city) {
+    private void sendReportToUsers(City city) {
     for (User user : userService.findAll()) {
-      if (user.getCity() == city && user.getRole() == User.Role.ADMIN) {
+      if (user.getCity() == city) {
         List<Order> orders =
             orderService.findAll().stream()
                 .filter(o -> o.getCity() == user.getCity())
                 .filter(o -> o.getStatus() == Status.READY)
+                .filter(o -> !o.getOrderItemList().isEmpty())
                 .collect(Collectors.toList());
         if (orders.isEmpty()) {
           sendMessageToUser(EMPTY_ORDERS, user,  telegramFoodBot);
@@ -122,7 +123,7 @@ public class SchedulerService {
           }
           if (orderService.existsById(user.getId())) {
             Order order = orderService.findById(user.getId());
-            if (order.getStatus() != Status.PENDING) {
+            if (order.getStatus() == Status.PENDING) {
               sendMessageWithMenuToUser(menu, order.getOrderItemList(), user, telegramFoodBot);
               handledNotifications.put(user.getId(), true);
             }

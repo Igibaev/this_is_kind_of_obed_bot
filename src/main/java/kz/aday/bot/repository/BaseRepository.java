@@ -49,11 +49,39 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   }
 
   @Override
-  public Collection<T> getAll() {
-    return database.entrySet().stream()
-        .filter(e -> e.getKey().getDate().isEqual(LocalDate.now()))
-        .map(Map.Entry::getValue)
-        .collect(Collectors.toList());
+  public Collection<T> getAll(LocalDate today) {
+    if (!Files.exists(BASE_PATH)) {
+      log.info("Storage not exist [{}]", BASE_PATH);
+      return List.of();
+    }
+    List<T> items = new ArrayList<>();
+    try (Stream<Path> dateFolders = Files.list(BASE_PATH)) {
+      for (Path dateFolder : dateFolders.toList()) {
+        if (Files.isDirectory(dateFolder)
+                && dateFolder
+                .getFileName()
+                .toString()
+                .equals(today.format(DATE_FOLDER_FORMATTER))) {
+          try (Stream<Path> files = Files.list(dateFolder)) {
+            files.forEach(
+                    path -> {
+                      if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
+                        try {
+                          T item = objectMapper.readValue(path.toFile(), type);
+                          items.add(item);
+                        } catch (IOException e) {
+                          log.warn("Failed to parse [{}], skip.", path);
+                        }
+                      }
+                    });
+          }
+        }
+      }
+      return items;
+    } catch (IOException e) {
+      log.error("Error loading storage", e);
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

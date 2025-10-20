@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -45,7 +46,7 @@ public class UserRepository implements Repository<User> {
   }
 
   @Override
-  public Collection<User> getAll() {
+  public Collection<User> getAll(LocalDate date) {
     return database.values();
   }
 

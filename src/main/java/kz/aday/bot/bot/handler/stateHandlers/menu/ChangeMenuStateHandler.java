@@ -63,6 +63,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
             KeyboardUtil.addButton(
                 List.of(
                     new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
+                    new UserButton("Удалить", CallbackState.CLEAR_MENU.toString()),
                     new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
                 markup);
             sendMessageWithKeyboard(

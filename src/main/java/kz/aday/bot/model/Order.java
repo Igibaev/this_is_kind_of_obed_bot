@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class Order implements Id {
   private String chatId;
@@ -29,7 +28,4 @@ public class Order implements Id {
     return chatId;
   }
 
-  public boolean isOrderReady() {
-    return status == Status.READY;
-  }
 }

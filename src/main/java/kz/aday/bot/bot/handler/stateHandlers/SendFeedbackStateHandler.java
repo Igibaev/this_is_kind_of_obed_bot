@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers;
 
+import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.configuration.BotConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
@@ -10,17 +11,19 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 @Slf4j
-public class SendFeedbackStateHandler {
+public class SendFeedbackStateHandler extends AbstractHandler implements StateHandler {
   private final String mainUserChatId;
 
   public SendFeedbackStateHandler() {
     this.mainUserChatId = BotConfig.getMainUserChatId();
   }
 
+  @Override
   public boolean canHandle(String state) {
     return State.SEND_FEEDBACK.getDisplayName().equals(state);
   }
 
+  @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     if (!update.hasMessage()) return;
     Message message = update.getMessage();

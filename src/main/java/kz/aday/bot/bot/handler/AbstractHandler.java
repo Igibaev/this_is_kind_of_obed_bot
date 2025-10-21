@@ -139,6 +139,7 @@ public abstract class AbstractHandler {
     userMenuItems.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
     if (user.getRole() == ADMIN) {
       userMenuItems.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
+      userMenuItems.add(State.GET_TODAY_ORDERS.getDisplayName());
     }
 
 

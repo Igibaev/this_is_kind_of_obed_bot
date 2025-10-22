@@ -166,9 +166,6 @@ public abstract class AbstractHandler {
       } else if (menuStatus == Status.DEADLINE) {
           userMenuItems.add(State.GET_ORDER.getDisplayName());
           userMenuItems.add(State.CHANGE_MENU.getDisplayName());
-          if (user.getRole() == ADMIN) {
-            userMenuItems.add(State.GET_TODAY_ORDERS.getDisplayName());
-          }
       } else if (menuStatus == Status.PENDING) {
         if (user.getRole() == ADMIN) {
           userMenuItems.add(State.PUBLISH_MENU.getDisplayName());

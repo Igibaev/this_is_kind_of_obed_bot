@@ -8,6 +8,8 @@ import java.util.List;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.stateHandlers.InputMessageToAllUsersStateHandler;
+import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
@@ -218,6 +220,12 @@ public abstract class AbstractHandler {
   }
 
   public boolean register(TelegramFoodBot bot) {
+    if (this instanceof SendFeedbackStateHandler) {
+      bot.addStateWithContentHandler((StateHandler) this);
+    }
+    if (this instanceof InputMessageToAllUsersStateHandler) {
+      bot.addStateWithContentHandler((StateHandler) this);
+    }
     if (this instanceof StateHandler) {
       bot.addStateHandler((StateHandler) this);
     } else if (this instanceof CommandHandler) {

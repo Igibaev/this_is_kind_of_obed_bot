@@ -4,6 +4,7 @@ package kz.aday.bot.bot;
 import kz.aday.bot.bot.dispatcher.CallbackDispatcher;
 import kz.aday.bot.bot.dispatcher.CommandDispatcher;
 import kz.aday.bot.bot.dispatcher.StateDispatcher;
+import kz.aday.bot.bot.dispatcher.StateWithContentDispatcher;
 import kz.aday.bot.bot.handler.ErrorHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
@@ -20,6 +21,7 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
   private final CallbackDispatcher callbackDispatcher;
   private final CommandDispatcher commandDispatcher;
   private final StateDispatcher stateDispatcher;
+  private final StateWithContentDispatcher stateWithContentDispatcher;
   private final ErrorHandler errorHandler;
   private final SendFeedbackStateHandler sendFeedbackStateHandler;
   private final String chatBotName;
@@ -32,22 +34,33 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
     this.stateDispatcher = new StateDispatcher();
     this.errorHandler = new ErrorHandler();
     this.sendFeedbackStateHandler = new SendFeedbackStateHandler();
+    this.stateWithContentDispatcher = new StateWithContentDispatcher();
   }
 
   @Override
   public void onUpdateReceived(Update update) {
     try {
       if (update.hasMessage()) {
-        Message msg = update.getMessage();
-        String text = msg.getText();
-        if (text != null) {
-          if (text.startsWith("/")) {
-            commandDispatcher.dispatch(update, this);
+        Message message = update.getMessage();
+        boolean hasContent =
+                message.hasText()
+                        || message.hasPhoto()
+                        || message.hasVideo()
+                        || message.hasAudio()
+                        || message.hasDocument()
+                        || message.hasVoice()
+                        || message.hasAnimation()
+                        || message.hasSticker();
+        if (hasContent) {
+          if (message.hasText()) {
+            if (message.getText().startsWith("/")) {
+              commandDispatcher.dispatch(update, this);
+            } else {
+              stateDispatcher.dispatch(update, this);
+            }
           } else {
-            stateDispatcher.dispatch(update, this);
+            stateWithContentDispatcher.dispatch(update, this);
           }
-        } else {
-          sendFeedbackStateHandler.handle(update, this);
         }
       } else if (update.hasCallbackQuery()) {
         callbackDispatcher.dispatch(update.getCallbackQuery(), this);
@@ -77,5 +90,9 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
 
   public void addStateHandler(StateHandler handler) {
     stateDispatcher.addHandler(handler);
+  }
+
+  public void addStateWithContentHandler(StateHandler stateHandler) {
+    stateWithContentDispatcher.addHandler(stateHandler);
   }
 }

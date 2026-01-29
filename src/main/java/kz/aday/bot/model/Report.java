@@ -23,6 +23,7 @@ public class Report {
     }
     StringBuilder report = new StringBuilder();
     report.append(String.format("*%s*", city.getValue())).append("\n");
+    report.append(String.format("*В офис: %s*", orderList.size())).append("\n");
     report.append("\n");
     orderList.forEach(
         order -> {

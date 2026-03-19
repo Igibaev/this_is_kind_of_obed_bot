@@ -14,9 +14,6 @@ public class MenuRulesService {
   static {
     MenuRules astana = new MenuRules();
     Map<Category, Set<Category>> astanaRules = new HashMap<>();
-    astanaRules.put(Category.FIRST, Set.of(Category.BAKERY, Category.SECOND));
-    astanaRules.put(Category.SECOND, Set.of(Category.FIRST, Category.BAKERY));
-    astanaRules.put(Category.BAKERY, Set.of(Category.SECOND, Category.FIRST));
     astana.setMenuRuleMap(astanaRules);
     menuRulesMap.put(City.ASTANA, astana);
 

@@ -20,6 +20,10 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
     if (isUserExistAndReady(update)) {
       User user = userService.findById(getChatId(update).toString());
       user.setState(State.NONE);
+      long counter = orderService.findAll().stream()
+              .filter(o -> o.getCity() == user.getCity())
+              .filter(o -> o.getStatus() == Status.READY)
+              .count();
       String usersWhoWillComeToOffice =
           orderService.findAll().stream()
               .filter(o -> o.getCity() == user.getCity())
@@ -32,12 +36,12 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
       } else {
         sendMessage(
             user,
-            String.format(THESE_ARE_USERS_WHO_ORDERED, usersWhoWillComeToOffice),
+            String.format(THESE_ARE_USERS_WHO_ORDERED, counter, usersWhoWillComeToOffice),
             getMessageId(update),
             sender);
       }
     }
   }
 
-  private final String THESE_ARE_USERS_WHO_ORDERED = "Список людей кто придет в офис: \n[%s]";
+  private final String THESE_ARE_USERS_WHO_ORDERED = "Список людей кто придет в офис:[%s] \n[%s]";
 }

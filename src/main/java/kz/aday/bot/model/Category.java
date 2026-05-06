@@ -6,7 +6,8 @@ public enum Category {
   SECOND("🍖 Второе", "второе"),
   SALAD("🥗 Салат", "салат"),
   BAKERY("🥐 Выпечка", "выпечка"),
-  BREAD("🍞 Хлеб", "хлеб");
+  BREAD("🍞 Хлеб", "хлеб"),
+  BEVERAGE("🥤 Напитки", "напитки");
 
   private final String displayName;
   private final String value;

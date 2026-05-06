@@ -33,7 +33,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Slf4j
 public class SchedulerService {
   private final MessageSender messageSender = new MessageSender();
-  private final UserService userService = new UserService();
+  private final UserService userService = ServiceContainer.getUserService();
   private final MenuService menuService = ServiceContainer.getMenuService();
   private final OrderService orderService = ServiceContainer.getOrderService();
   private final TelegramFoodBot telegramFoodBot;

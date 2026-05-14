@@ -40,7 +40,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
           if (order.getStatus() == Status.READY) {
             sendMessageWithKeyboard(
                 user,
-                CURRENT_ORDER,
+                CURRENT_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
                 getMenuKeyboard(
                     menu.getItemList(),
                     order,
@@ -53,7 +53,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
           } else {
             sendMessageWithKeyboard(
                 user,
-                CURRENT_PENDING_ORDER,
+                CURRENT_PENDING_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
                 getMenuKeyboard(
                     menu.getItemList(),
                     order,
@@ -71,7 +71,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
               String.format(
                   MENU_TODAY,
                   user.getCity().getValue(),
-                  menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
+                  menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
+                  + "\n\n" + menu.getMenuAsFormattedText(),
               getMenuKeyboard(
                   menu.getItemList(),
                   List.of(new UserButton("Отправить", CallbackState.SUBMIT_ORDER.name()))),

@@ -43,7 +43,8 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
             String.format(
                 NEW_MENU_IS_PUBLISHED,
                 menu.getCity().getValue(),
-                menu.getDeadline().format(DateTimeFormatter.ISO_TIME)),
+                menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
+                + "\n\n" + menu.getMenuAsFormattedText(),
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             userToNotificate.getLastMessageId(),
             sender);

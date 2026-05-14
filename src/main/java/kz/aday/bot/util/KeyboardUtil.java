@@ -96,10 +96,9 @@ public class KeyboardUtil {
   }
 
   private static String getTextButton(Set<Item> selectedItems, Item item) {
-    return item.getCategory().getDisplayName()
-        + ": "
-        + (selectedItems.contains(item) ? " ✅" : "")
-        + item.getName();
+    String categoryEmoji = item.getCategory().getDisplayName().split(" ")[0];
+    String checkmark = selectedItems.contains(item) ? " ✅" : "";
+    return categoryEmoji + " " + item.getName() + checkmark;
   }
 
   public static void addButton(List<UserButton> userButtons, InlineKeyboardMarkup markup) {

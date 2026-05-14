@@ -18,10 +18,9 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
       menuService.deleteById(user.getCity().toString());
       orderService
           .findAll()
-          .forEach(
-              order -> {
-                orderService.deleteById(order.getChatId());
-              });
+          .stream()
+          .filter(order -> order.getCity() == user.getCity())
+          .forEach(order -> orderService.deleteById(order.getChatId()));
       sendMessage(user, MENU_WAS_DELETED, getMessageId(callback), sender);
     }
   }

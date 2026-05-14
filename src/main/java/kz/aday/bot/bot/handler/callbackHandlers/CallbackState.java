@@ -16,7 +16,12 @@ public enum CallbackState {
   SUBMIT_TEMP_ORDER("Потвердить временный заказ"),
   SUBMIT_ORDER("Потвердить заказ"),
   CHANGE_ORDER("Изменить заказ"),
-  DELETE_ORDER("Удалить заказ");
+  DELETE_ORDER("Удалить заказ"),
+
+  GET_ORDER_TODAY_ALMATA("Заказ на сегодня"),
+  GET_ORDER_TOMORROW_ALMATA("Заказ на завтра"),
+  GET_ORDERS_TODAY_ALMATA("Заказы на сегодня"),
+  GET_ORDERS_TOMORROW_ALMATA("Заказы на завтра");
 
   @Getter private String displayName;
 

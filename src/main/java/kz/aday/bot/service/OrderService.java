@@ -8,10 +8,24 @@ import java.util.stream.Collectors;
 
 import kz.aday.bot.model.*;
 import kz.aday.bot.repository.BaseRepository;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class OrderService extends BaseService<Order> {
   public OrderService() {
     super(new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, "order"));
+  }
+
+  public Optional<Order> findByIdOnDate(String userId, LocalDate date) {
+    log.debug("Finding order by id {} on date {}", userId, date);
+    return repository.getAll(date).stream()
+        .filter(o -> o.getId().equals(userId))
+        .findFirst();
+  }
+
+  public Collection<Order> findAllOnDate(LocalDate date) {
+    log.debug("Finding all orders on date {}", date);
+    return repository.getAll(date);
   }
 
   public String getAllOrdersGropedByDate(City city) {

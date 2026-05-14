@@ -96,10 +96,7 @@ public class KeyboardUtil {
   }
 
   private static String getTextButton(Set<Item> selectedItems, Item item) {
-    return item.getCategory().getDisplayName()
-        + ": "
-        + (selectedItems.contains(item) ? " ✅" : "")
-        + item.getName();
+    return (selectedItems.contains(item) ? "✅ " : "") + item.getName();
   }
 
   public static void addButton(List<UserButton> userButtons, InlineKeyboardMarkup markup) {

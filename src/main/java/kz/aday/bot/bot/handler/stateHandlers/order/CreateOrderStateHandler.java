@@ -37,7 +37,7 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
         orderService.save(order);
         sendMessageWithKeyboard(
             user,
-            CHOOSE_ITEM_MESSAGE,
+            CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             getMessageId(update),
             sender);

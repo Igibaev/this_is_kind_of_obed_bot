@@ -95,11 +95,20 @@ public class KeyboardUtil {
     return markup;
   }
 
+  private static final int MAX_BUTTON_TEXT_LENGTH = 40;
+
   private static String getTextButton(Set<Item> selectedItems, Item item) {
-    return item.getCategory().getDisplayName()
+    String prefix = item.getCategory().getDisplayName()
         + ": "
-        + (selectedItems.contains(item) ? " ✅" : "")
-        + item.getName();
+        + (selectedItems.contains(item) ? "✅ " : "");
+    String name = item.getName();
+    if (prefix.length() + name.length() > MAX_BUTTON_TEXT_LENGTH) {
+      int available = MAX_BUTTON_TEXT_LENGTH - prefix.length() - 1;
+      if (available > 3) {
+        name = name.substring(0, available) + "…";
+      }
+    }
+    return prefix + name;
   }
 
   public static void addButton(List<UserButton> userButtons, InlineKeyboardMarkup markup) {

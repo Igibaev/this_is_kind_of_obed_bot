@@ -4,7 +4,9 @@ package kz.aday.bot.model;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,5 +43,19 @@ public class Menu implements Id {
 
   public String getDeadlineAsText() {
     return deadline.format(DateTimeFormatter.ofPattern("HH:mm"));
+  }
+
+  public String getMenuAsFormattedText() {
+    Map<Category, List<Item>> byCategory = new LinkedHashMap<>();
+    for (Item item : itemList) {
+      byCategory.computeIfAbsent(item.getCategory(), k -> new ArrayList<>()).add(item);
+    }
+    StringBuilder sb = new StringBuilder();
+    byCategory.forEach((category, items) -> {
+      sb.append(category.getDisplayName()).append(":\n");
+      items.forEach(item -> sb.append("• ").append(item.getName()).append("\n"));
+      sb.append("\n");
+    });
+    return sb.toString().trim();
   }
 }

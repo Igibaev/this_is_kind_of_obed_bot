@@ -24,7 +24,7 @@ public class ChangeOrderCallbackHandler extends AbstractHandler implements Callb
       orderService.save(order);
       sendMessageWithKeyboard(
           user,
-          CHOOSE_ITEM_MESSAGE,
+          CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
           KeyboardUtil.createInlineKeyboard(
               menu.getItemList(), order.getOrderItemList(), CallbackState.ADD_ITEM_TO_ORDER),
           getMessageId(callback),

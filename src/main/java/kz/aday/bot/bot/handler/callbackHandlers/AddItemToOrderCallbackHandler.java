@@ -58,7 +58,11 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
                 new UserButton("Отменить", CallbackState.DELETE_ORDER.toString())),
             keyboard);
         sendMessageWithKeyboard(
-            user, CREATING_ORDER_MESSAGE, keyboard, getMessageId(callback), sender);
+            user,
+            CREATING_ORDER_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+            keyboard,
+            getMessageId(callback),
+            sender);
         orderService.save(order);
       }
     }

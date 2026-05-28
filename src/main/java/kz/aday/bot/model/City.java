@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public enum City {
   ASTANA("Астана"),
-  ALMATA("Алмата");
+  ALMATA("Алматы");
 
   private final String value;
 

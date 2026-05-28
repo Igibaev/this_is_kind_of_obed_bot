@@ -24,7 +24,7 @@ public enum State {
   CHANGE_ORDER("Изменить заказ", Type.ACTION),
   DELETE_ORDER("Удалить заказ", Type.ACTION),
   RANDOM_ORDER("Рандомный заказ", Type.ACTION),
-  SUBMIT_ORDER("Потвердить заказ", Type.ACTION),
+  SUBMIT_ORDER("Подтвердить заказ", Type.ACTION),
 
   GET_TODAY_ORDERS("Выгрузить заказы", Type.ACTION),
   PUBLISH_MENU("Опубликовать меню", Type.ACTION),

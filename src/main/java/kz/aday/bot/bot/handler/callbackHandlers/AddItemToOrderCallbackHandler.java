@@ -54,7 +54,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
                 menu.getItemList(), order.getOrderItemList(), CallbackState.ADD_ITEM_TO_ORDER);
         KeyboardUtil.addButton(
             List.of(
-                new UserButton("Потвердить", CallbackState.SUBMIT_ORDER.toString()),
+                new UserButton("Подтвердить", CallbackState.SUBMIT_ORDER.toString()),
                 new UserButton("Отменить", CallbackState.DELETE_ORDER.toString())),
             keyboard);
         sendMessageWithKeyboard(

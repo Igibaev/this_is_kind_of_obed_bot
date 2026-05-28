@@ -58,7 +58,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
                     menu.getItemList(),
                     order,
                     List.of(
-                        new UserButton("Потвердить", CallbackState.SUBMIT_ORDER.toString()),
+                        new UserButton("Подтвердить", CallbackState.SUBMIT_ORDER.toString()),
                         new UserButton("Изменить заказ", CallbackState.CHANGE_ORDER.toString()),
                         new UserButton("Удалить", CallbackState.DELETE_ORDER.toString()),
                         new UserButton("Вернуться", CallbackState.CANCEL.toString()))),

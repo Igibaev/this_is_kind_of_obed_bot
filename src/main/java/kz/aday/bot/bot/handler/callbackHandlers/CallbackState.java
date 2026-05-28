@@ -13,15 +13,17 @@ public enum CallbackState {
   CHANGE_MENU("Изменить меню"),
   CLEAR_MENU("Очистить меню"),
 
-  SUBMIT_TEMP_ORDER("Потвердить временный заказ"),
-  SUBMIT_ORDER("Потвердить заказ"),
+  SUBMIT_TEMP_ORDER("Подтвердить временный заказ"),
+  SUBMIT_ORDER("Подтвердить заказ"),
   CHANGE_ORDER("Изменить заказ"),
   DELETE_ORDER("Удалить заказ"),
 
   GET_ORDER_TODAY_ALMATA("Заказ на сегодня"),
   GET_ORDER_TOMORROW_ALMATA("Заказ на завтра"),
   GET_ORDERS_TODAY_ALMATA("Заказы на сегодня"),
-  GET_ORDERS_TOMORROW_ALMATA("Заказы на завтра");
+  GET_ORDERS_TOMORROW_ALMATA("Заказы на завтра"),
+  WHO_COMES_TODAY_ALMATA("Кто приходит сегодня"),
+  WHO_COMES_TOMORROW_ALMATA("Кто придет завтра");
 
   @Getter private String displayName;
 

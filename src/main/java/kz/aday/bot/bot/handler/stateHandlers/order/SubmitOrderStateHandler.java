@@ -57,9 +57,9 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
 
   private static final String RETURN_TO_MENU = "Окей. Вернитесь в меню тогда /return";
 
-  private static final String ORDER_WAS_SUBMITED = "Твой заказ %s. Потвержден.";
+  private static final String ORDER_WAS_SUBMITED = "Твой заказ %s. Подтвержден.";
 
-  private static final String YOUR_ORDER_IS = "Твой заказ %s. Чтобы потвердить отправьте 'Да'.";
+  private static final String YOUR_ORDER_IS = "Твой заказ %s. Чтобы подтвердить отправьте 'Да'.";
 
   private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн меню уже прошел.";
 }

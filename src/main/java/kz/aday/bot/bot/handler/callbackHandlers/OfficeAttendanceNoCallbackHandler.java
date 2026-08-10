@@ -1,12 +1,13 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
-import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.messages.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
+
+import java.util.Optional;
 
 public class OfficeAttendanceNoCallbackHandler extends AbstractHandler implements CallbackHandler {
 
@@ -22,7 +23,7 @@ public class OfficeAttendanceNoCallbackHandler extends AbstractHandler implement
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    Optional<User> optionalUser = findReadyUserByChatId(callback);
+      Optional<User> optionalUser= findReadyUserByChatId(callback);
 
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();

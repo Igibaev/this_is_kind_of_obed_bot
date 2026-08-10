@@ -47,9 +47,25 @@ public class SchedulerService {
 
   public void start() {
     planCleanTask();
+    planOfficeAttendanceTask();
     executorService.scheduleAtFixedRate(
         this::sendDeadlineIsNearNotification, 0, 1, TimeUnit.SECONDS);
     executorService.scheduleAtFixedRate(this::closeMenu, 0, 1, TimeUnit.SECONDS);
+  }
+
+  private void planOfficeAttendanceTask() {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime next = now.with(LocalTime.of(17, 0));
+    if (now.isAfter(next)) {
+      next = next.plusDays(1);
+    }
+
+    Duration duration = Duration.between(now, next);
+    long initialDelay = duration.getSeconds();
+
+    long period = TimeUnit.DAYS.toSeconds(1);
+    executorService.scheduleAtFixedRate(
+        this::askOfficeAttendance, initialDelay, period, TimeUnit.SECONDS);
   }
 
   private void planCleanTask() {
@@ -107,6 +123,41 @@ public class SchedulerService {
       if (user.getCity() == city) {
         sendMessageToUser(Messages.MENU_IS_CLOSED, user, telegramFoodBot);
       }
+    }
+  }
+
+  /** Спросить пользователей придут ли они завтра в офис */
+  private void askOfficeAttendance() {
+    log.debug("Asking office attendance");
+    for (User user : userService.findAll()) {
+      if (user.getStatus() == Status.READY) {
+        sendAttendancePrompt(user);
+      }
+    }
+  }
+
+  private void sendAttendancePrompt(User user) {
+    List<Integer> messagesToDelete = new ArrayList<>();
+
+    if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
+    SendMessage message = new SendMessage();
+    message.setChatId(user.getChatId());
+    message.setText(Messages.WILL_COME_TOMORROW_QUESTION);
+    message.setReplyMarkup(
+        KeyboardUtil.createInlineKeyboard(
+            List.of(
+                new UserButton("Да", CallbackState.ATTENDANCE_YES.name()),
+                new UserButton("Нет", CallbackState.ATTENDANCE_NO.name()))));
+    message.enableMarkdown(true);
+
+    try {
+      Message sendedMessage = messageSender.sendMessage(message, telegramFoodBot);
+      messageSender.deleteMessage(user.getChatId(), messagesToDelete, telegramFoodBot);
+
+      user.setLastMessageId(sendedMessage.getMessageId());
+      userService.save(user);
+    } catch (TelegramApiException e) {
+      log.error("Skip sending office attendance prompt: {}\n {}", e.getMessage(), e);
     }
   }
 

@@ -23,7 +23,10 @@ public enum CallbackState {
   GET_ORDERS_TODAY_ALMATA("Заказы на сегодня"),
   GET_ORDERS_TOMORROW_ALMATA("Заказы на завтра"),
   WHO_COMES_TODAY_ALMATA("Кто приходит сегодня"),
-  WHO_COMES_TOMORROW_ALMATA("Кто придет завтра");
+  WHO_COMES_TOMORROW_ALMATA("Кто придет завтра"),
+
+  ATTENDANCE_YES("Да, приду"),
+  ATTENDANCE_NO("Нет, не приду");
 
   @Getter private String displayName;
 

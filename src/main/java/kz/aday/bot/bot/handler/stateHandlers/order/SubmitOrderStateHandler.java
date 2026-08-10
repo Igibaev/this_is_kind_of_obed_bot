@@ -2,6 +2,8 @@
 package kz.aday.bot.bot.handler.stateHandlers.order;
 
 import java.util.List;
+import java.util.Optional;
+
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
@@ -22,8 +24,9 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
         Order order = orderService.findById(user.getId());
         Menu menu = menuService.findById(user.getCity().toString());

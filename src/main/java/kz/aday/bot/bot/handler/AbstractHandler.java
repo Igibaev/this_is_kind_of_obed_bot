@@ -5,6 +5,8 @@ import static kz.aday.bot.model.User.Role.ADMIN;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
@@ -20,6 +22,7 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
+import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
@@ -38,6 +41,7 @@ public abstract class AbstractHandler {
   protected final MessageSender messageService = ServiceContainer.getMessageService();
   protected final MenuService menuService = ServiceContainer.getMenuService();
   protected final OrderService orderService = ServiceContainer.getOrderService();
+  protected final OfficeAttendanceService officeAttendanceService = ServiceContainer.getOfficeAttendanceService();
 
   public Long getChatId(CallbackQuery update) {
     return update.getMessage().getChatId();
@@ -46,12 +50,26 @@ public abstract class AbstractHandler {
   public boolean isUserExistAndReady(CallbackQuery update) {
     return userService
         .findByIdOptional(getChatId(update).toString())
-        .filter(user -> user.getStatus() == Status.READY)
+        .filter(this::isUserReady)
         .isPresent();
   }
 
   public boolean isUserExist(CallbackQuery update) {
     return userService.findByIdOptional(getChatId(update).toString()).isPresent();
+  }
+
+  public Optional<User> findReadyUserByChatId(CallbackQuery update) {
+    return userService.findByIdOptional(getChatId(update).toString())
+            .filter(this::isUserReady);
+  }
+
+  public Optional<User> findReadyUserByChatId(Update update) {
+    return userService.findByIdOptional(getChatId(update).toString())
+            .filter(this::isUserReady);
+  }
+
+  public boolean isUserReady(User user) {
+    return user.getStatus() == Status.READY;
   }
 
   public Long getChatId(Update update) {
@@ -139,6 +157,7 @@ public abstract class AbstractHandler {
     userMenuItems.add(State.PROFILE.getDisplayName());
     userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
     userMenuItems.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
+    userMenuItems.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
     if (user.getRole() == ADMIN) {
       userMenuItems.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
       userMenuItems.add(State.GET_TODAY_ORDERS.getDisplayName());

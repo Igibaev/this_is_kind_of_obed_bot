@@ -3,7 +3,6 @@ package kz.aday.bot.bot.handler.stateHandlers.order;
 
 import java.util.List;
 import java.util.Optional;
-
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
@@ -39,6 +38,8 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
             if (message.equals("Да")) {
               order.setStatus(Status.READY);
               orderService.save(order);
+              officeAttendanceService.save(
+                  user.getId(), user.getPreferedName(), user.getCity(), true);
               sendMessage(user, ORDER_WAS_SUBMITED, getMessageId(update), sender);
             } else {
               sendMessage(user, RETURN_TO_MENU, getMessageId(update), sender);

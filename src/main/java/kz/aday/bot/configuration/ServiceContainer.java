@@ -5,6 +5,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
+import kz.aday.bot.service.OfficeAttendanceService;
 import lombok.Getter;
 
 @Getter
@@ -13,6 +14,7 @@ public class ServiceContainer {
   private static final MessageSender messageService = new MessageSender();
   private static final OrderService orderService = new OrderService();
   private static final MenuService menuService = new MenuService();
+  private static final OfficeAttendanceService officeAttendanceService = new OfficeAttendanceService();
 
   private ServiceContainer() {}
 
@@ -30,5 +32,9 @@ public class ServiceContainer {
 
   public static MenuService getMenuService() {
     return menuService;
+  }
+
+  public static OfficeAttendanceService getOfficeAttendanceService() {
+    return officeAttendanceService;
   }
 }

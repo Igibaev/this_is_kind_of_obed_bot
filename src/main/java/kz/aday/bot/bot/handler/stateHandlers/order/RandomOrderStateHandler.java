@@ -45,6 +45,8 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
             order.setStatus(Status.READY);
             order.setOrderItemList(randomOrder(menu, menu.getItemList()));
             orderService.save(order);
+            officeAttendanceService.save(
+                user.getId(), user.getPreferedName(), user.getCity(), true);
             sendMessage(user, RANDOM_ORDER_CREATED_MESSAGE, getMessageId(update), sender);
           } else {
             sendMessage(user, CANCEL_RANDOM, getMessageId(update), sender);

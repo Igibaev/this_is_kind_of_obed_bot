@@ -13,12 +13,7 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     super(new BaseRepository<>(new ConcurrentHashMap<>(), OfficeAttendance.class, "attendance"));
   }
 
-  public void save(
-          String userId,
-          String username,
-          City city,
-          boolean willCome
-  ) {
+  public void save(String userId, String username, City city, boolean willCome) {
     OfficeAttendance officeAttendance = new OfficeAttendance();
     officeAttendance.setChatId(userId);
     officeAttendance.setUsername(username);

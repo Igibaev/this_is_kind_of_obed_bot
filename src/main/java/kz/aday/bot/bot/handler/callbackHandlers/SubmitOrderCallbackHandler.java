@@ -18,14 +18,16 @@ public class SubmitOrderCallbackHandler extends AbstractHandler implements Callb
       Order order = orderService.findById(user.getId());
       if (menu.isDeadlinePassed()) {
         sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(callback), sender);
+      } else {
+        order.setStatus(Status.READY);
+        orderService.save(order);
+        officeAttendanceService.save(user.getId(), user.getPreferedName(), user.getCity(), true);
+        sendMessage(
+            user,
+            String.format(ORDER_SENDED, order.getOrderItemList()),
+            getMessageId(callback),
+            sender);
       }
-      order.setStatus(Status.READY);
-      orderService.save(order);
-      sendMessage(
-          user,
-          String.format(ORDER_SENDED, order.getOrderItemList()),
-          getMessageId(callback),
-          sender);
     }
   }
 

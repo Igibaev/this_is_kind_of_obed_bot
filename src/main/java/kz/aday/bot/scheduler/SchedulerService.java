@@ -97,7 +97,7 @@ public class SchedulerService {
     }
   }
 
-    private void sendReportToUsers(City city) {
+  private void sendReportToUsers(City city) {
     for (User user : userService.findAll()) {
       if (user.getCity() == city) {
         List<Order> orders =
@@ -107,7 +107,7 @@ public class SchedulerService {
                 .filter(o -> !o.getOrderItemList().isEmpty())
                 .collect(Collectors.toList());
         if (orders.isEmpty()) {
-          sendMessageToUser(EMPTY_ORDERS, user,  telegramFoodBot);
+          sendMessageToUser(EMPTY_ORDERS, user, telegramFoodBot);
         } else {
           Report report = new Report(user.getCity(), orders);
           sendMessageToUser(REPORT_MESSAGE + report.printOrderReport(), user, telegramFoodBot);
@@ -192,7 +192,7 @@ public class SchedulerService {
     SendMessage message = new SendMessage();
     message.setChatId(user.getChatId());
     message.setText(messageText);
-	message.enableMarkdown(true);
+    message.enableMarkdown(true);
     try {
       Message sendedMessage = messageSender.sendMessage(message, absSender);
       messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);

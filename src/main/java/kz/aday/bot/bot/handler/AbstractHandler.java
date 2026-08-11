@@ -6,7 +6,6 @@ import static kz.aday.bot.model.User.Role.ADMIN;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
@@ -41,9 +40,14 @@ public abstract class AbstractHandler {
   protected final MessageSender messageService = ServiceContainer.getMessageService();
   protected final MenuService menuService = ServiceContainer.getMenuService();
   protected final OrderService orderService = ServiceContainer.getOrderService();
-  protected final OfficeAttendanceService officeAttendanceService = ServiceContainer.getOfficeAttendanceService();
+  protected final OfficeAttendanceService officeAttendanceService =
+      ServiceContainer.getOfficeAttendanceService();
 
   public Long getChatId(CallbackQuery update) {
+    return update.getMessage().getChatId();
+  }
+
+  public Long getChatId(Update update) {
     return update.getMessage().getChatId();
   }
 
@@ -55,21 +59,15 @@ public abstract class AbstractHandler {
   }
 
   public Optional<User> findReadyUserByChatId(CallbackQuery update) {
-    return userService.findByIdOptional(getChatId(update).toString())
-            .filter(this::isUserReady);
+    return userService.findByIdOptional(getChatId(update).toString()).filter(this::isUserReady);
   }
 
   public Optional<User> findReadyUserByChatId(Update update) {
-    return userService.findByIdOptional(getChatId(update).toString())
-            .filter(this::isUserReady);
+    return userService.findByIdOptional(getChatId(update).toString()).filter(this::isUserReady);
   }
 
   public boolean isUserReady(User user) {
     return user.getStatus() == Status.READY;
-  }
-
-  public Long getChatId(Update update) {
-    return update.getMessage().getChatId();
   }
 
   public Integer getMessageId(Update update) {
@@ -172,9 +170,9 @@ public abstract class AbstractHandler {
       return;
     }
     items.add(
-            order.get().getStatus() == Status.READY
-                    ? State.DELETE_ORDER.getDisplayName()
-                    : State.SUBMIT_ORDER.getDisplayName());
+        order.get().getStatus() == Status.READY
+            ? State.DELETE_ORDER.getDisplayName()
+            : State.SUBMIT_ORDER.getDisplayName());
     items.add(State.CHANGE_ORDER.getDisplayName());
     items.add(State.GET_ORDER.getDisplayName());
   }

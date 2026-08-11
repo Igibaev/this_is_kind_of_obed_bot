@@ -7,7 +7,7 @@ import kz.aday.bot.bot.dispatcher.StateDispatcher;
 import kz.aday.bot.bot.dispatcher.StateWithContentDispatcher;
 import kz.aday.bot.bot.handler.ErrorHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
-import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import lombok.extern.slf4j.Slf4j;

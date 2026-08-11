@@ -1,16 +1,11 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.repository;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -20,9 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserRepository implements Repository<User> {
-  private static final DateTimeFormatter FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-  private static final String JSON = ".json";
+  private static final String JSON = JsonFileStorageSupport.JSON;
 
   private final Path BASE_PATH;
   private final ObjectMapper objectMapper;
@@ -30,7 +23,7 @@ public class UserRepository implements Repository<User> {
 
   public UserRepository(Map<String, User> database, String storagePath) {
     this.BASE_PATH = Path.of(BotConfig.getBotStorePath()).resolve(storagePath);
-    this.objectMapper = getObjectMapper();
+    this.objectMapper = JsonFileStorageSupport.createObjectMapper();
     this.database = database;
     loadFromStorage();
   }
@@ -97,7 +90,7 @@ public class UserRepository implements Repository<User> {
   }
 
   private void saveToStorage(User user) {
-    createStorageIfNotExist(BASE_PATH);
+    JsonFileStorageSupport.createStorageIfNotExist(BASE_PATH);
 
     Path file = BASE_PATH.resolve(user.getId() + JSON);
     try {
@@ -123,54 +116,6 @@ public class UserRepository implements Repository<User> {
       }
     } catch (IOException e) {
       log.error("Failure deleting file [{}]", file, e);
-    }
-  }
-
-  private void createStorageIfNotExist(Path storage) {
-    try {
-      if (!Files.exists(storage)) {
-        Files.createDirectories(storage);
-        log.info("Created storage folder [{}]", storage);
-      }
-    } catch (IOException e) {
-      log.error("Failure create storage [{}]", storage, e);
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void deleteRecursively(Path path) throws IOException {
-    if (Files.isDirectory(path)) {
-      try (Stream<Path> entries = Files.list(path)) {
-        for (Path entry : entries.toList()) {
-          deleteRecursively(entry);
-        }
-      }
-    }
-    Files.deleteIfExists(path);
-  }
-
-  private ObjectMapper getObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    SimpleModule module = new SimpleModule();
-    module.addSerializer(LocalDateTime.class, new BaseRepository.LocalDateTimeSerializer());
-    module.addDeserializer(LocalDateTime.class, new BaseRepository.LocalDateTimeDeserializer());
-    objectMapper.registerModule(module);
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    return objectMapper;
-  }
-
-  public static class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime> {
-    @Override
-    public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
-        throws IOException {
-      gen.writeString(value.format(FORMATTER));
-    }
-  }
-
-  public static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
-    @Override
-    public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      return LocalDateTime.parse(p.getText(), FORMATTER);
     }
   }
 }

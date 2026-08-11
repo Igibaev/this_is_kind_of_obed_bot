@@ -2,7 +2,7 @@
 package kz.aday.bot.bot.dispatcher;
 
 import java.util.HashSet;
-import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;

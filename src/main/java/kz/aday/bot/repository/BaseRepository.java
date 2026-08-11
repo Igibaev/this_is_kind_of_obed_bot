@@ -1,16 +1,12 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.repository;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.model.Id;
@@ -19,11 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BaseRepository<T extends Id> implements Repository<T> {
 
-  private static final DateTimeFormatter FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
   private static final DateTimeFormatter DATE_FOLDER_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd");
-  private static final String JSON = ".json";
+  private static final String JSON = JsonFileStorageSupport.JSON;
 
   private final Path BASE_PATH;
   private final ObjectMapper objectMapper;
@@ -32,7 +26,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
 
   public BaseRepository(Map<BaseRepoKey, T> database, Class<T> type, String storagePath) {
     this.BASE_PATH = Path.of(BotConfig.getBotStorePath()).resolve(storagePath);
-    this.objectMapper = getObjectMapper();
+    this.objectMapper = JsonFileStorageSupport.createObjectMapper();
     this.database = database;
     this.type = type;
     loadFromStorage();
@@ -143,7 +137,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
 
   private void saveToStorage(T t) {
     Path todayPath = getTodayFolderPath();
-    createStorageIfNotExist(todayPath);
+    JsonFileStorageSupport.createStorageIfNotExist(todayPath);
 
     Path file = todayPath.resolve(t.getId() + JSON);
     try {
@@ -178,18 +172,6 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
   }
 
-  private void createStorageIfNotExist(Path storage) {
-    try {
-      if (!Files.exists(storage)) {
-        Files.createDirectories(storage);
-        log.info("Created storage folder [{}]", storage);
-      }
-    } catch (IOException e) {
-      log.error("Failure create storage [{}]", storage, e);
-      throw new RuntimeException(e);
-    }
-  }
-
   private void clearOldFolders() {
     if (!Files.exists(BASE_PATH)) return;
 
@@ -203,7 +185,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
                 try {
                   LocalDate folderDate = LocalDate.parse(name, DATE_FOLDER_FORMATTER);
                   if (folderDate.isBefore(today.minusDays(30))) {
-                    deleteRecursively(folder);
+                    JsonFileStorageSupport.deleteRecursively(folder);
                     log.info("Deleted old folder [{}]", folder);
                   }
                 } catch (Exception e) {
@@ -216,17 +198,6 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
   }
 
-  private void deleteRecursively(Path path) throws IOException {
-    if (Files.isDirectory(path)) {
-      try (Stream<Path> entries = Files.list(path)) {
-        for (Path entry : entries.toList()) {
-          deleteRecursively(entry);
-        }
-      }
-    }
-    Files.deleteIfExists(path);
-  }
-
   private Path getTodayFolderPath() {
     String dateFolder = LocalDate.now().format(DATE_FOLDER_FORMATTER);
     return BASE_PATH.resolve(dateFolder);
@@ -234,30 +205,5 @@ public class BaseRepository<T extends Id> implements Repository<T> {
 
   private static BaseRepoKey createRepoKey(String id) {
     return new BaseRepoKey(id, LocalDate.now());
-  }
-
-  private ObjectMapper getObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    SimpleModule module = new SimpleModule();
-    module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
-    module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer());
-    objectMapper.registerModule(module);
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    return objectMapper;
-  }
-
-  public static class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime> {
-    @Override
-    public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
-        throws IOException {
-      gen.writeString(value.format(FORMATTER));
-    }
-  }
-
-  public static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
-    @Override
-    public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-      return LocalDateTime.parse(p.getText(), FORMATTER);
-    }
   }
 }

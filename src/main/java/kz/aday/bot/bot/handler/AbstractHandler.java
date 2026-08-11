@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
-import kz.aday.bot.bot.handler.commandHamndlers.CommandHandler;
+import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.InputMessageToAllUsersStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;

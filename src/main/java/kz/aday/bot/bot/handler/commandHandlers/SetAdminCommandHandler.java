@@ -1,5 +1,5 @@
 /* (C) 2024 Igibaev */
-package kz.aday.bot.bot.handler.commandHamndlers;
+package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Status;

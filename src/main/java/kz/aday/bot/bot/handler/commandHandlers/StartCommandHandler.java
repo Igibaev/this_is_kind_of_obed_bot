@@ -1,5 +1,5 @@
 /* (C) 2024 Igibaev */
-package kz.aday.bot.bot.handler.commandHamndlers;
+package kz.aday.bot.bot.handler.commandHandlers;
 
 import static kz.aday.bot.bot.handler.stateHandlers.State.SET_USERNAME_THEN_CHOOSE_CITY;
 

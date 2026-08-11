@@ -54,10 +54,6 @@ public abstract class AbstractHandler {
         .isPresent();
   }
 
-  public boolean isUserExist(CallbackQuery update) {
-    return userService.findByIdOptional(getChatId(update).toString()).isPresent();
-  }
-
   public Optional<User> findReadyUserByChatId(CallbackQuery update) {
     return userService.findByIdOptional(getChatId(update).toString())
             .filter(this::isUserReady);
@@ -115,89 +111,67 @@ public abstract class AbstractHandler {
     return false;
   }
 
-  public boolean isMenuPending(City city) {
-    if (isMenuExist(city)) {
-      Menu menu = menuService.findById(city.toString());
-      return menu.getStatus() == Status.PENDING;
-    }
-    return false;
-  }
-
   public boolean isOrderExist(User user) {
     return orderService.existsById(user.getId());
   }
 
-  public boolean isOrderReady(User user) {
-    if (isOrderExist(user)) {
-      Order order = orderService.findById(user.getId());
-      return order.getStatus() == Status.READY;
-    }
-    return false;
-  }
-
-  public boolean isOrderPending(User user) {
-    if (isOrderExist(user)) {
-      Order order = orderService.findById(user.getId());
-      return order.getStatus() == Status.PENDING;
-    }
-    return false;
-  }
-
   public ReplyKeyboard getUserMenuKeyboard(User user) {
-    boolean isMenuExist = isMenuExist(user.getCity());
-    Status menuStatus =
-        isMenuExist(user.getCity())
-            ? menuService.findById(user.getCity().toString()).getStatus()
-            : null;
-    boolean isMenuReady = isMenuReady(user.getCity());
-    boolean isOrderExist = isOrderExist(user);
-    boolean isOrderReady = isOrderReady(user);
+    List<String> items = new ArrayList<>();
+    addBaseMenuItems(user, items);
 
-    List<String> userMenuItems = new ArrayList<>();
-    userMenuItems.add(State.PROFILE.getDisplayName());
-    userMenuItems.add(State.EDIT_USERNAME.getDisplayName());
-    userMenuItems.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
-    userMenuItems.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
-    if (user.getRole() == ADMIN) {
-      userMenuItems.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
-      userMenuItems.add(State.GET_TODAY_ORDERS.getDisplayName());
+    Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
+    if (menu.isEmpty()) {
+      items.add(State.CREATE_ORDER.getDisplayName());
+      items.add(State.CREATE_MENU.getDisplayName());
+      return KeyboardUtil.createReplyKeyboard(items);
     }
 
-
-    if (isMenuExist) {
-      if (menuStatus == Status.READY) {
+    switch (menu.get().getStatus()) {
+      case READY -> addReadyMenuItems(user, items);
+      case DEADLINE -> {
+        items.add(State.GET_ORDER.getDisplayName());
+        items.add(State.CHANGE_MENU.getDisplayName());
+      }
+      case PENDING -> {
         if (user.getRole() == ADMIN) {
-          userMenuItems.add(State.CLEAR_MENU.getDisplayName());
-          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
-        }
-        if (isOrderExist) {
-          if (isOrderReady) {
-            userMenuItems.add(State.DELETE_ORDER.getDisplayName());
-            userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
-            userMenuItems.add(State.GET_ORDER.getDisplayName());
-          } else {
-            userMenuItems.add(State.SUBMIT_ORDER.getDisplayName());
-            userMenuItems.add(State.CHANGE_ORDER.getDisplayName());
-            userMenuItems.add(State.GET_ORDER.getDisplayName());
-          }
-        } else {
-          userMenuItems.add(State.CREATE_ORDER.getDisplayName());
-          userMenuItems.add(State.RANDOM_ORDER.getDisplayName());
-        }
-      } else if (menuStatus == Status.DEADLINE) {
-          userMenuItems.add(State.GET_ORDER.getDisplayName());
-          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
-      } else if (menuStatus == Status.PENDING) {
-        if (user.getRole() == ADMIN) {
-          userMenuItems.add(State.PUBLISH_MENU.getDisplayName());
-          userMenuItems.add(State.CHANGE_MENU.getDisplayName());
+          items.add(State.PUBLISH_MENU.getDisplayName());
+          items.add(State.CHANGE_MENU.getDisplayName());
         }
       }
-    } else {
-      userMenuItems.add(State.CREATE_ORDER.getDisplayName());
-      userMenuItems.add(State.CREATE_MENU.getDisplayName());
+      default -> {}
     }
-    return KeyboardUtil.createReplyKeyboard(userMenuItems);
+    return KeyboardUtil.createReplyKeyboard(items);
+  }
+
+  private void addBaseMenuItems(User user, List<String> items) {
+    items.add(State.PROFILE.getDisplayName());
+    items.add(State.EDIT_USERNAME.getDisplayName());
+    items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
+    items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
+
+    if (user.getRole() == ADMIN) {
+      items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
+      items.add(State.GET_TODAY_ORDERS.getDisplayName());
+    }
+  }
+
+  private void addReadyMenuItems(User user, List<String> items) {
+    if (user.getRole() == ADMIN) {
+      items.add(State.CLEAR_MENU.getDisplayName());
+      items.add(State.CHANGE_MENU.getDisplayName());
+    }
+    Optional<Order> order = orderService.findByIdOptional(user.getId());
+    if (order.isEmpty()) {
+      items.add(State.CREATE_ORDER.getDisplayName());
+      items.add(State.RANDOM_ORDER.getDisplayName());
+      return;
+    }
+    items.add(
+            order.get().getStatus() == Status.READY
+                    ? State.DELETE_ORDER.getDisplayName()
+                    : State.SUBMIT_ORDER.getDisplayName());
+    items.add(State.CHANGE_ORDER.getDisplayName());
+    items.add(State.GET_ORDER.getDisplayName());
   }
 
   public void sendMessageWithKeyboard(

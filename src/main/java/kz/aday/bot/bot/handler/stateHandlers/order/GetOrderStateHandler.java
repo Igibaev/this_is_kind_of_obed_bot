@@ -6,6 +6,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.model.City;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
@@ -23,7 +24,7 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
   public void handle(Update update, AbsSender sender) throws Exception {
     if (isUserExistAndReady(update)) {
       User user = userService.findById(getChatId(update).toString());
-      if (user.getCity().isNextDayOrderCycle()) {
+      if (user.getCity() == City.ALMATA) {
         List<UserButton> buttons = List.of(
             new UserButton(CallbackState.GET_ORDER_TODAY_ALMATA.getDisplayName(),
                 CallbackState.GET_ORDER_TODAY_ALMATA.name()),

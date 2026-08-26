@@ -8,16 +8,13 @@ import lombok.Getter;
 
 @Getter
 public enum City {
-  ASTANA("Астана", false),
-  ALMATA("Алматы", true),
-  KARAGANDA("Караганда", true);
+  ASTANA("Астана"),
+  ALMATA("Алматы");
 
   private final String value;
-  private final boolean nextDayOrderCycle;
 
-  City(String value, boolean nextDayOrderCycle) {
+  City(String value) {
     this.value = value;
-    this.nextDayOrderCycle = nextDayOrderCycle;
   }
 
   public static City from(String text) throws TelegramMessageException {

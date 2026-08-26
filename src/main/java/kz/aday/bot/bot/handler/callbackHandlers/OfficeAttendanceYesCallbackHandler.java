@@ -7,6 +7,7 @@ import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public class OfficeAttendanceYesCallbackHandler extends AbstractHandler implements CallbackHandler {
@@ -27,8 +28,15 @@ public class OfficeAttendanceYesCallbackHandler extends AbstractHandler implemen
 
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      officeAttendanceService.save(user.getId(), user.getPreferedName(), user.getCity(), true);
-      sendMessage(user, Messages.THANKS_WILL_COME, getMessageId(callback), sender);
+      String[] data = callback.getData().split(":");
+      boolean isToday = data.length > 1 && "TODAY".equals(data[1]);
+      LocalDate date = isToday ? LocalDate.now() : LocalDate.now().plusDays(1);
+      officeAttendanceService.save(user.getId(), user.getPreferedName(), user.getCity(), true, date);
+      sendMessage(
+          user,
+          isToday ? Messages.THANKS_WILL_COME_TODAY : Messages.THANKS_WILL_COME_TOMORROW,
+          getMessageId(callback),
+          sender);
     }
   }
 }

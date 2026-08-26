@@ -13,6 +13,7 @@ public class OfficeAttendance implements Id {
   private String username;
   private City city;
   private Boolean willCome;
+  private String date;
 
   @Override
   public String toString() {
@@ -27,11 +28,13 @@ public class OfficeAttendance implements Id {
         + city
         + ", willCome="
         + willCome
+        + ", date="
+        + date
         + '}';
   }
 
   @Override
   public String getId() {
-    return chatId;
+    return chatId + "_" + date;
   }
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
-import kz.aday.bot.model.City;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -26,7 +25,7 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
       User user = userService.findById(getChatId(update).toString());
       user.setState(State.NONE);
       userService.save(user);
-      if (user.getCity() == City.ALMATA) {
+      if (user.getCity().isNextDayOrderCycle()) {
         List<UserButton> buttons = List.of(
             new UserButton(CallbackState.WHO_COMES_TODAY_ALMATA.getDisplayName(),
                 CallbackState.WHO_COMES_TODAY_ALMATA.name()),

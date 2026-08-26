@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.model.City;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -28,7 +27,7 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
       // Кто приходит сегодня = заказы сделанные вчера
       LocalDate yesterday = LocalDate.now().minusDays(1);
       List<Order> orders = orderService.findAllOnDate(yesterday).stream()
-          .filter(o -> o.getCity() == City.ALMATA)
+          .filter(o -> o.getCity() == user.getCity())
           .filter(o -> o.getStatus() == Status.READY)
           .collect(Collectors.toList());
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));

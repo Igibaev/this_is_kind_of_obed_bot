@@ -155,6 +155,8 @@ public abstract class AbstractHandler {
     if (isAdmin) {
       items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
       items.add(State.GET_TODAY_ORDERS.getDisplayName());
+      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
+      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
     }
   }
 

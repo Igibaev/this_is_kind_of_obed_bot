@@ -56,25 +56,49 @@ public class BaseRepository<T extends Id> implements Repository<T> {
                 .getFileName()
                 .toString()
                 .equals(today.format(DATE_FOLDER_FORMATTER))) {
-          try (Stream<Path> files = Files.list(dateFolder)) {
-            files.forEach(
-                    path -> {
-                      if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
-                        try {
-                          T item = objectMapper.readValue(path.toFile(), type);
-                          items.add(item);
-                        } catch (IOException e) {
-                          log.warn("Failed to parse [{}], skip.", path);
-                        }
-                      }
-                    });
-          }
+          readFolder(dateFolder, items);
         }
       }
       return items;
     } catch (IOException e) {
       log.error("Error loading storage", e);
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Collection<T> getAll() {
+    if (!Files.exists(BASE_PATH)) {
+      log.info("Storage not exist [{}]", BASE_PATH);
+      return List.of();
+    }
+    List<T> items = new ArrayList<>();
+    try (Stream<Path> dateFolders = Files.list(BASE_PATH)) {
+      for (Path dateFolder : dateFolders.toList()) {
+        if (Files.isDirectory(dateFolder)) {
+          readFolder(dateFolder, items);
+        }
+      }
+      return items;
+    } catch (IOException e) {
+      log.error("Error loading storage", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void readFolder(Path dateFolder, List<T> items) throws IOException {
+    try (Stream<Path> files = Files.list(dateFolder)) {
+      files.forEach(
+          path -> {
+            if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
+              try {
+                T item = objectMapper.readValue(path.toFile(), type);
+                items.add(item);
+              } catch (IOException e) {
+                log.warn("Failed to parse [{}], skip.", path);
+              }
+            }
+          });
     }
   }
 

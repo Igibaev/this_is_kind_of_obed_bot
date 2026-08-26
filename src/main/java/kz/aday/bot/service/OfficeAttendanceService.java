@@ -2,7 +2,13 @@
 package kz.aday.bot.service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
@@ -26,5 +32,46 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     officeAttendance.setWillCome(willCome);
     officeAttendance.setDate(date.toString());
     save(officeAttendance);
+  }
+
+  public String getOverallAttendanceStats() {
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .toList();
+    return formatStats(attendances);
+  }
+
+  public String getCurrentMonthAttendanceStats() {
+    YearMonth currentMonth = YearMonth.now();
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> isInMonth(a, currentMonth))
+            .toList();
+    return formatStats(attendances);
+  }
+
+  private boolean isInMonth(OfficeAttendance attendance, YearMonth month) {
+    if (attendance.getDate() == null) {
+      return false;
+    }
+    try {
+      return YearMonth.from(LocalDate.parse(attendance.getDate())).equals(month);
+    } catch (DateTimeParseException e) {
+      return false;
+    }
+  }
+
+  private String formatStats(List<OfficeAttendance> attendances) {
+    if (attendances.isEmpty()) {
+      return "Нет данных о посещениях.";
+    }
+    Map<String, List<OfficeAttendance>> byChatId =
+        attendances.stream().collect(Collectors.groupingBy(OfficeAttendance::getChatId));
+    return byChatId.values().stream()
+        .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
+        .map(list -> String.format("%s: %d", list.get(0).getUsername(), list.size()))
+        .collect(Collectors.joining("\n"));
   }
 }

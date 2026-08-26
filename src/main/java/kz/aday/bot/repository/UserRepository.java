@@ -44,6 +44,11 @@ public class UserRepository implements Repository<User> {
   }
 
   @Override
+  public Collection<User> getAll() {
+    return database.values();
+  }
+
+  @Override
   public void save(User user) {
     saveToStorage(user);
     database.put(user.getId(), user);

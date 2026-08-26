@@ -11,6 +11,8 @@ public interface Repository<T> {
 
   Collection<T> getAll(LocalDate date);
 
+  Collection<T> getAll();
+
   void save(T t);
 
   void clearLastWeek();

@@ -646,7 +646,9 @@ class AbstractHandlerTest {
         BASE_ITEMS,
         List.of(
             State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName(),
-            State.GET_TODAY_ORDERS.getDisplayName()));
+            State.GET_TODAY_ORDERS.getDisplayName(),
+            State.GET_ATTENDANCE_STATS.getDisplayName(),
+            State.GET_ATTENDANCE_STATS_MONTH.getDisplayName()));
   }
 
   private static List<String> concat(List<String> first, List<String> second) {

@@ -28,6 +28,8 @@ public enum State {
   SUBMIT_ORDER("Подтвердить заказ", Type.ACTION),
 
   GET_TODAY_ORDERS("Выгрузить заказы", Type.ACTION),
+  GET_ATTENDANCE_STATS("Общая статистика посещений", Type.ACTION),
+  GET_ATTENDANCE_STATS_MONTH("Статистика посещений за месяц", Type.ACTION),
   PUBLISH_MENU("Опубликовать меню", Type.ACTION),
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),

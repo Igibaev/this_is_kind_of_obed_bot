@@ -26,11 +26,11 @@ public class SetOfficeAttendanceStateHandler extends AbstractHandler implements 
       user.setState(State.NONE);
       sendMessageWithKeyboard(
           user,
-          Messages.WILL_COME_TOMORROW_QUESTION,
+          Messages.WILL_COME_DAY_QUESTION,
           KeyboardUtil.createInlineKeyboard(
               List.of(
-                  new UserButton("Да", CallbackState.ATTENDANCE_YES.name()),
-                  new UserButton("Нет", CallbackState.ATTENDANCE_NO.name()))),
+                  new UserButton("Сегодня", CallbackState.ATTENDANCE_DAY_TODAY.name()),
+                  new UserButton("Завтра", CallbackState.ATTENDANCE_DAY_TOMORROW.name()))),
           getMessageId(update),
           sender);
     }

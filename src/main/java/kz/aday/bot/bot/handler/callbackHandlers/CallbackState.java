@@ -25,6 +25,8 @@ public enum CallbackState {
   WHO_COMES_TODAY_ALMATA("Кто приходит сегодня"),
   WHO_COMES_TOMORROW_ALMATA("Кто придет завтра"),
 
+  ATTENDANCE_DAY_TODAY("Сегодня"),
+  ATTENDANCE_DAY_TOMORROW("Завтра"),
   ATTENDANCE_YES("Да, приду"),
   ATTENDANCE_NO("Нет, не приду");
 

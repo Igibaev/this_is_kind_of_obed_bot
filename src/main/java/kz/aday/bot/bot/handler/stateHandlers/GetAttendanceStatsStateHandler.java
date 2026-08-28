@@ -22,7 +22,7 @@ public class GetAttendanceStatsStateHandler extends AbstractHandler implements S
       }
       sendMessage(
           user,
-          REPORT_MESSAGE + officeAttendanceService.getOverallAttendanceStats(),
+          REPORT_MESSAGE + officeAttendanceService.getOverallAttendanceStats(user.getCity()),
           getMessageId(update),
           sender);
     }

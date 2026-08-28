@@ -23,7 +23,8 @@ public class GetAttendanceStatsForMonthStateHandler extends AbstractHandler
       }
       sendMessage(
           user,
-          REPORT_MESSAGE + officeAttendanceService.getCurrentMonthAttendanceStats(),
+          REPORT_MESSAGE
+              + officeAttendanceService.getCurrentMonthAttendanceStats(user.getCity()),
           getMessageId(update),
           sender);
     }

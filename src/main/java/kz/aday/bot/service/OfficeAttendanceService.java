@@ -34,19 +34,21 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     save(officeAttendance);
   }
 
-  public String getOverallAttendanceStats() {
+  public String getOverallAttendanceStats(City city) {
     List<OfficeAttendance> attendances =
         repository.getAll().stream()
             .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
             .toList();
     return formatStats(attendances);
   }
 
-  public String getCurrentMonthAttendanceStats() {
+  public String getCurrentMonthAttendanceStats(City city) {
     YearMonth currentMonth = YearMonth.now();
     List<OfficeAttendance> attendances =
         repository.getAll().stream()
             .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
             .filter(a -> isInMonth(a, currentMonth))
             .toList();
     return formatStats(attendances);

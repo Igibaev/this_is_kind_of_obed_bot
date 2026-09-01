@@ -4,7 +4,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -19,7 +19,7 @@ public class ChangeMenuCallbackHanlder extends AbstractHandler implements Callba
         return;
       }
       user.setState(State.CHANGE_MENU);
-      sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(callback), sender);
+      sendMessage(user, Messages.MENU_TEMPLATE.getText(), getMessageId(callback), sender);
     }
   }
 

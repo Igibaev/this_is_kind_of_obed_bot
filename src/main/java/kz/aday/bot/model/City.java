@@ -1,7 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
-import static kz.aday.bot.messages.Messages.RETURN_TO_MENU;
+import static kz.aday.bot.util.Messages.RETURN_TO_MENU;
 
 import kz.aday.bot.exception.TelegramMessageException;
 import lombok.Getter;

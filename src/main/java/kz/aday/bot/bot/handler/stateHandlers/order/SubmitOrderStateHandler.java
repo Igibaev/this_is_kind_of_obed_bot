@@ -6,6 +6,7 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -30,7 +31,11 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
         Order order = orderService.findById(user.getId());
         Menu menu = menuService.findById(user.getCity().toString());
         if (menu.isDeadlinePassed()) {
-          sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
+          sendMessage(
+              user,
+              Messages.SUBMIT_ORDER_MENU_DEADLINE_PASSED.getText(),
+              getMessageId(update),
+              sender);
         } else {
           if (user.getState() == State.SUBMIT_ORDER) {
             user.setState(State.NONE);
@@ -40,16 +45,16 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
               orderService.save(order);
               officeAttendanceService.save(
                   user.getId(), user.getPreferedName(), user.getCity(), true);
-              sendMessage(user, ORDER_WAS_SUBMITED, getMessageId(update), sender);
+              sendMessage(user, Messages.ORDER_WAS_SUBMITED.getText(), getMessageId(update), sender);
             } else {
-              sendMessage(user, RETURN_TO_MENU, getMessageId(update), sender);
+              sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);
             }
           } else {
             ReplyKeyboard keyboard = KeyboardUtil.createReplyKeyboard(List.of("Да", "Нет"));
             user.setState(State.SUBMIT_ORDER);
             sendMessageWithKeyboard(
                 user,
-                String.format(YOUR_ORDER_IS, order.getOrderItemList()),
+                Messages.SUBMIT_ORDER_CONFIRM_PROMPT.getText(order.getOrderItemList()),
                 keyboard,
                 getMessageId(update),
                 sender);
@@ -58,12 +63,4 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
       }
     }
   }
-
-  private static final String RETURN_TO_MENU = "Окей. Вернитесь в меню тогда /return";
-
-  private static final String ORDER_WAS_SUBMITED = "Твой заказ %s. Подтвержден.";
-
-  private static final String YOUR_ORDER_IS = "Твой заказ %s. Чтобы подтвердить отправьте 'Да'.";
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн меню уже прошел.";
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
@@ -65,7 +66,7 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
         }
         SendMessage confirm = new SendMessage();
         confirm.setChatId(message.getChatId().toString());
-        confirm.setText("Рассылка прошла успешно.");
+        confirm.setText(Messages.BROADCAST_SUCCESS.getText());
         sender.executeAsync(confirm);
         user.setState(State.NONE);
         userService.save(user);
@@ -73,13 +74,10 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
         user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
         sendMessage(
             user,
-            String.format(INPUT_MESSAGE, user.getCity().getValue()),
+            Messages.INPUT_MESSAGE.getText(user.getCity().getValue()),
             getMessageId(update),
             sender);
       }
     }
   }
-
-  private static final String INPUT_MESSAGE =
-      "Введите сообщение для рассылки, для города %s. \n" + "Чтобы отменить нажмите /cancel";
 }

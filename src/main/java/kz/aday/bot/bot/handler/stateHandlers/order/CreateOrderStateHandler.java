@@ -6,6 +6,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -29,7 +30,8 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
         Menu menu = menuService.findById(user.getCity().toString());
         if (menu.isDeadlinePassed()) {
-          sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
+          sendMessage(
+              user, Messages.MENU_DEADLINE_IS_PASSED.getText(), getMessageId(update), sender);
         }
         Order order = new Order();
         order.setCity(user.getCity());
@@ -39,19 +41,13 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
         orderService.save(order);
         sendMessageWithKeyboard(
             user,
-            CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+            Messages.CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             getMessageId(update),
             sender);
       } else {
-        sendMessage(user, MENU_IS_NOT_READY_TODAY, getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_IS_NOT_READY_TODAY.getText(), getMessageId(update), sender);
       }
     }
   }
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";
-
-  private static final String CHOOSE_ITEM_MESSAGE = "Выберите что хотите заказать:";
-
-  private static final String MENU_IS_NOT_READY_TODAY = "Меню на сегодня еще не готово. /return";
 }

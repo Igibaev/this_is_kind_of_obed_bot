@@ -7,6 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
@@ -36,7 +37,7 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
                     CallbackState.GET_ORDER_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
-            CHOOSE_DATE_MESSAGE,
+            Messages.CHOOSE_DATE_MESSAGE_ORDER.getText(),
             KeyboardUtil.createInlineKeyboard(buttons),
             getMessageId(update),
             sender);
@@ -45,17 +46,13 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
           Order order = orderService.findById(user.getId());
           sendMessage(
               user,
-              String.format(YOUR_ORDER_IS, order.getOrderItemList()),
+              Messages.YOUR_ORDER_IS.getText(order.getOrderItemList()),
               getMessageId(update),
               sender);
         } else {
-          sendMessage(user, ORDER_IS_EMPTY, getMessageId(update), sender);
+          sendMessage(user, Messages.ORDER_IS_EMPTY.getText(), getMessageId(update), sender);
         }
       }
     }
   }
-
-  private static final String CHOOSE_DATE_MESSAGE = "Выберите за какой день посмотреть заказ:";
-  private static final String YOUR_ORDER_IS = "Твой заказ %s.";
-  private static final String ORDER_IS_EMPTY = "Твой заказ пуст.";
 }

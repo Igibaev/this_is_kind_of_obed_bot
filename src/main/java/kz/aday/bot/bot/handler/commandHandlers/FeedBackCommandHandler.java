@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,9 +20,6 @@ public class FeedBackCommandHandler extends AbstractHandler implements CommandHa
   public void handle(Update update, AbsSender sender) throws Exception {
     User user = userService.findById(getChatId(update).toString());
     user.setState(State.SEND_FEEDBACK);
-    sendMessage(user, SEND_FEEDBACK, user.getLastMessageId(), sender);
+    sendMessage(user, Messages.FEEDBACK_FORM_MESSAGE.getText(), user.getLastMessageId(), sender);
   }
-
-  private final String SEND_FEEDBACK =
-      "Это форма обратной связи. Приложите фотографии, аудио, видео или просто текстом опишите, ваши пожелания как сделать чат бот лучше и удобнее.";
 }

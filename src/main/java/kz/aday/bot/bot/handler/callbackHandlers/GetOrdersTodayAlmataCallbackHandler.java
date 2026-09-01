@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Report;
 import kz.aday.bot.model.Status;
@@ -39,15 +40,15 @@ public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler
               .collect(Collectors.toList());
 
       if (orders.isEmpty()) {
-        sendMessage(user, EMPTY_ORDERS, getMessageId(callback), sender);
+        sendMessage(user, Messages.EMPTY_ORDERS_TODAY.getText(), getMessageId(callback), sender);
       } else {
         Report report = new Report(user.getCity(), orders);
         sendMessage(
-            user, REPORT_MESSAGE + report.printOrderReport(), getMessageId(callback), sender);
+            user,
+            Messages.REPORT_MESSAGE_ORDERS_TODAY + report.printOrderReport(),
+            getMessageId(callback),
+            sender);
       }
     }
   }
-
-  private static final String EMPTY_ORDERS = "Список заказов на сегодня пуст.";
-  private static final String REPORT_MESSAGE = "Заказы на сегодня.\n";
 }

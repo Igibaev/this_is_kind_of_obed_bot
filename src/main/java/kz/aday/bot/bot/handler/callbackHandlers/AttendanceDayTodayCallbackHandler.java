@@ -4,7 +4,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -28,7 +28,7 @@ public class AttendanceDayTodayCallbackHandler extends AbstractHandler implement
       User user = optionalUser.get();
       sendMessageWithKeyboard(
           user,
-          Messages.WILL_COME_TODAY_QUESTION,
+          Messages.WILL_COME_TODAY_QUESTION.getText(),
           KeyboardUtil.createInlineKeyboard(
               List.of(
                   new UserButton("Да", CallbackState.ATTENDANCE_YES.name() + TODAY),

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -38,7 +39,7 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
                     CallbackState.WHO_COMES_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
-            CHOOSE_DATE_MESSAGE,
+            Messages.CHOOSE_DATE_MESSAGE_WHO_COMES.getText(),
             KeyboardUtil.createInlineKeyboard(buttons),
             getMessageId(update),
             sender);
@@ -50,16 +51,15 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
                 .collect(Collectors.toList());
         String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
         if (names.isBlank()) {
-          sendMessage(user, NOBODY_COMES_TODAY, getMessageId(update), sender);
+          sendMessage(user, Messages.NOBODY_COMES_TODAY.getText(), getMessageId(update), sender);
         } else {
           sendMessage(
-              user, String.format(WHO_COMES, orders.size(), names), getMessageId(update), sender);
+              user,
+              Messages.WHO_COMES_OFFICE.getText(orders.size(), names),
+              getMessageId(update),
+              sender);
         }
       }
     }
   }
-
-  static final String NOBODY_COMES_TODAY = "Сегодня никто в офис не придет( хнык хнык";
-  static final String WHO_COMES = "Список людей кто придет в офис: [%s]\n%s";
-  private static final String CHOOSE_DATE_MESSAGE = "Выберите за какой день посмотреть:";
 }

@@ -7,6 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
@@ -50,13 +51,10 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
           markup);
       sendMessageWithKeyboard(
           user,
-          String.format(MENU_PENDING, user.getCity().getValue()),
+          Messages.MENU_PENDING.getText(user.getCity().getValue()),
           markup,
           getMessageId(update),
           sender);
     }
   }
-
-  private static final String MENU_PENDING =
-      "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";
 }

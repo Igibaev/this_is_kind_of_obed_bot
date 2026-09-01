@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -18,12 +19,9 @@ public class ProfileStateHandler extends AbstractHandler implements StateHandler
       User user = userService.findById(getChatId(update).toString());
       sendMessage(
           user,
-          String.format(PROFILE_MESSAGE, user.getPreferedName(), user.getCity().getValue()),
+          Messages.PROFILE_MESSAGE.getText(user.getPreferedName(), user.getCity().getValue()),
           getMessageId(update),
           sender);
     }
   }
-
-  private static final String PROFILE_MESSAGE =
-      "Ваше имя: %s \nГород: %s \nВернуться в меню /return";
 }

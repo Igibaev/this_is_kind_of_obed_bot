@@ -12,7 +12,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -71,7 +71,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
               markup);
           sendMessageWithKeyboard(
               user,
-              String.format(MENU_PENDING, user.getCity().getValue()),
+              Messages.MENU_PENDING.getText(user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);
@@ -93,7 +93,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
               markup);
           sendMessageWithKeyboard(
               user,
-              String.format(MENU_PENDING, user.getCity().getValue()),
+              Messages.MENU_PENDING.getText(user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);
@@ -117,7 +117,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                 log.debug("Send notification to user:{}", userHasBannedItems);
                 sendMessageWithKeyboard(
                     userHasBannedItems,
-                    String.format(NOTIFY_IF_USER_HAS_BANNED_ITEMS, bannedItems),
+                    Messages.NOTIFY_IF_USER_HAS_BANNED_ITEMS.getText(bannedItems),
                     markup,
                     getMessageId(update),
                     sender);
@@ -128,16 +128,8 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
 
       } else {
         user.setState(State.CHANGE_MENU);
-        sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_TEMPLATE.getText(), getMessageId(update), sender);
       }
     }
   }
-
-  private static final String NOTIFY_IF_USER_HAS_BANNED_ITEMS =
-      "Меню изменилось. Из вашего заказа были убраны след позиции %s. "
-          + "Выберите то что осталось в меню. "
-          + "Или нажмите /cancel чтобы оставить заказ без изменений или удалите его /delete.";
-
-  private static final String MENU_PENDING =
-      "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";
 }

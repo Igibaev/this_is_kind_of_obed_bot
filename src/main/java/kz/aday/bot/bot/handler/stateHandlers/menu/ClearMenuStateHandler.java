@@ -7,6 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -31,7 +32,7 @@ public class ClearMenuStateHandler extends AbstractHandler implements StateHandl
       if (isMenuExist(user.getCity())) {
         sendMessageWithKeyboard(
             user,
-            MENU_TO_DELETE,
+            Messages.MENU_TO_DELETE.getText(),
             KeyboardUtil.createInlineKeyboard(
                 List.of(
                     new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString()),
@@ -39,13 +40,8 @@ public class ClearMenuStateHandler extends AbstractHandler implements StateHandl
             getMessageId(update),
             sender);
       } else {
-        sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_NOT_EXIST_FOR_CITY.getText(), getMessageId(update), sender);
       }
     }
   }
-
-  private static final String MENU_TO_DELETE = "Вы хотите удалить меню на сегодня?\n";
-
-  private static final String MENU_NOT_EXIST =
-      "Меню не создано для города *%s*\n" + "Нажмите /return чтобы вернутся в меню.\n";
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -33,14 +34,14 @@ public class WhoComesTomorrowAlmataCallbackHandler extends AbstractHandler
               .toList();
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
       if (names.isBlank()) {
-        sendMessage(user, NOBODY_COMES, getMessageId(callback), sender);
+        sendMessage(user, Messages.NOBODY_COMES_TOMORROW.getText(), getMessageId(callback), sender);
       } else {
         sendMessage(
-            user, String.format(WHO_COMES, orders.size(), names), getMessageId(callback), sender);
+            user,
+            Messages.WHO_COMES_TOMORROW.getText(orders.size(), names),
+            getMessageId(callback),
+            sender);
       }
     }
   }
-
-  private static final String NOBODY_COMES = "Завтра никто в офис не придет( хнык хнык";
-  private static final String WHO_COMES = "Завтра в офис придет [%s]:\n%s";
 }

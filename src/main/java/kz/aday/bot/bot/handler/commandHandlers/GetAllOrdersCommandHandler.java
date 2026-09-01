@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -17,13 +18,9 @@ public class GetAllOrdersCommandHandler extends AbstractHandler implements Comma
     User user = userService.findById(getChatId(update).toString());
     sendMessage(
         user,
-        String.format(
-            ATTENDANCE_SHEET,
-            user.getCity().getValue(),
-            orderService.getAllOrdersGropedByDate(user.getCity())),
+        Messages.ATTENDANCE_SHEET.getText(
+            user.getCity().getValue(), orderService.getAllOrdersGropedByDate(user.getCity())),
         getMessageId(update),
         sender);
   }
-
-  private final String ATTENDANCE_SHEET = "Отчет посещяемости офиса %s за 30дней\n%s";
 }

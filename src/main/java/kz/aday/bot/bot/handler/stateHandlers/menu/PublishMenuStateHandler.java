@@ -7,6 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -40,8 +41,8 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
               markup);
           sendMessageWithKeyboard(
               user,
-              String.format(
-                  MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              Messages.PUBLISH_MENU_READY_MESSAGE.getText(
+                  menu.getDeadlineAsText(), user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);
@@ -56,25 +57,15 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
               markup);
           sendMessageWithKeyboard(
               user,
-              String.format(MENU_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              Messages.PUBLISH_MENU_MESSAGE.getText(
+                  menu.getDeadlineAsText(), user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);
         }
       } else {
-        sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_NOT_EXIST.getText(), getMessageId(update), sender);
       }
     }
   }
-
-  private static final String MENU_NOT_EXIST =
-      "Меню не создано, сначала создайте меню. Чтобы вернуться нажмите \return";
-
-  private static final String MENU_READY_MESSAGE =
-      "Вот меню для города *%s*. Оно уже опубликовано. \n"
-          + "Дедлайн до: *%s* \n"
-          + "Чтобы отменить нажми /cancel";
-
-  private static final String MENU_MESSAGE =
-      "Вот меню для города *%s*.\n" + "Дедлайн до: *%s* \n" + "Чтобы отменить нажми /cancel";
 }

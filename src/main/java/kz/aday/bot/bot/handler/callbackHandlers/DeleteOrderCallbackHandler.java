@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -15,7 +16,7 @@ public class DeleteOrderCallbackHandler extends AbstractHandler implements Callb
       User user = optionalUser.get();
       if (isOrderExist(user)) {
         orderService.deleteById(user.getId());
-        sendMessage(user, ORDER_DELETED, getMessageId(callback), sender);
+        sendMessage(user, Messages.ORDER_DELETED_RETURN.getText(), getMessageId(callback), sender);
       }
     }
   }
@@ -24,6 +25,4 @@ public class DeleteOrderCallbackHandler extends AbstractHandler implements Callb
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.DELETE_ORDER);
   }
-
-  private static final String ORDER_DELETED = "Ваш заказ удален./return";
 }

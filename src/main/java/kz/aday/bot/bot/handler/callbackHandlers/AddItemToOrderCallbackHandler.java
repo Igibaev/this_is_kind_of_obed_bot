@@ -4,6 +4,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -40,7 +41,8 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
       }
 
       if (menu.isDeadlinePassed()) {
-        sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(callback), sender);
+        sendMessage(
+            user, Messages.MENU_DEADLINE_IS_PASSED.getText(), getMessageId(callback), sender);
       } else {
         menu.getItemById(getItemId(callback))
             .ifPresent(
@@ -57,7 +59,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
             keyboard);
         sendMessageWithKeyboard(
             user,
-            CREATING_ORDER_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+            Messages.CREATING_ORDER_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
             keyboard,
             getMessageId(callback),
             sender);
@@ -69,8 +71,4 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
   private Integer getItemId(CallbackQuery callback) {
     return Integer.parseInt(callback.getData().split(":")[1]);
   }
-
-  private static final String CREATING_ORDER_MESSAGE = "Собираем ваш заказ.";
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";
 }

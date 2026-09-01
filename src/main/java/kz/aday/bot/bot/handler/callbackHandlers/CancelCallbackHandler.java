@@ -4,6 +4,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -16,7 +17,11 @@ public class CancelCallbackHandler extends AbstractHandler implements CallbackHa
       User user = optionalUser.get();
       user.setState(State.NONE);
       sendMessageWithKeyboard(
-          user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(callback), sender);
+          user,
+          Messages.NAVIGATION_MENU.getText(),
+          getUserMenuKeyboard(user),
+          getMessageId(callback),
+          sender);
     }
   }
 
@@ -24,6 +29,4 @@ public class CancelCallbackHandler extends AbstractHandler implements CallbackHa
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.CANCEL);
   }
-
-  private static final String NAVIGATION_MENU = "Меню навигации по боту.";
 }

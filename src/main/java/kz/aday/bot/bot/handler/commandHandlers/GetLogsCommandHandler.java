@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.LogFileHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -48,16 +49,11 @@ public class GetLogsCommandHandler extends AbstractHandler implements CommandHan
             linesCount,
             user.getId());
       } else {
-        sendMessage(
-            user,
-            "Не удалось найти или сформировать файл логов с запрошенными строками.",
-            getMessageId(update),
-            sender);
+        sendMessage(user, Messages.LOGS_FILE_NOT_FOUND.getText(), getMessageId(update), sender);
         log.warn("Файл логов не найден или пуст после запроса {} строк.", linesCount);
       }
     } catch (IOException e) {
-      sendMessage(
-          user, "Произошла ошибка при подготовке файла логов.", getMessageId(update), sender);
+      sendMessage(user, Messages.LOGS_FILE_ERROR.getText(), getMessageId(update), sender);
       log.error("Ошибка при чтении или обработке файла логов: {}", e.getMessage(), e);
     } finally {
       // 5. Обязательно удаляем временный файл после использования

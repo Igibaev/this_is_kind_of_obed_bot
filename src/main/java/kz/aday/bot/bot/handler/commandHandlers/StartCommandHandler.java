@@ -9,6 +9,7 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -42,7 +43,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
           if (order.getStatus() == Status.READY) {
             sendMessageWithKeyboard(
                 user,
-                CURRENT_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
+                Messages.CURRENT_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
                 getMenuKeyboard(
                     menu.getItemList(),
                     order,
@@ -55,7 +56,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
           } else {
             sendMessageWithKeyboard(
                 user,
-                CURRENT_PENDING_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
+                Messages.CURRENT_PENDING_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
                 getMenuKeyboard(
                     menu.getItemList(),
                     order,
@@ -70,8 +71,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
         } else {
           sendMessageWithKeyboard(
               user,
-              String.format(
-                      MENU_TODAY,
+              Messages.MENU_TODAY.getText(
                       user.getCity().getValue(),
                       menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
                   + "\n\n"
@@ -85,7 +85,11 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
       } else {
         user.setState(State.NONE);
         sendMessageWithKeyboard(
-            user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(update), sender);
+            user,
+            Messages.NAVIGATION_MENU.getText(),
+            getUserMenuKeyboard(user),
+            getMessageId(update),
+            sender);
       }
     } else {
       User createdUser =
@@ -96,7 +100,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
               .build();
       createdUser.setState(SET_USERNAME_THEN_CHOOSE_CITY);
       userService.save(createdUser);
-      sendMessage(createdUser, START_MESSAGE_INPUT_NAME, getMessageId(update), sender);
+      sendMessage(
+          createdUser, Messages.START_MESSAGE_INPUT_NAME.getText(), getMessageId(update), sender);
     }
   }
 
@@ -115,22 +120,4 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
     KeyboardUtil.addButton(buttons, markup);
     return markup;
   }
-
-  private static final String NAVIGATION_MENU = "Меню навигации по боту.";
-
-  private static final String CURRENT_PENDING_ORDER = "Ты не закончил заказ.";
-
-  private static final String CURRENT_ORDER = "Твой заказ.";
-
-  private static final String MENU_TODAY =
-      "Город: *%s*. Вот что сегодня в меню! \n"
-          + "Дедлайн до: *%s* \n"
-          + "Чтобы отменить заказ нажми /cancel";
-
-  private static final String START_MESSAGE_INPUT_NAME =
-      "Добро пожаловать! \n"
-          + "Данный бот предназначен \n"
-          + "для заказов еды в koronaTech.\n"
-          + "Введите своё имя. \n"
-          + "Чтобы отменить нажми /cancel";
 }

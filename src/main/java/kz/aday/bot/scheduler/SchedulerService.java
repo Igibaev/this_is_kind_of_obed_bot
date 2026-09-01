@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.configuration.ServiceContainer;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.*;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
@@ -105,7 +105,7 @@ public class SchedulerService {
     log.debug("send menu is closed notification");
     for (User user : userService.findAll()) {
       if (user.getCity() == city) {
-        sendMessageToUser(Messages.MENU_IS_CLOSED, user, telegramFoodBot);
+        sendMessageToUser(Messages.MENU_IS_CLOSED.getText(), user, telegramFoodBot);
       }
     }
   }
@@ -162,7 +162,7 @@ public class SchedulerService {
     if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
     SendMessage message = new SendMessage();
     message.setChatId(user.getChatId());
-    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER);
+    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER.getText());
     message.setReplyMarkup(
         KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER));
     message.enableMarkdown(true);
@@ -183,7 +183,7 @@ public class SchedulerService {
     if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
     SendMessage message = new SendMessage();
     message.setChatId(user.getChatId());
-    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER);
+    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER.getText());
     message.setReplyMarkup(
         KeyboardUtil.createInlineKeyboard(
             menu.getItemList(), orderItems, CallbackState.ADD_ITEM_TO_ORDER));

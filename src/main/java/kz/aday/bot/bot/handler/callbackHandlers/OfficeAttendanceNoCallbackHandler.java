@@ -4,7 +4,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -29,7 +29,9 @@ public class OfficeAttendanceNoCallbackHandler extends AbstractHandler implement
           user.getId(), user.getPreferedName(), user.getCity(), false, date);
       sendMessage(
           user,
-          isToday ? Messages.THANKS_WONT_COME_TODAY : Messages.THANKS_WONT_COME_TOMORROW,
+          isToday
+              ? Messages.THANKS_WONT_COME_TODAY.getText()
+              : Messages.THANKS_WONT_COME_TOMORROW.getText(),
           getMessageId(callback),
           sender);
     }

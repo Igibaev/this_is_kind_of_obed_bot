@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -20,13 +21,14 @@ public class ChangeOrderCallbackHandler extends AbstractHandler implements Callb
       Menu menu = menuService.findById(user.getCity().toString());
       Order order = orderService.findById(user.getId());
       if (menu.isDeadlinePassed()) {
-        sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(callback), sender);
+        sendMessage(
+            user, Messages.MENU_DEADLINE_IS_PASSED.getText(), getMessageId(callback), sender);
       }
       order.setStatus(Status.PENDING);
       orderService.save(order);
       sendMessageWithKeyboard(
           user,
-          CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+          Messages.CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
           KeyboardUtil.createInlineKeyboard(
               menu.getItemList(), order.getOrderItemList(), CallbackState.ADD_ITEM_TO_ORDER),
           getMessageId(callback),
@@ -38,8 +40,4 @@ public class ChangeOrderCallbackHandler extends AbstractHandler implements Callb
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.CHANGE_ORDER);
   }
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";
-
-  private static final String CHOOSE_ITEM_MESSAGE = "Выберите что хотите заказать:";
 }

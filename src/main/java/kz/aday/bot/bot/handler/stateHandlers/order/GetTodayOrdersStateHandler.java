@@ -8,6 +8,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Report;
 import kz.aday.bot.model.Status;
@@ -42,7 +43,7 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
                     CallbackState.GET_ORDERS_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
-            CHOOSE_DATE_MESSAGE,
+            Messages.CHOOSE_DATE_MESSAGE_TODAY_ORDERS.getText(),
             KeyboardUtil.createInlineKeyboard(buttons),
             getMessageId(update),
             sender);
@@ -55,17 +56,16 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
                 .collect(Collectors.toList());
 
         if (orders.isEmpty()) {
-          sendMessage(user, EMPTY_ORDERS, getMessageId(update), sender);
+          sendMessage(user, Messages.EMPTY_ORDERS.getText(), getMessageId(update), sender);
         } else {
           Report report = new Report(user.getCity(), orders);
           sendMessage(
-              user, REPORT_MESSAGE + report.printOrderReport(), getMessageId(update), sender);
+              user,
+              Messages.REPORT_MESSAGE_ORDERS_LIST + report.printOrderReport(),
+              getMessageId(update),
+              sender);
         }
       }
     }
   }
-
-  private static final String CHOOSE_DATE_MESSAGE = "Выберите за какой день выгрузить заказы:";
-  private static final String EMPTY_ORDERS = "Список заказов пуст.";
-  private static final String REPORT_MESSAGE = "Список заказов.\n";
 }

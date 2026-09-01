@@ -9,6 +9,7 @@ import java.util.Set;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
@@ -37,7 +38,8 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
       User user = optionalUser.get();
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
         if (isDeadLinePassed(user.getCity())) {
-          sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
+          sendMessage(
+              user, Messages.MENU_DEADLINE_IS_PASSED.getText(), getMessageId(update), sender);
         } else if (user.getState() == State.RANDOM_ORDER) {
           String message = update.getMessage().getText();
           user.setState(State.NONE);
@@ -49,9 +51,10 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
             orderService.save(order);
             officeAttendanceService.save(
                 user.getId(), user.getPreferedName(), user.getCity(), true);
-            sendMessage(user, RANDOM_ORDER_CREATED_MESSAGE, getMessageId(update), sender);
+            sendMessage(
+                user, Messages.RANDOM_ORDER_CREATED_MESSAGE.getText(), getMessageId(update), sender);
           } else {
-            sendMessage(user, CANCEL_RANDOM, getMessageId(update), sender);
+            sendMessage(user, Messages.CANCEL_RANDOM.getText(), getMessageId(update), sender);
           }
         } else {
           user.setState(State.RANDOM_ORDER);
@@ -64,10 +67,10 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
           ReplyKeyboard keyboard =
               KeyboardUtil.createReplyKeyboard(List.of("Удиви меня", "Нет, я выберу сам"));
           sendMessageWithKeyboard(
-              user, RANDOM_ORDER_MESSAGE, keyboard, getMessageId(update), sender);
+              user, Messages.RANDOM_ORDER_MESSAGE.getText(), keyboard, getMessageId(update), sender);
         }
       } else {
-        sendMessage(user, "Меню на сегодня еще не готово. /return", getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_IS_NOT_READY_TODAY.getText(), getMessageId(update), sender);
       }
     }
   }
@@ -110,10 +113,4 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
     }
     return items;
   }
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";
-  private static final String CANCEL_RANDOM = "Ну ладно, выбери сам. /return";
-  private static final String RANDOM_ORDER_MESSAGE = "Вы хотите рандомно сделать заказ?";
-  private static final String RANDOM_ORDER_CREATED_MESSAGE =
-      "Ваш заказ улетел. Пусть содержимое заказа останется тайной. пока.";
 }

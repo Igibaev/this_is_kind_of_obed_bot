@@ -7,7 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -47,8 +47,8 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
               markup);
           sendMessageWithKeyboard(
               user,
-              String.format(
-                  MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              Messages.CREATE_MENU_READY_MESSAGE.getText(
+                  menu.getDeadlineAsText(), user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);
@@ -70,28 +70,20 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
                 markup);
             sendMessageWithKeyboard(
                 user,
-                String.format(
-                    MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+                Messages.CREATE_MENU_PENDING_MESSAGE.getText(
+                    menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
           } else {
             user.setState(State.SET_MENU);
-            sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(update), sender);
+            sendMessage(user, Messages.MENU_TEMPLATE.getText(), getMessageId(update), sender);
           }
         }
       } else {
         user.setState(State.SET_MENU);
-        sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(update), sender);
+        sendMessage(user, Messages.MENU_TEMPLATE.getText(), getMessageId(update), sender);
       }
     }
   }
-
-  private static final String MENU_READY_MESSAGE =
-      "Вот меню для города *%s*.  Дедлайн до *%s*. \n Оно уже опубликовано. \n"
-          + "Чтобы отменить нажми /cancel";
-
-  private static final String MENU_PENDING_MESSAGE =
-      "Вот меню для города *%s*. Дедлайн до *%s*. \n Но оно не опубликовано.\n"
-          + "Чтобы отменить нажми /cancel";
 }

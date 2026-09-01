@@ -4,6 +4,7 @@ package kz.aday.bot.bot.handler.stateHandlers;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -28,7 +29,7 @@ public class SetCityStateHandler extends AbstractHandler implements StateHandler
     } catch (Exception e) {
       sendMessageWithKeyboard(
           user,
-          String.format(CITY_DOESN_EXIST_YET, update.getMessage().getText()),
+          Messages.CITY_DOESN_EXIST_YET.getText(update.getMessage().getText()),
           KeyboardUtil.createReplyKeyboard(
               Arrays.stream(City.values()).map(City::getValue).collect(Collectors.toList())),
           getMessageId(update),
@@ -39,7 +40,7 @@ public class SetCityStateHandler extends AbstractHandler implements StateHandler
     if (city == null) {
       sendMessageWithKeyboard(
           user,
-          CITY_IS_NULL,
+          Messages.CITY_IS_NULL.getText(),
           KeyboardUtil.createReplyKeyboard(
               Arrays.stream(City.values()).map(City::getValue).collect(Collectors.toList())),
           getMessageId(update),
@@ -50,14 +51,6 @@ public class SetCityStateHandler extends AbstractHandler implements StateHandler
     user.setCity(city);
     user.setState(State.NONE);
     user.setStatus(Status.READY);
-    sendMessage(user, SET_CITY_MESSAGE, getMessageId(update), sender);
+    sendMessage(user, Messages.SET_CITY_MESSAGE.getText(), getMessageId(update), sender);
   }
-
-  private static final String SET_CITY_MESSAGE =
-      "Прекрасный город. Нажми /return чтобы вернуться в меню навигации.";
-
-  private static final String CITY_DOESN_EXIST_YET =
-      "%s город не заведен в систему, выберите те которые вам предложены.";
-
-  private static final String CITY_IS_NULL = "Вы не выбрали город. Выберите город.";
 }

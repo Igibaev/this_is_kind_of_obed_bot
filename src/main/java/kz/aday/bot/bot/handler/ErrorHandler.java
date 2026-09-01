@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler;
 
 import kz.aday.bot.configuration.BotConfig;
+import kz.aday.bot.util.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -23,7 +24,7 @@ public class ErrorHandler extends AbstractHandler {
     if (!isUserExistAndReady(update)) {
       sendMessage(
           userService.findById(chatId),
-          GO_TO_START_COMMAND,
+          Messages.GO_TO_START_COMMAND.getText(),
           update.hasCallbackQuery()
               ? getMessageId(update.getCallbackQuery())
               : getMessageId(update),
@@ -33,18 +34,14 @@ public class ErrorHandler extends AbstractHandler {
 
     sendMessage(
         userService.findById(chatId),
-        String.format(ERROR_MESSAGE, e.getMessage()),
+        Messages.ERROR_MESSAGE.getText(e.getMessage()),
         update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
 
     sendMessage(
         userService.findById(BotConfig.getMainUserChatId()),
-        String.format(ERROR_MESSAGE, e.getMessage()),
+        Messages.ERROR_MESSAGE.getText(e.getMessage()),
         update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
   }
-
-  private static final String ERROR_MESSAGE = "Произошла ошибка: %s.";
-  private static final String GO_TO_START_COMMAND =
-      "Чтобы начать взаимодейcтвовать с ботом, завершите команду /start.";
 }

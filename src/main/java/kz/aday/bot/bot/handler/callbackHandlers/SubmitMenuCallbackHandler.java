@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -26,8 +27,8 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
       if (menu.isDeadlinePassed()) {
         sendMessage(
             user,
-            String.format(
-                MENU_IS_ALREADY_EXPIRED, menu.getCity().getValue(), menu.getDeadlineAsText()),
+            Messages.MENU_IS_ALREADY_EXPIRED.getText(
+                menu.getCity().getValue(), menu.getDeadlineAsText()),
             user.getLastMessageId(),
             sender);
         user.setState(State.CHANGE_DEADLINE);
@@ -36,13 +37,12 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
       }
       menu.setStatus(Status.READY);
       menuService.save(menu);
-      sendMessage(user, MENU_IS_PUBLISHED, getMessageId(callback), sender);
+      sendMessage(user, Messages.MENU_IS_PUBLISHED.getText(), getMessageId(callback), sender);
       for (User userToNotificate :
           userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
         sendMessageWithKeyboard(
             userToNotificate,
-            String.format(
-                    NEW_MENU_IS_PUBLISHED,
+            Messages.NEW_MENU_IS_PUBLISHED.getText(
                     menu.getCity().getValue(),
                     menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
                 + "\n\n"
@@ -58,12 +58,4 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.SUBMIT_MENU);
   }
-
-  private static final String MENU_IS_PUBLISHED = "Меню опубликовали.";
-
-  private static final String MENU_IS_ALREADY_EXPIRED =
-      "У меню: *%s* \nдедлайн уже прошел *%s*.\n" + "Введите время дедлайна в формате HH:MM";
-
-  private static final String NEW_MENU_IS_PUBLISHED =
-      "Новое меню доступно для заказа.\n" + "Город: *%s* \n" + "Дедлайн до: *%s* ";
 }

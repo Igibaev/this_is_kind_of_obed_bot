@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -20,7 +21,7 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
       orderService.findAll().stream()
           .filter(order -> order.getCity() == user.getCity())
           .forEach(order -> orderService.deleteById(order.getChatId()));
-      sendMessage(user, MENU_WAS_DELETED, getMessageId(callback), sender);
+      sendMessage(user, Messages.MENU_WAS_DELETED.getText(), getMessageId(callback), sender);
     }
   }
 
@@ -28,6 +29,4 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.CLEAR_MENU);
   }
-
-  private static final String MENU_WAS_DELETED = "Меню и все заказы были удалены.";
 }

@@ -6,6 +6,7 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
@@ -29,23 +30,27 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
         Order order = orderService.findById(user.getId());
         Menu menu = menuService.findById(user.getCity().toString());
         if (menu.isDeadlinePassed()) {
-          sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);
+          sendMessage(
+              user,
+              Messages.MENU_DEADLINE_IS_PASSED_ORDER_SENT.getText(),
+              getMessageId(update),
+              sender);
         } else {
           if (user.getState() == State.DELETE_ORDER) {
             user.setState(State.NONE);
             String message = update.getMessage().getText();
             if (message.equals("Да")) {
               orderService.deleteById(order.getId());
-              sendMessage(user, ORDER_WAS_DELETED, getMessageId(update), sender);
+              sendMessage(user, Messages.ORDER_WAS_DELETED.getText(), getMessageId(update), sender);
             } else {
-              sendMessage(user, RETURN_TO_MENU, getMessageId(update), sender);
+              sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);
             }
           } else {
             ReplyKeyboard keyboard = KeyboardUtil.createReplyKeyboard(List.of("Да", "Нет"));
             user.setState(State.DELETE_ORDER);
             sendMessageWithKeyboard(
                 user,
-                String.format(YOUR_ORDER_IS, order.getOrderItemList()),
+                Messages.YOUR_ORDER_IS_DELETE_CONFIRM.getText(order.getOrderItemList()),
                 keyboard,
                 getMessageId(update),
                 sender);
@@ -54,12 +59,4 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
       }
     }
   }
-
-  private static final String RETURN_TO_MENU = "Окей. Вернитесь в меню тогда /return";
-
-  private static final String ORDER_WAS_DELETED = "Ваш заказ удален.";
-
-  private static final String YOUR_ORDER_IS = "Твой заказ %s. Чтобы удалить отправьте 'Да'.";
-
-  private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел, заказ отправлен.";
 }

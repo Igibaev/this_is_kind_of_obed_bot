@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -18,8 +19,10 @@ public class MenuCommandHandler extends AbstractHandler implements CommandHandle
     User user = userService.findById(getChatId(update).toString());
     user.setState(State.NONE);
     sendMessageWithKeyboard(
-        user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(update), sender);
+        user,
+        Messages.NAVIGATION_MENU.getText(),
+        getUserMenuKeyboard(user),
+        getMessageId(update),
+        sender);
   }
-
-  private static final String NAVIGATION_MENU = "Меню навигации по боту.";
 }

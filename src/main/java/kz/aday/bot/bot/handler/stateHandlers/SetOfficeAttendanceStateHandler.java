@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
-import kz.aday.bot.messages.Messages;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -26,7 +26,7 @@ public class SetOfficeAttendanceStateHandler extends AbstractHandler implements 
       user.setState(State.NONE);
       sendMessageWithKeyboard(
           user,
-          Messages.WILL_COME_DAY_QUESTION,
+          Messages.WILL_COME_DAY_QUESTION.getText(),
           KeyboardUtil.createInlineKeyboard(
               List.of(
                   new UserButton("Сегодня", CallbackState.ATTENDANCE_DAY_TODAY.name()),

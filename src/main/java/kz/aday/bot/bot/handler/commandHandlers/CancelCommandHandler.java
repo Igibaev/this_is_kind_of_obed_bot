@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +23,11 @@ public class CancelCommandHandler extends AbstractHandler implements CommandHand
     user.setState(State.NONE);
     if (user.getStatus() == Status.READY) {
       sendMessageWithKeyboard(
-          user, NAVIGATION_MENU, getUserMenuKeyboard(user), getMessageId(update), sender);
+          user,
+          Messages.NAVIGATION_MENU.getText(),
+          getUserMenuKeyboard(user),
+          getMessageId(update),
+          sender);
     }
   }
-
-  private static final String NAVIGATION_MENU = "Меню навигации по боту.";
 }

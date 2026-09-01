@@ -15,6 +15,7 @@ import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -38,8 +39,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Slf4j
 public abstract class AbstractHandler {
 
-  private static final String PERMISSION_DENIED = "Нет доступа.";
-
   protected final UserService userService = ServiceContainer.getUserService();
   protected final MessageSender messageService = ServiceContainer.getMessageService();
   protected final MenuService menuService = ServiceContainer.getMenuService();
@@ -49,7 +48,7 @@ public abstract class AbstractHandler {
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
     String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
+    if (data.length == 0) {
       throw new IllegalArgumentException("There is no callback");
     }
     return state.name().equals(data[0].trim());
@@ -85,7 +84,7 @@ public abstract class AbstractHandler {
   public boolean checkAdminRole(User user, Integer messageId, AbsSender sender)
       throws TelegramApiException {
     if (user.getRole() == User.Role.USER) {
-      sendMessage(user, PERMISSION_DENIED, messageId, sender);
+      sendMessage(user, Messages.PERMISSION_DENIED.getText(), messageId, sender);
       return true;
     }
     return false;

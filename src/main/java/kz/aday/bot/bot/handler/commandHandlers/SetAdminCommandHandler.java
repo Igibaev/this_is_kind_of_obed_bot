@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.commandHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,10 @@ public class SetAdminCommandHandler extends AbstractHandler implements CommandHa
         log.info(
             "Set admin role to user, {}", userService.findById(extractedChatId).getPreferedName());
         sendMessage(
-            userService.findById(getChatId(update).toString()), "Ok", getMessageId(update), sender);
+            userService.findById(getChatId(update).toString()),
+            Messages.OK.getText(),
+            getMessageId(update),
+            sender);
       }
     }
   }

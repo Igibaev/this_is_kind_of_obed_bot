@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -26,15 +27,13 @@ public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler
         Order order = orderService.findById(user.getId());
         sendMessage(
             user,
-            String.format(YOUR_ORDER_IS, order.getOrderItemList()),
+            Messages.YOUR_ORDER_IS_TOMORROW.getText(order.getOrderItemList()),
             getMessageId(callback),
             sender);
       } else {
-        sendMessage(user, ORDER_IS_EMPTY, getMessageId(callback), sender);
+        sendMessage(
+            user, Messages.ORDER_IS_EMPTY_TOMORROW.getText(), getMessageId(callback), sender);
       }
     }
   }
-
-  private static final String YOUR_ORDER_IS = "Твой заказ на завтра %s.";
-  private static final String ORDER_IS_EMPTY = "Заказ на завтра не найден.";
 }

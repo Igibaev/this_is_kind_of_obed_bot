@@ -4,6 +4,7 @@ package kz.aday.bot.bot.handler.stateHandlers;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
@@ -23,12 +24,10 @@ public class SetUsernameStateHandler extends AbstractHandler implements StateHan
     user.setState(State.CHOOSE_CITY);
     sendMessageWithKeyboard(
         user,
-        String.format(SET_NAME_MESSAGE, update.getMessage().getText()),
+        Messages.SET_NAME_MESSAGE.getText(update.getMessage().getText()),
         KeyboardUtil.createReplyKeyboard(
             Arrays.stream(City.values()).map(City::getValue).collect(Collectors.toList())),
         getMessageId(update),
         sender);
   }
-
-  private static final String SET_NAME_MESSAGE = "Сохранил имя %s. Теперь выбери город.";
 }

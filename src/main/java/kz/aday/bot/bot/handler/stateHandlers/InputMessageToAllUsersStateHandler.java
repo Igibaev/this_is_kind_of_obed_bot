@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.User;
@@ -22,8 +23,9 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
       } else {

@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.stateHandlers.menu;
 
 import java.util.List;
+import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
@@ -21,8 +22,9 @@ public class ClearMenuStateHandler extends AbstractHandler implements StateHandl
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
       } else {

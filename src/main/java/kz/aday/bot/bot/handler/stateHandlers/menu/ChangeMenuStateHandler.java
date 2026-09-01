@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
@@ -33,8 +34,9 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
       } else {

@@ -18,8 +18,9 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(callback)) {
-      User user = userService.findById(getChatId(callback).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(callback);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       // "Заказ на сегодня" = что едим сегодня = заказ сделанный вчера
       LocalDate yesterday = LocalDate.now().minusDays(1);
       Optional<Order> orderOpt = orderService.findByIdOnDate(user.getId(), yesterday);

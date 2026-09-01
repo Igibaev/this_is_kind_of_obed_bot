@@ -4,6 +4,7 @@ package kz.aday.bot.bot.handler.stateHandlers.order;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
@@ -31,8 +32,9 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
         if (isDeadLinePassed(user.getCity())) {
           sendMessage(user, MENU_DEADLINE_IS_PASSED, getMessageId(update), sender);

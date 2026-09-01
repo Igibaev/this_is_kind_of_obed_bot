@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
@@ -21,14 +22,15 @@ public class WhoComesTomorrowAlmataCallbackHandler extends AbstractHandler
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(callback)) {
-      User user = userService.findById(getChatId(callback).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(callback);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       // Кто придет завтра = текущие заказы (сделанные сегодня)
       List<Order> orders =
           orderService.findAllOnDate(LocalDate.now()).stream()
               .filter(o -> o.getCity() == user.getCity())
               .filter(o -> o.getStatus() == Status.READY)
-              .collect(Collectors.toList());
+              .toList();
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
       if (names.isBlank()) {
         sendMessage(user, NOBODY_COMES, getMessageId(callback), sender);

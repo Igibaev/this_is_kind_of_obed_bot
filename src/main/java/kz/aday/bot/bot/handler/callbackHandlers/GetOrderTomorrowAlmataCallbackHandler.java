@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
@@ -17,8 +18,9 @@ public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(callback)) {
-      User user = userService.findById(getChatId(callback).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(callback);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       // "Заказ на завтра" = что едим завтра = текущий заказ (сделанный сегодня)
       if (isOrderExist(user)) {
         Order order = orderService.findById(user.getId());

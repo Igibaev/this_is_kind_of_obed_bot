@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.util.List;
+import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -23,8 +24,9 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(callback)) {
-      User user = userService.findById(getChatId(callback).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(callback);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       Menu menu = menuService.findById(user.getCity().toString());
       Order order;
       if (isOrderExist(user)) {

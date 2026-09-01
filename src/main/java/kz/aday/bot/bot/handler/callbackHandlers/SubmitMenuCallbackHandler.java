@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.Menu;
@@ -15,8 +16,9 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
 
   @Override
   public void handle(CallbackQuery callback, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(callback)) {
-      User user = userService.findById(getChatId(callback).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(callback);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(callback), sender);
         return;

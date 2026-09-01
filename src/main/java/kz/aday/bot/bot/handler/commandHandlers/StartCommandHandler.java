@@ -5,6 +5,7 @@ import static kz.aday.bot.bot.handler.stateHandlers.State.SET_USERNAME_THEN_CHOO
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
@@ -31,8 +32,9 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       Menu menu = menuService.findById(user.getCity().toString());
       if (menu != null && menu.getStatus() == Status.READY && !menu.isDeadlinePassed()) {
         if (isOrderExist(user)) {

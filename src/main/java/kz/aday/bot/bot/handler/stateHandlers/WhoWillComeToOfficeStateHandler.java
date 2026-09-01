@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
@@ -21,8 +22,9 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       user.setState(State.NONE);
       userService.save(user);
       if (user.getCity().isNextDayOrderCycle()) {

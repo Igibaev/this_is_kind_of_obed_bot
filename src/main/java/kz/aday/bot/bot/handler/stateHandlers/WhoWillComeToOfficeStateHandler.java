@@ -6,12 +6,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -39,7 +39,7 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
                     CallbackState.WHO_COMES_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
-            Messages.CHOOSE_DATE_MESSAGE_WHO_COMES.getText(),
+            Messages.CHOOSE_DATE_WHO_COMES.getText(),
             KeyboardUtil.createInlineKeyboard(buttons),
             getMessageId(update),
             sender);

@@ -2,10 +2,12 @@
 package kz.aday.bot.util;
 
 public enum Messages {
+  // Плановые уведомления (SchedulerService): дедлайн скоро, меню закрыто
   RETURN_TO_MENU("Чтобы вернуться в меню нажмите /cancel"),
   DEADLINE_IS_NEAR_MAKE_AN_ORDER("Скоро дедлайн, успей заказать еду."),
   MENU_IS_CLOSED("Меню для заказов закрыто"),
 
+  // Отметка о посещении офиса: вопрос "придёшь?" и подтверждение ответа
   WILL_COME_DAY_QUESTION("За какой день хочешь отметиться?"),
   WILL_COME_TODAY_QUESTION("Пойдешь ли ты сегодня в офис?"),
   WILL_COME_TOMORROW_QUESTION("Пойдешь ли ты завтра в офис?"),
@@ -14,6 +16,7 @@ public enum Messages {
   THANKS_WONT_COME_TODAY("Понял, сегодня тебя в офисе не будет."),
   THANKS_WONT_COME_TOMORROW("Понял, завтра тебя в офисе не будет."),
 
+  // Шаблон-подсказка для создания/изменения меню
   MENU_TEMPLATE(
       "Шаблон меню:\n"
           + "Возможны только 5 категории блюд(первое, второе, салат, выпечка, хлеб)\n"
@@ -36,18 +39,22 @@ public enum Messages {
           + "\n"
           + "Чтобы отменить нажми /cancel\n"),
 
+  // Общие служебные ответы
   PERMISSION_DENIED("Нет доступа."),
   OK("Ok"),
 
+  // Возврат/переход в меню навигации по боту
   NAVIGATION_MENU("Меню навигации по боту."),
   RETURNING_NAVIGATION_MENU("Возвращаемся. Меню навигации по боту."),
   OK_RETURN_TO_MENU("Окей. Вернитесь в меню тогда /return"),
 
+  // Начало оформления заказа: меню недоступно / выбор блюда / сбор заказа
   MENU_DEADLINE_IS_PASSED("Дедлайн уже прошел."),
   MENU_IS_NOT_READY_TODAY("Меню на сегодня еще не готово. /return"),
-  CHOOSE_ITEM_MESSAGE("Выберите что хотите заказать:"),
-  CREATING_ORDER_MESSAGE("Собираем ваш заказ."),
+  CHOOSE_ITEM("Выберите что хотите заказать:"),
+  CREATING_ORDER("Собираем ваш заказ."),
 
+  // Просмотр, подтверждение и удаление конкретного заказа
   YOUR_ORDER_IS("Твой заказ %s."),
   YOUR_ORDER_IS_TODAY("Твой заказ на сегодня %s."),
   YOUR_ORDER_IS_TOMORROW("Твой заказ на завтра %s."),
@@ -63,47 +70,52 @@ public enum Messages {
   YOUR_ORDER_IS_DELETE_CONFIRM("Твой заказ %s. Чтобы удалить отправьте 'Да'."),
   MENU_DEADLINE_IS_PASSED_ORDER_SENT("Дедлайн уже прошел, заказ отправлен."),
 
-  CHOOSE_DATE_MESSAGE_ORDER("Выберите за какой день посмотреть заказ:"),
-  CHOOSE_DATE_MESSAGE_TODAY_ORDERS("Выберите за какой день выгрузить заказы:"),
-  CHOOSE_DATE_MESSAGE_WHO_COMES("Выберите за какой день посмотреть:"),
+  // Списки заказов и отчёты по посещаемости за период
+  CHOOSE_DATE_ORDER("Выберите за какой день посмотреть заказ:"),
+  CHOOSE_DATE_TODAY_ORDERS("Выберите за какой день выгрузить заказы:"),
+  CHOOSE_DATE_WHO_COMES("Выберите за какой день посмотреть:"),
   EMPTY_ORDERS("Список заказов пуст."),
   EMPTY_ORDERS_TODAY("Список заказов на сегодня пуст."),
   EMPTY_ORDERS_TOMORROW("Список заказов на завтра пуст."),
-  REPORT_MESSAGE_ORDERS_LIST("Список заказов.\n"),
-  REPORT_MESSAGE_ORDERS_TODAY("Заказы на сегодня.\n"),
-  REPORT_MESSAGE_ORDERS_TOMORROW("Заказы на завтра.\n"),
-  REPORT_MESSAGE_OVERALL_ATTENDANCE("Общая статистика посещений:\n"),
-  REPORT_MESSAGE_MONTH_ATTENDANCE("Статистика посещений за текущий месяц:\n"),
+  REPORT_ORDERS_LIST("Список заказов.\n"),
+  REPORT_ORDERS_TODAY("Заказы на сегодня.\n"),
+  REPORT_ORDERS_TOMORROW("Заказы на завтра.\n"),
+  REPORT_OVERALL_ATTENDANCE("Общая статистика посещений:\n"),
+  REPORT_MONTH_ATTENDANCE("Статистика посещений за текущий месяц:\n"),
 
+  // Кто придёт в офис сегодня/завтра
   NOBODY_COMES_TODAY("Сегодня никто в офис не придет( хнык хнык"),
   NOBODY_COMES_TOMORROW("Завтра никто в офис не придет( хнык хнык"),
   WHO_COMES_TODAY("Сегодня в офис придет [%s]:\n%s"),
   WHO_COMES_TOMORROW("Завтра в офис придет [%s]:\n%s"),
   WHO_COMES_OFFICE("Список людей кто придет в офис: [%s]\n%s"),
 
+  // Случайный заказ
   CANCEL_RANDOM("Ну ладно, выбери сам. /return"),
-  RANDOM_ORDER_MESSAGE("Вы хотите рандомно сделать заказ?"),
-  RANDOM_ORDER_CREATED_MESSAGE("Ваш заказ улетел. Пусть содержимое заказа останется тайной. пока."),
+  RANDOM_ORDER("Вы хотите рандомно сделать заказ?"),
+  RANDOM_ORDER_CREATED("Ваш заказ улетел. Пусть содержимое заказа останется тайной. пока."),
 
-  PROFILE_MESSAGE("Ваше имя: %s \nГород: %s \nВернуться в меню /return"),
+  // Профиль пользователя
+  PROFILE("Ваше имя: %s \nГород: %s \nВернуться в меню /return"),
 
-  DEADLINE_IS_SET_AND_MENU_IS_PUBLISHE(
+  // Администрирование меню: дедлайн, создание, публикация, удаление
+  DEADLINE_IS_SET_AND_MENU_IS_PUBLISHED(
       "Скорректировали дедлайн для меню.\n" + "Вот меню для *%s* \n" + "Дедлайн *%s*\n"),
   MENU_TO_DELETE("Вы хотите удалить меню на сегодня?\n"),
   MENU_NOT_EXIST_FOR_CITY(
       "Меню не создано для города *%s*\n" + "Нажмите /return чтобы вернутся в меню.\n"),
   MENU_NOT_EXIST("Меню не создано, сначала создайте меню. Чтобы вернуться нажмите \return"),
-  PUBLISH_MENU_READY_MESSAGE(
+  PUBLISH_MENU_READY(
       "Вот меню для города *%s*. Оно уже опубликовано. \n"
           + "Дедлайн до: *%s* \n"
           + "Чтобы отменить нажми /cancel"),
-  PUBLISH_MENU_MESSAGE(
+  PUBLISH_MENU(
       "Вот меню для города *%s*.\n" + "Дедлайн до: *%s* \n" + "Чтобы отменить нажми /cancel"),
   MENU_PENDING("Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel"),
-  CREATE_MENU_READY_MESSAGE(
+  CREATE_MENU_READY(
       "Вот меню для города *%s*.  Дедлайн до *%s*. \n Оно уже опубликовано. \n"
           + "Чтобы отменить нажми /cancel"),
-  CREATE_MENU_PENDING_MESSAGE(
+  CREATE_MENU_PENDING(
       "Вот меню для города *%s*. Дедлайн до *%s*. \n Но оно не опубликовано.\n"
           + "Чтобы отменить нажми /cancel"),
   NOTIFY_IF_USER_HAS_BANNED_ITEMS(
@@ -117,35 +129,39 @@ public enum Messages {
       "Новое меню доступно для заказа.\n" + "Город: *%s* \n" + "Дедлайн до: *%s* "),
   MENU_WAS_DELETED("Меню и все заказы были удалены."),
 
+  // Команда /start: приветствие и текущее состояние заказа
   CURRENT_PENDING_ORDER("Ты не закончил заказ."),
   CURRENT_ORDER("Твой заказ."),
   MENU_TODAY(
       "Город: *%s*. Вот что сегодня в меню! \n"
           + "Дедлайн до: *%s* \n"
           + "Чтобы отменить заказ нажми /cancel"),
-  START_MESSAGE_INPUT_NAME(
+  START_INPUT_NAME(
       "Добро пожаловать! \n"
           + "Данный бот предназначен \n"
           + "для заказов еды в koronaTech.\n"
           + "Введите своё имя. \n"
           + "Чтобы отменить нажми /cancel"),
 
-  SET_CITY_MESSAGE("Прекрасный город. Нажми /return чтобы вернуться в меню навигации."),
+  // Регистрация: выбор имени и города
+  SET_CITY("Прекрасный город. Нажми /return чтобы вернуться в меню навигации."),
   CITY_DOESN_EXIST_YET("%s город не заведен в систему, выберите те которые вам предложены."),
   CITY_IS_NULL("Вы не выбрали город. Выберите город."),
-  SET_NAME_MESSAGE("Сохранил имя %s. Теперь выбери город."),
-  CHANGE_NAME_MESSAGE("Введи новое имя \n" + "Чтобы отменить нажми /cancel"),
+  SET_NAME("Сохранил имя %s. Теперь выбери город."),
+  CHANGE_NAME("Введи новое имя \n" + "Чтобы отменить нажми /cancel"),
 
-  FEEDBACK_FORM_MESSAGE(
+  // Обратная связь, логи, рассылка сообщений всем пользователям
+  FEEDBACK_FORM(
       "Это форма обратной связи. Приложите фотографии, аудио, видео или просто текстом опишите, ваши пожелания как сделать чат бот лучше и удобнее."),
   ATTENDANCE_SHEET("Отчет посещяемости офиса %s за 30дней\n%s"),
   LOGS_FILE_NOT_FOUND("Не удалось найти или сформировать файл логов с запрошенными строками."),
   LOGS_FILE_ERROR("Произошла ошибка при подготовке файла логов."),
   BROADCAST_SUCCESS("Рассылка прошла успешно."),
-  INPUT_MESSAGE(
+  BROADCAST_INPUT(
       "Введите сообщение для рассылки, для города %s. \n" + "Чтобы отменить нажмите /cancel"),
 
-  ERROR_MESSAGE("Произошла ошибка: %s."),
+  // Ошибки
+  ERROR("Произошла ошибка: %s."),
   GO_TO_START_COMMAND("Чтобы начать взаимодейcтвовать с ботом, завершите команду /start.");
 
   private final String text;

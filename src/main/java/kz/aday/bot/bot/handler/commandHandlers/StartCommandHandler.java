@@ -9,7 +9,6 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -17,6 +16,7 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -100,8 +100,7 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
               .build();
       createdUser.setState(SET_USERNAME_THEN_CHOOSE_CITY);
       userService.save(createdUser);
-      sendMessage(
-          createdUser, Messages.START_MESSAGE_INPUT_NAME.getText(), getMessageId(update), sender);
+      sendMessage(createdUser, Messages.START_INPUT_NAME.getText(), getMessageId(update), sender);
     }
   }
 

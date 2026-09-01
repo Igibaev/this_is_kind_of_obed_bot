@@ -6,12 +6,12 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -41,7 +41,7 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
         orderService.save(order);
         sendMessageWithKeyboard(
             user,
-            Messages.CHOOSE_ITEM_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+            Messages.CHOOSE_ITEM + "\n\n" + menu.getMenuAsFormattedText(),
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             getMessageId(update),
             sender);

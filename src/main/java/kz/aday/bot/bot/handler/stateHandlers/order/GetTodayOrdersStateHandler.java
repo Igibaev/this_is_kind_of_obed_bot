@@ -8,13 +8,13 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Report;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -43,7 +43,7 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
                     CallbackState.GET_ORDERS_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
-            Messages.CHOOSE_DATE_MESSAGE_TODAY_ORDERS.getText(),
+            Messages.CHOOSE_DATE_TODAY_ORDERS.getText(),
             KeyboardUtil.createInlineKeyboard(buttons),
             getMessageId(update),
             sender);
@@ -61,7 +61,7 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
           Report report = new Report(user.getCity(), orders);
           sendMessage(
               user,
-              Messages.REPORT_MESSAGE_ORDERS_LIST + report.printOrderReport(),
+              Messages.REPORT_ORDERS_LIST + report.printOrderReport(),
               getMessageId(update),
               sender);
         }

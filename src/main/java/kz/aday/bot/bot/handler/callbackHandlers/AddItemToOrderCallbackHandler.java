@@ -4,7 +4,6 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -12,6 +11,7 @@ import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.service.MenuRulesService;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -59,7 +59,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
             keyboard);
         sendMessageWithKeyboard(
             user,
-            Messages.CREATING_ORDER_MESSAGE + "\n\n" + menu.getMenuAsFormattedText(),
+            Messages.CREATING_ORDER + "\n\n" + menu.getMenuAsFormattedText(),
             keyboard,
             getMessageId(callback),
             sender);

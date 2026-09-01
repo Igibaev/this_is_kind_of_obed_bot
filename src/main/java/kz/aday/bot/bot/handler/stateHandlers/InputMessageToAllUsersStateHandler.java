@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
+import kz.aday.bot.util.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -74,7 +74,7 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
         user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
         sendMessage(
             user,
-            Messages.INPUT_MESSAGE.getText(user.getCity().getValue()),
+            Messages.BROADCAST_INPUT.getText(user.getCity().getValue()),
             getMessageId(update),
             sender);
       }

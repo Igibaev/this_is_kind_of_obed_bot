@@ -9,7 +9,6 @@ import java.util.Set;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
@@ -19,6 +18,7 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuRulesService;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.util.Randomizer;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -52,7 +52,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
             officeAttendanceService.save(
                 user.getId(), user.getPreferedName(), user.getCity(), true);
             sendMessage(
-                user, Messages.RANDOM_ORDER_CREATED_MESSAGE.getText(), getMessageId(update), sender);
+                user, Messages.RANDOM_ORDER_CREATED.getText(), getMessageId(update), sender);
           } else {
             sendMessage(user, Messages.CANCEL_RANDOM.getText(), getMessageId(update), sender);
           }
@@ -67,7 +67,7 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
           ReplyKeyboard keyboard =
               KeyboardUtil.createReplyKeyboard(List.of("Удиви меня", "Нет, я выберу сам"));
           sendMessageWithKeyboard(
-              user, Messages.RANDOM_ORDER_MESSAGE.getText(), keyboard, getMessageId(update), sender);
+              user, Messages.RANDOM_ORDER.getText(), keyboard, getMessageId(update), sender);
         }
       } else {
         sendMessage(user, Messages.MENU_IS_NOT_READY_TODAY.getText(), getMessageId(update), sender);

@@ -34,13 +34,13 @@ public class ErrorHandler extends AbstractHandler {
 
     sendMessage(
         userService.findById(chatId),
-        Messages.ERROR_MESSAGE.getText(e.getMessage()),
+        Messages.ERROR.getText(e.getMessage()),
         update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
 
     sendMessage(
         userService.findById(BotConfig.getMainUserChatId()),
-        Messages.ERROR_MESSAGE.getText(e.getMessage()),
+        Messages.ERROR.getText(e.getMessage()),
         update.hasCallbackQuery() ? getMessageId(update.getCallbackQuery()) : getMessageId(update),
         sender);
   }

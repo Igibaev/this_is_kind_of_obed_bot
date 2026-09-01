@@ -3,8 +3,8 @@ package kz.aday.bot.bot.handler.stateHandlers;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -27,7 +27,7 @@ public class GetAttendanceStatsStateHandler extends AbstractHandler implements S
 
       sendMessage(
           user,
-          Messages.REPORT_MESSAGE_OVERALL_ATTENDANCE
+          Messages.REPORT_OVERALL_ATTENDANCE
               + officeAttendanceService.getOverallAttendanceStats(user.getCity()),
           getMessageId(update),
           sender);

@@ -6,12 +6,12 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -45,7 +45,8 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
               orderService.save(order);
               officeAttendanceService.save(
                   user.getId(), user.getPreferedName(), user.getCity(), true);
-              sendMessage(user, Messages.ORDER_WAS_SUBMITED.getText(), getMessageId(update), sender);
+              sendMessage(
+                  user, Messages.ORDER_WAS_SUBMITED.getText(), getMessageId(update), sender);
             } else {
               sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);
             }

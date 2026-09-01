@@ -2,8 +2,8 @@
 package kz.aday.bot.bot.handler.stateHandlers;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.User;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -19,7 +19,7 @@ public class ProfileStateHandler extends AbstractHandler implements StateHandler
       User user = userService.findById(getChatId(update).toString());
       sendMessage(
           user,
-          Messages.PROFILE_MESSAGE.getText(user.getPreferedName(), user.getCity().getValue()),
+          Messages.PROFILE.getText(user.getPreferedName(), user.getCity().getValue()),
           getMessageId(update),
           sender);
     }

@@ -7,12 +7,12 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.util.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
+import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -41,7 +41,7 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
               markup);
           sendMessageWithKeyboard(
               user,
-              Messages.PUBLISH_MENU_READY_MESSAGE.getText(
+              Messages.PUBLISH_MENU_READY.getText(
                   menu.getDeadlineAsText(), user.getCity().getValue()),
               markup,
               getMessageId(update),
@@ -57,8 +57,7 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
               markup);
           sendMessageWithKeyboard(
               user,
-              Messages.PUBLISH_MENU_MESSAGE.getText(
-                  menu.getDeadlineAsText(), user.getCity().getValue()),
+              Messages.PUBLISH_MENU.getText(menu.getDeadlineAsText(), user.getCity().getValue()),
               markup,
               getMessageId(update),
               sender);

@@ -68,6 +68,9 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
   }
 
   private boolean isAfter(OfficeAttendance attendance, LocalDate date) {
+    if (attendance.getDate() == null) {
+      return true;
+    }
     try {
       return LocalDate.parse(attendance.getDate()).isAfter(date);
     } catch (DateTimeParseException e) {

@@ -26,8 +26,7 @@ public class GetOrdersTomorrowAlmataCallbackHandler extends AbstractHandler
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(callback), sender);
+      if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
       // "Заказы на завтра" = кто обедает завтра = текущие заказы (сделанные сегодня)
@@ -48,7 +47,6 @@ public class GetOrdersTomorrowAlmataCallbackHandler extends AbstractHandler
     }
   }
 
-  private static final String PERMISSION_DENIED = "Нет доступа.";
   private static final String EMPTY_ORDERS = "Список заказов на завтра пуст.";
   private static final String REPORT_MESSAGE = "Заказы на завтра.\n";
 }

@@ -28,9 +28,10 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      } else if (user.getCity().isNextDayOrderCycle()) {
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
+      }
+      if (user.getCity().isNextDayOrderCycle()) {
         List<UserButton> buttons =
             List.of(
                 new UserButton(
@@ -64,7 +65,6 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
     }
   }
 
-  private static final String PERMISSION_DENIED = "Нет доступа.";
   private static final String CHOOSE_DATE_MESSAGE = "Выберите за какой день выгрузить заказы:";
   private static final String EMPTY_ORDERS = "Список заказов пуст.";
   private static final String REPORT_MESSAGE = "Список заказов.\n";

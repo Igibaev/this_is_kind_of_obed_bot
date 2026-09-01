@@ -27,38 +27,35 @@ public class SetMenuStateHandler extends AbstractHandler implements StateHandler
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      } else {
-        Menu menu = null;
-        try {
-          menu = MenuTextParser.parseMenu(update.getMessage().getText());
-        } catch (Exception e) {
-          sendMessage(user, e.getMessage(), getMessageId(update), sender);
-          return;
-        }
-        menu.setCity(user.getCity());
-        menuService.save(menu);
-
-        user.setState(State.NONE);
-        InlineKeyboardMarkup markup =
-            KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
-        KeyboardUtil.addButton(
-            List.of(
-                new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
-                new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
-            markup);
-        sendMessageWithKeyboard(
-            user,
-            String.format(MENU_PENDING, user.getCity().getValue()),
-            markup,
-            getMessageId(update),
-            sender);
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
       }
+      Menu menu = null;
+      try {
+        menu = MenuTextParser.parseMenu(update.getMessage().getText());
+      } catch (Exception e) {
+        sendMessage(user, e.getMessage(), getMessageId(update), sender);
+        return;
+      }
+      menu.setCity(user.getCity());
+      menuService.save(menu);
+
+      user.setState(State.NONE);
+      InlineKeyboardMarkup markup =
+          KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+      KeyboardUtil.addButton(
+          List.of(
+              new UserButton("Опубликовать", CallbackState.SUBMIT_MENU.toString()),
+              new UserButton("Изменить", CallbackState.CHANGE_MENU.toString())),
+          markup);
+      sendMessageWithKeyboard(
+          user,
+          String.format(MENU_PENDING, user.getCity().getValue()),
+          markup,
+          getMessageId(update),
+          sender);
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_PENDING =
       "Проверьте корректность меню для города %s.\nЧтобы отменить нажми /cancel";

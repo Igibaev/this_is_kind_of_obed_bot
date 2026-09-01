@@ -20,8 +20,7 @@ public class GetAttendanceStatsForMonthStateHandler extends AbstractHandler
 
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
+      if (checkAdminRole(user, getMessageId(update), sender)) {
         return;
       }
 
@@ -33,6 +32,5 @@ public class GetAttendanceStatsForMonthStateHandler extends AbstractHandler
     }
   }
 
-  private static final String PERMISSION_DENIED = "Нет доступа.";
   private static final String REPORT_MESSAGE = "Статистика посещений за текущий месяц:\n";
 }

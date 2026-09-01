@@ -19,8 +19,7 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(callback), sender);
+      if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
       Menu menu = menuService.findById(user.getCity().toString());
@@ -61,8 +60,6 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
   }
 
   private static final String MENU_IS_PUBLISHED = "Меню опубликовали.";
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_IS_ALREADY_EXPIRED =
       "У меню: *%s* \nдедлайн уже прошел *%s*.\n" + "Введите время дедлайна в формате HH:MM";

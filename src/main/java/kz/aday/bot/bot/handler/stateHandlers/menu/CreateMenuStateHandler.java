@@ -7,6 +7,7 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.messages.Messages;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -27,16 +28,39 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      } else {
-        if (isMenuExist(user.getCity())) {
-          Menu menu = menuService.findById(user.getCity().toString());
-          if (menu.getStatus() == Status.READY) {
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
+      }
+      if (isMenuExist(user.getCity())) {
+        Menu menu = menuService.findById(user.getCity().toString());
+        if (menu.getStatus() == Status.READY) {
+          InlineKeyboardMarkup markup =
+              KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+          KeyboardUtil.addButton(
+              List.of(
+                  new UserButton(
+                      CallbackState.CHANGE_MENU.getDisplayName(),
+                      CallbackState.CHANGE_MENU.toString()),
+                  new UserButton(
+                      CallbackState.CLEAR_MENU.getDisplayName(),
+                      CallbackState.CLEAR_MENU.toString())),
+              markup);
+          sendMessageWithKeyboard(
+              user,
+              String.format(
+                  MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              markup,
+              getMessageId(update),
+              sender);
+        } else {
+          if (menu.getStatus() == Status.PENDING) {
             InlineKeyboardMarkup markup =
                 KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
             KeyboardUtil.addButton(
                 List.of(
+                    new UserButton(
+                        CallbackState.SUBMIT_MENU.getDisplayName(),
+                        CallbackState.SUBMIT_MENU.toString()),
                     new UserButton(
                         CallbackState.CHANGE_MENU.getDisplayName(),
                         CallbackState.CHANGE_MENU.toString()),
@@ -47,47 +71,21 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
             sendMessageWithKeyboard(
                 user,
                 String.format(
-                    MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+                    MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
                 markup,
                 getMessageId(update),
                 sender);
           } else {
-            if (menu.getStatus() == Status.PENDING) {
-              InlineKeyboardMarkup markup =
-                  KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
-              KeyboardUtil.addButton(
-                  List.of(
-                      new UserButton(
-                          CallbackState.SUBMIT_MENU.getDisplayName(),
-                          CallbackState.SUBMIT_MENU.toString()),
-                      new UserButton(
-                          CallbackState.CHANGE_MENU.getDisplayName(),
-                          CallbackState.CHANGE_MENU.toString()),
-                      new UserButton(
-                          CallbackState.CLEAR_MENU.getDisplayName(),
-                          CallbackState.CLEAR_MENU.toString())),
-                  markup);
-              sendMessageWithKeyboard(
-                  user,
-                  String.format(
-                      MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
-                  markup,
-                  getMessageId(update),
-                  sender);
-            } else {
-              user.setState(State.SET_MENU);
-              sendMessage(user, MENU_TEMPLATE, getMessageId(update), sender);
-            }
+            user.setState(State.SET_MENU);
+            sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(update), sender);
           }
-        } else {
-          user.setState(State.SET_MENU);
-          sendMessage(user, MENU_TEMPLATE, getMessageId(update), sender);
         }
+      } else {
+        user.setState(State.SET_MENU);
+        sendMessage(user, Messages.MENU_TEMPLATE, getMessageId(update), sender);
       }
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа к созданию меню";
 
   private static final String MENU_READY_MESSAGE =
       "Вот меню для города *%s*.  Дедлайн до *%s*. \n Оно уже опубликовано. \n"
@@ -96,26 +94,4 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
   private static final String MENU_PENDING_MESSAGE =
       "Вот меню для города *%s*. Дедлайн до *%s*. \n Но оно не опубликовано.\n"
           + "Чтобы отменить нажми /cancel";
-
-  private static final String MENU_TEMPLATE =
-      "Шаблон меню:\n"
-          + "Возможны только 5 категории блюд(первое, второе, салат, выпечка, хлеб)\n"
-          + "\n"
-          + "Первое:\n"
-          + "Блюда перечисляются через отступ строки\n"
-          + "\n"
-          + "Второе:\n"
-          + "Блюдо 1\n"
-          + "Блюдо 2\n"
-          + "\n"
-          + "Салат:\n"
-          + "1. Блюдо('1. ' это затираться будет)\n"
-          + "\n"
-          + "Выпечка:\n"
-          + "\n"
-          + "Хлеб: (если хлеба нету,  либо он всегда к заказу идет, то лучше его убрать)\n"
-          + "\n"
-          + "Дедлайн 11:00. (дедлайн можно указывать так, можно просто время указывать в формате HH:mm)\n"
-          + "\n"
-          + "Чтобы отменить нажми /cancel\n";
 }

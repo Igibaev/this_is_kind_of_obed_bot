@@ -13,8 +13,7 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(callback), sender);
+      if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
       menuService.deleteById(user.getCity().toString());
@@ -29,8 +28,6 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
   public boolean canHandle(CallbackQuery callback) {
     return canHandle(callback, CallbackState.CLEAR_MENU);
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_WAS_DELETED = "Меню и все заказы были удалены.";
 }

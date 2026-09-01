@@ -37,6 +37,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
 public abstract class AbstractHandler {
+
+  private static final String PERMISSION_DENIED = "Нет доступа.";
+
   protected final UserService userService = ServiceContainer.getUserService();
   protected final MessageSender messageService = ServiceContainer.getMessageService();
   protected final MenuService menuService = ServiceContainer.getMenuService();
@@ -77,6 +80,15 @@ public abstract class AbstractHandler {
 
   public boolean isUserReady(User user) {
     return user.getStatus() == Status.READY;
+  }
+
+  public boolean checkAdminRole(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    if (user.getRole() == User.Role.USER) {
+      sendMessage(user, PERMISSION_DENIED, messageId, sender);
+      return true;
+    }
+    return false;
   }
 
   public Integer getMessageId(Update update) {

@@ -25,27 +25,24 @@ public class ClearMenuStateHandler extends AbstractHandler implements StateHandl
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
+      }
+      if (isMenuExist(user.getCity())) {
+        sendMessageWithKeyboard(
+            user,
+            MENU_TO_DELETE,
+            KeyboardUtil.createInlineKeyboard(
+                List.of(
+                    new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString()),
+                    new UserButton("Отменить", CallbackState.CANCEL.toString()))),
+            getMessageId(update),
+            sender);
       } else {
-        if (isMenuExist(user.getCity())) {
-          sendMessageWithKeyboard(
-              user,
-              MENU_TO_DELETE,
-              KeyboardUtil.createInlineKeyboard(
-                  List.of(
-                      new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString()),
-                      new UserButton("Отменить", CallbackState.CANCEL.toString()))),
-              getMessageId(update),
-              sender);
-        } else {
-          sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
-        }
+        sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
       }
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_TO_DELETE = "Вы хотите удалить меню на сегодня?\n";
 

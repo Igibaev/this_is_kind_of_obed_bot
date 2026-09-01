@@ -27,48 +27,45 @@ public class PublishMenuStateHandler extends AbstractHandler implements StateHan
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      } else {
-        if (isMenuExist(user.getCity())) {
-          Menu menu = menuService.findById(user.getCity().toString());
-          if (menu.getStatus() == Status.READY) {
-            InlineKeyboardMarkup markup =
-                KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
-            KeyboardUtil.addButton(
-                List.of(new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())),
-                markup);
-            sendMessageWithKeyboard(
-                user,
-                String.format(
-                    MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
-                markup,
-                getMessageId(update),
-                sender);
-          } else {
-            InlineKeyboardMarkup markup =
-                KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
-            KeyboardUtil.addButton(
-                List.of(
-                    new UserButton("Опубликовать меню", CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString()),
-                    new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString())),
-                markup);
-            sendMessageWithKeyboard(
-                user,
-                String.format(MENU_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
-                markup,
-                getMessageId(update),
-                sender);
-          }
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
+      }
+      if (isMenuExist(user.getCity())) {
+        Menu menu = menuService.findById(user.getCity().toString());
+        if (menu.getStatus() == Status.READY) {
+          InlineKeyboardMarkup markup =
+              KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+          KeyboardUtil.addButton(
+              List.of(new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString())),
+              markup);
+          sendMessageWithKeyboard(
+              user,
+              String.format(
+                  MENU_READY_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              markup,
+              getMessageId(update),
+              sender);
         } else {
-          sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
+          InlineKeyboardMarkup markup =
+              KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+          KeyboardUtil.addButton(
+              List.of(
+                  new UserButton("Опубликовать меню", CallbackState.SUBMIT_MENU.toString()),
+                  new UserButton("Изменить меню", CallbackState.CHANGE_MENU.toString()),
+                  new UserButton("Удалить меню", CallbackState.CLEAR_MENU.toString())),
+              markup);
+          sendMessageWithKeyboard(
+              user,
+              String.format(MENU_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+              markup,
+              getMessageId(update),
+              sender);
         }
+      } else {
+        sendMessage(user, MENU_NOT_EXIST, getMessageId(update), sender);
       }
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String MENU_NOT_EXIST =
       "Меню не создано, сначала создайте меню. Чтобы вернуться нажмите \return";

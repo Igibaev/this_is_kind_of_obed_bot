@@ -28,9 +28,7 @@ public class ChangeDeadlineStateHandler extends AbstractHandler implements State
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      }
+      checkAdminRole(user, getMessageId(update), sender);
       LocalDateTime newDeadline = MenuTextParser.parseDeadline(update.getMessage().getText());
       Menu menu = menuService.findById(user.getCity().toString());
       menu.setDeadline(newDeadline);
@@ -55,8 +53,6 @@ public class ChangeDeadlineStateHandler extends AbstractHandler implements State
           sender);
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String DEADLINE_IS_SET_AND_MENU_IS_PUBLISHE =
       "Скорректировали дедлайн для меню.\n" + "Вот меню для *%s* \n" + "Дедлайн *%s*\n";

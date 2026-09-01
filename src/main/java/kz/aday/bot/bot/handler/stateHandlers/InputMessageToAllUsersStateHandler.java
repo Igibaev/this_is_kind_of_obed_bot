@@ -26,62 +26,59 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
-      } else {
-        if (user.getState() == State.SEND_MESSAGE_TO_ALL_USERS) {
-          Message message = update.getMessage();
+      if (checkAdminRole(user, getMessageId(update), sender)) {
+        return;
+      }
+      if (user.getState() == State.SEND_MESSAGE_TO_ALL_USERS) {
+        Message message = update.getMessage();
 
-          List<User> recipients =
-              userService.findAll().stream()
-                  .filter(u -> u.getCity() == user.getCity())
-                  .collect(Collectors.toList());
-          boolean hasContent =
-              message.hasText()
-                  || message.hasPhoto()
-                  || message.hasVideo()
-                  || message.hasAudio()
-                  || message.hasDocument()
-                  || message.hasVoice()
-                  || message.hasAnimation()
-                  || message.hasSticker();
+        List<User> recipients =
+            userService.findAll().stream()
+                .filter(u -> u.getCity() == user.getCity())
+                .collect(Collectors.toList());
+        boolean hasContent =
+            message.hasText()
+                || message.hasPhoto()
+                || message.hasVideo()
+                || message.hasAudio()
+                || message.hasDocument()
+                || message.hasVoice()
+                || message.hasAnimation()
+                || message.hasSticker();
 
-          if (!hasContent) {
-            log.info("No message found");
-            return;
-          }
-
-          for (User recipient : recipients) {
-            try {
-              ForwardMessage forward = new ForwardMessage();
-              forward.setChatId(recipient.getChatId());
-              forward.setFromChatId(message.getChatId().toString());
-              forward.setMessageId(message.getMessageId());
-              forward.setProtectContent(true);
-              sender.executeAsync(forward);
-            } catch (TelegramApiException e) {
-              log.error("Failed send message to user:{}. Reason: {}", user.getId(), e.getMessage());
-            }
-          }
-          SendMessage confirm = new SendMessage();
-          confirm.setChatId(message.getChatId().toString());
-          confirm.setText("Рассылка прошла успешно.");
-          sender.executeAsync(confirm);
-          user.setState(State.NONE);
-          userService.save(user);
-        } else {
-          user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
-          sendMessage(
-              user,
-              String.format(INPUT_MESSAGE, user.getCity().getValue()),
-              getMessageId(update),
-              sender);
+        if (!hasContent) {
+          log.info("No message found");
+          return;
         }
+
+        for (User recipient : recipients) {
+          try {
+            ForwardMessage forward = new ForwardMessage();
+            forward.setChatId(recipient.getChatId());
+            forward.setFromChatId(message.getChatId().toString());
+            forward.setMessageId(message.getMessageId());
+            forward.setProtectContent(true);
+            sender.executeAsync(forward);
+          } catch (TelegramApiException e) {
+            log.error("Failed send message to user:{}. Reason: {}", user.getId(), e.getMessage());
+          }
+        }
+        SendMessage confirm = new SendMessage();
+        confirm.setChatId(message.getChatId().toString());
+        confirm.setText("Рассылка прошла успешно.");
+        sender.executeAsync(confirm);
+        user.setState(State.NONE);
+        userService.save(user);
+      } else {
+        user.setState(State.SEND_MESSAGE_TO_ALL_USERS);
+        sendMessage(
+            user,
+            String.format(INPUT_MESSAGE, user.getCity().getValue()),
+            getMessageId(update),
+            sender);
       }
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 
   private static final String INPUT_MESSAGE =
       "Введите сообщение для рассылки, для города %s. \n" + "Чтобы отменить нажмите /cancel";

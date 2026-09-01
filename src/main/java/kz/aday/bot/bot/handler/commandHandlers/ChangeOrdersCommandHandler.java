@@ -18,12 +18,9 @@ public class ChangeOrdersCommandHandler extends AbstractHandler implements Comma
     Optional<User> optionalUser = findReadyUserByChatId(update);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      if (user.getRole() == User.Role.USER) {
-        sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
+      if (checkAdminRole(user, getMessageId(update), sender)) {
         return;
       }
     }
   }
-
-  private static final String PERMISSION_DENIED = "Нет доступа.";
 }

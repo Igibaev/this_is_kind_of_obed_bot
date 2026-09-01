@@ -2,10 +2,12 @@
 package kz.aday.bot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import kz.aday.bot.model.City;
@@ -32,7 +34,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void getOverallAttendanceStats_givenNoAttendances_whenCalled_thenReturnsNoDataMessage() {
+  void getOverallAttendanceStats_returnsNoDataMessage_whenNoAttendances() {
     // given
     when(repository.getAll()).thenReturn(List.of());
     // when
@@ -42,8 +44,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void
-      getOverallAttendanceStats_givenOnlyOtherCityOrNotComingAttendances_whenCalled_thenReturnsNoDataMessage() {
+  void getOverallAttendanceStats_returnsNoDataMessage_whenOtherCityOrNotComing() {
     // given
     when(repository.getAll())
         .thenReturn(
@@ -57,8 +58,22 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void
-      getOverallAttendanceStats_givenAttendancesAcrossManyDates_whenCalled_thenCountsPerUserSortedDescending() {
+  void getOverallAttendanceStats_returnsStats_whenFutureDateExcluded() {
+    // given
+    String tomorrow = LocalDate.now().plusDays(1).toString();
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ALMATA, true, "2026-01-05"),
+                attendance("1", "user1", City.ALMATA, true, tomorrow)));
+    // when
+    String actual = service.getOverallAttendanceStats(City.ALMATA);
+    // then
+    assertEquals("user1: 1", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStats_returnsCountsSortedDescending() {
     // given
     when(repository.getAll())
         .thenReturn(
@@ -76,7 +91,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void getCurrentMonthAttendanceStats_givenNoAttendances_whenCalled_thenReturnsNoDataMessage() {
+  void getCurrentMonthAttendanceStats_returnsNoDataMessage_whenNoAttendances() {
     // given
     when(repository.getAll()).thenReturn(List.of());
     // when
@@ -86,7 +101,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void getCurrentMonthAttendanceStats_givenAttendancesInOtherMonths_whenCalled_thenExcludesThem() {
+  void getCurrentMonthAttendanceStats_returnsNoDataMessage_whenOtherMonths() {
     // given
     YearMonth currentMonth = YearMonth.now();
     String pastMonthDate = currentMonth.minusMonths(1).atDay(1).toString();
@@ -103,12 +118,29 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void
-      getCurrentMonthAttendanceStats_givenAttendancesInCurrentMonth_whenCalled_thenCountsPerUserSortedDescending() {
+  void getCurrentMonthAttendanceStats_returnsStats_whenFutureDateExcluded() {
     // given
-    YearMonth currentMonth = YearMonth.now();
-    String day1 = currentMonth.atDay(1).toString();
-    String day2 = currentMonth.atDay(Math.min(2, currentMonth.lengthOfMonth())).toString();
+    LocalDate today = LocalDate.now();
+    LocalDate tomorrow = today.plusDays(1);
+    assumeTrue(YearMonth.from(tomorrow).equals(YearMonth.from(today)));
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ALMATA, true, today.toString()),
+                attendance("1", "user1", City.ALMATA, true, tomorrow.toString())));
+    // when
+    String actual = service.getCurrentMonthAttendanceStats(City.ALMATA);
+    // then
+    assertEquals("user1: 1", actual);
+  }
+
+  @Test
+  void getCurrentMonthAttendanceStats_returnsCountsSortedDescending() {
+    // given
+    LocalDate today = LocalDate.now();
+    LocalDate yesterday = today.minusDays(1);
+    String day1 = today.toString();
+    String day2 = (yesterday.getMonth() == today.getMonth() ? yesterday : today).toString();
     when(repository.getAll())
         .thenReturn(
             List.of(
@@ -122,7 +154,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void getCurrentMonthAttendanceStats_givenNullOrMalformedDates_whenCalled_thenExcludesThem() {
+  void getCurrentMonthAttendanceStats_returnsNoDataMessage_whenDatesMalformed() {
     // given
     when(repository.getAll())
         .thenReturn(
@@ -136,7 +168,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void getCurrentMonthAttendanceStats_givenAttendanceInOtherCity_whenCalled_thenExcludesIt() {
+  void getCurrentMonthAttendanceStats_returnsNoDataMessage_whenOtherCity() {
     // given
     YearMonth currentMonth = YearMonth.now();
     String day1 = currentMonth.atDay(1).toString();

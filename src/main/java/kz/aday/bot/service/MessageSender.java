@@ -17,17 +17,20 @@ public class MessageSender {
     try {
       if (sendMessage != null) {
         if (!(sendMessage.getText().contains("/return")
-                || sendMessage.getText().contains("/menu")
-                || sendMessage.getText().contains("/start")
-                || sendMessage.getText().contains("/cancel"))) {
+            || sendMessage.getText().contains("/menu")
+            || sendMessage.getText().contains("/start")
+            || sendMessage.getText().contains("/cancel"))) {
           sendMessage.setText(
-                  String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));
+              String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));
           return absSender.execute(sendMessage);
         }
       }
       return absSender.execute(sendMessage);
     } catch (TelegramApiException e) {
-      log.error("Failed to send message user:{}. \nReason: [{}]", sendMessage.getChatId(), e.getMessage());
+      log.error(
+          "Failed to send message user:{}. \nReason: [{}]",
+          sendMessage.getChatId(),
+          e.getMessage());
       return new Message();
     }
   }

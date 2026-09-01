@@ -41,10 +41,11 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
         sendMessageWithKeyboard(
             userToNotificate,
             String.format(
-                NEW_MENU_IS_PUBLISHED,
-                menu.getCity().getValue(),
-                menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
-                + "\n\n" + menu.getMenuAsFormattedText(),
+                    NEW_MENU_IS_PUBLISHED,
+                    menu.getCity().getValue(),
+                    menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
+                + "\n\n"
+                + menu.getMenuAsFormattedText(),
             KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
             userToNotificate.getLastMessageId(),
             sender);
@@ -54,11 +55,7 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.SUBMIT_MENU.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.SUBMIT_MENU);
   }
 
   private static final String MENU_IS_PUBLISHED = "Меню опубликовали.";

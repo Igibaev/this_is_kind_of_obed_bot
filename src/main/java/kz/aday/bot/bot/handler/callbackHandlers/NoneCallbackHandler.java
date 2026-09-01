@@ -11,10 +11,6 @@ public class NoneCallbackHandler extends AbstractHandler implements CallbackHand
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.NONE.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.NONE);
   }
 }

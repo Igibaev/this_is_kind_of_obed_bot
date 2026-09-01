@@ -16,9 +16,7 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
         return;
       }
       menuService.deleteById(user.getCity().toString());
-      orderService
-          .findAll()
-          .stream()
+      orderService.findAll().stream()
           .filter(order -> order.getCity() == user.getCity())
           .forEach(order -> orderService.deleteById(order.getChatId()));
       sendMessage(user, MENU_WAS_DELETED, getMessageId(callback), sender);
@@ -27,11 +25,7 @@ public class ClearMenuCallbackHandler extends AbstractHandler implements Callbac
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.CLEAR_MENU.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.CLEAR_MENU);
   }
 
   private static final String PERMISSION_DENIED = "Нет доступа.";

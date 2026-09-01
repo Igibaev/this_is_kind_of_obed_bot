@@ -12,15 +12,12 @@ import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler implements CallbackHandler {
+public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler
+    implements CallbackHandler {
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.GET_ORDERS_TODAY_ALMATA.name().equals(data[0]);
+    return canHandle(callback, CallbackState.GET_ORDERS_TODAY_ALMATA);
   }
 
   @Override
@@ -33,17 +30,19 @@ public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler impleme
       }
       // "Заказы на сегодня" = кто обедает сегодня = заказы сделанные вчера
       LocalDate yesterday = LocalDate.now().minusDays(1);
-      List<Order> orders = orderService.findAllOnDate(yesterday).stream()
-          .filter(o -> o.getCity() == user.getCity())
-          .filter(o -> !o.getOrderItemList().isEmpty())
-          .filter(o -> o.getStatus() == Status.READY)
-          .collect(Collectors.toList());
+      List<Order> orders =
+          orderService.findAllOnDate(yesterday).stream()
+              .filter(o -> o.getCity() == user.getCity())
+              .filter(o -> !o.getOrderItemList().isEmpty())
+              .filter(o -> o.getStatus() == Status.READY)
+              .collect(Collectors.toList());
 
       if (orders.isEmpty()) {
         sendMessage(user, EMPTY_ORDERS, getMessageId(callback), sender);
       } else {
         Report report = new Report(user.getCity(), orders);
-        sendMessage(user, REPORT_MESSAGE + report.printOrderReport(), getMessageId(callback), sender);
+        sendMessage(
+            user, REPORT_MESSAGE + report.printOrderReport(), getMessageId(callback), sender);
       }
     }
   }

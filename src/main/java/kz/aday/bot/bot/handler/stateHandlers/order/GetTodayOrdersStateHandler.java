@@ -29,12 +29,14 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
       } else if (user.getCity().isNextDayOrderCycle()) {
-        List<UserButton> buttons = List.of(
-            new UserButton(CallbackState.GET_ORDERS_TODAY_ALMATA.getDisplayName(),
-                CallbackState.GET_ORDERS_TODAY_ALMATA.name()),
-            new UserButton(CallbackState.GET_ORDERS_TOMORROW_ALMATA.getDisplayName(),
-                CallbackState.GET_ORDERS_TOMORROW_ALMATA.name())
-        );
+        List<UserButton> buttons =
+            List.of(
+                new UserButton(
+                    CallbackState.GET_ORDERS_TODAY_ALMATA.getDisplayName(),
+                    CallbackState.GET_ORDERS_TODAY_ALMATA.name()),
+                new UserButton(
+                    CallbackState.GET_ORDERS_TOMORROW_ALMATA.getDisplayName(),
+                    CallbackState.GET_ORDERS_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
             CHOOSE_DATE_MESSAGE,

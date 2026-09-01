@@ -69,10 +69,11 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
           sendMessageWithKeyboard(
               user,
               String.format(
-                  MENU_TODAY,
-                  user.getCity().getValue(),
-                  menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
-                  + "\n\n" + menu.getMenuAsFormattedText(),
+                      MENU_TODAY,
+                      user.getCity().getValue(),
+                      menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
+                  + "\n\n"
+                  + menu.getMenuAsFormattedText(),
               getMenuKeyboard(
                   menu.getItemList(),
                   List.of(new UserButton("Отправить", CallbackState.SUBMIT_ORDER.name()))),

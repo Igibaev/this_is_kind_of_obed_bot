@@ -15,9 +15,7 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) throw new IllegalArgumentException("There is no callback");
-    return CallbackState.WHO_COMES_TODAY_ALMATA.name().equals(data[0]);
+    return canHandle(callback, CallbackState.WHO_COMES_TODAY_ALMATA);
   }
 
   @Override
@@ -26,16 +24,17 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
       User user = userService.findById(getChatId(callback).toString());
       // Кто приходит сегодня = заказы сделанные вчера
       LocalDate yesterday = LocalDate.now().minusDays(1);
-      List<Order> orders = orderService.findAllOnDate(yesterday).stream()
-          .filter(o -> o.getCity() == user.getCity())
-          .filter(o -> o.getStatus() == Status.READY)
-          .collect(Collectors.toList());
+      List<Order> orders =
+          orderService.findAllOnDate(yesterday).stream()
+              .filter(o -> o.getCity() == user.getCity())
+              .filter(o -> o.getStatus() == Status.READY)
+              .collect(Collectors.toList());
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
       if (names.isBlank()) {
         sendMessage(user, NOBODY_COMES, getMessageId(callback), sender);
       } else {
-        sendMessage(user, String.format(WHO_COMES, orders.size(), names),
-            getMessageId(callback), sender);
+        sendMessage(
+            user, String.format(WHO_COMES, orders.size(), names), getMessageId(callback), sender);
       }
     }
   }

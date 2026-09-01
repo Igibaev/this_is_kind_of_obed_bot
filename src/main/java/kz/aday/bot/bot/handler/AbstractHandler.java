@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
+import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.InputMessageToAllUsersStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
@@ -42,6 +43,14 @@ public abstract class AbstractHandler {
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
+
+  public boolean canHandle(CallbackQuery callback, CallbackState state) {
+    String[] data = callback.getData().split(":");
+    if (data.length <= 0) {
+      throw new IllegalArgumentException("There is no callback");
+    }
+    return state.name().equals(data[0].trim());
+  }
 
   public Long getChatId(CallbackQuery update) {
     return update.getMessage().getChatId();

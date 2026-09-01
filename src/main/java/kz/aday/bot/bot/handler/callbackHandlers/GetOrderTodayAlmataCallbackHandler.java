@@ -13,11 +13,7 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.GET_ORDER_TODAY_ALMATA.name().equals(data[0]);
+    return canHandle(callback, CallbackState.GET_ORDER_TODAY_ALMATA);
   }
 
   @Override

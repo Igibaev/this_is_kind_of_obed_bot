@@ -51,11 +51,12 @@ public class Menu implements Id {
       byCategory.computeIfAbsent(item.getCategory(), k -> new ArrayList<>()).add(item);
     }
     StringBuilder sb = new StringBuilder();
-    byCategory.forEach((category, items) -> {
-      sb.append(category.getDisplayName()).append(":\n");
-      items.forEach(item -> sb.append("• ").append(item.getName()).append("\n"));
-      sb.append("\n");
-    });
+    byCategory.forEach(
+        (category, items) -> {
+          sb.append(category.getDisplayName()).append(":\n");
+          items.forEach(item -> sb.append("• ").append(item.getName()).append("\n"));
+          sb.append("\n");
+        });
     return sb.toString().trim();
   }
 }

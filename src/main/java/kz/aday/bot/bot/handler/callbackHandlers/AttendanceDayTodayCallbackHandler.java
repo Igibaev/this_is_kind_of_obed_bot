@@ -14,14 +14,10 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 public class AttendanceDayTodayCallbackHandler extends AbstractHandler implements CallbackHandler {
 
   private static final String TODAY = ":TODAY";
+
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-
-    return CallbackState.ATTENDANCE_DAY_TODAY.name().equals(data[0]);
+    return canHandle(callback, CallbackState.ATTENDANCE_DAY_TODAY);
   }
 
   @Override

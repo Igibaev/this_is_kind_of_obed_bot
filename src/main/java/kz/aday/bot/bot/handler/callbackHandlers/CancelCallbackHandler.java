@@ -20,11 +20,7 @@ public class CancelCallbackHandler extends AbstractHandler implements CallbackHa
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.CANCEL.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.CANCEL);
   }
 
   private static final String NAVIGATION_MENU = "Меню навигации по боту.";

@@ -34,14 +34,14 @@ public class SendFeedbackStateHandler extends AbstractHandler implements StateHa
       if (user.getState() != State.SEND_FEEDBACK) return;
 
       boolean hasContent =
-              message.hasText()
-                      || message.hasPhoto()
-                      || message.hasVideo()
-                      || message.hasAudio()
-                      || message.hasDocument()
-                      || message.hasVoice()
-                      || message.hasAnimation()
-                      || message.hasSticker();
+          message.hasText()
+              || message.hasPhoto()
+              || message.hasVideo()
+              || message.hasAudio()
+              || message.hasDocument()
+              || message.hasVoice()
+              || message.hasAnimation()
+              || message.hasSticker();
 
       if (!hasContent) {
         log.info("No feedback found");

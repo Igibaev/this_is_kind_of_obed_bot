@@ -52,10 +52,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     try (Stream<Path> dateFolders = Files.list(BASE_PATH)) {
       for (Path dateFolder : dateFolders.toList()) {
         if (Files.isDirectory(dateFolder)
-                && dateFolder
-                .getFileName()
-                .toString()
-                .equals(today.format(DATE_FOLDER_FORMATTER))) {
+            && dateFolder.getFileName().toString().equals(today.format(DATE_FOLDER_FORMATTER))) {
           readFolder(dateFolder, items);
         }
       }

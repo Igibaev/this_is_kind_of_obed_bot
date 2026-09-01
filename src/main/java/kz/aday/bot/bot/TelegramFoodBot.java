@@ -43,14 +43,14 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
       if (update.hasMessage()) {
         Message message = update.getMessage();
         boolean hasContent =
-                message.hasText()
-                        || message.hasPhoto()
-                        || message.hasVideo()
-                        || message.hasAudio()
-                        || message.hasDocument()
-                        || message.hasVoice()
-                        || message.hasAnimation()
-                        || message.hasSticker();
+            message.hasText()
+                || message.hasPhoto()
+                || message.hasVideo()
+                || message.hasAudio()
+                || message.hasDocument()
+                || message.hasVoice()
+                || message.hasAnimation()
+                || message.hasSticker();
         if (hasContent) {
           if (message.hasText()) {
             if (message.getText().startsWith("/")) {

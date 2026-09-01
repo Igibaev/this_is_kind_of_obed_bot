@@ -26,12 +26,14 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
       user.setState(State.NONE);
       userService.save(user);
       if (user.getCity().isNextDayOrderCycle()) {
-        List<UserButton> buttons = List.of(
-            new UserButton(CallbackState.WHO_COMES_TODAY_ALMATA.getDisplayName(),
-                CallbackState.WHO_COMES_TODAY_ALMATA.name()),
-            new UserButton(CallbackState.WHO_COMES_TOMORROW_ALMATA.getDisplayName(),
-                CallbackState.WHO_COMES_TOMORROW_ALMATA.name())
-        );
+        List<UserButton> buttons =
+            List.of(
+                new UserButton(
+                    CallbackState.WHO_COMES_TODAY_ALMATA.getDisplayName(),
+                    CallbackState.WHO_COMES_TODAY_ALMATA.name()),
+                new UserButton(
+                    CallbackState.WHO_COMES_TOMORROW_ALMATA.getDisplayName(),
+                    CallbackState.WHO_COMES_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
             CHOOSE_DATE_MESSAGE,
@@ -39,16 +41,17 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
             getMessageId(update),
             sender);
       } else {
-        List<Order> orders = orderService.findAll().stream()
-            .filter(o -> o.getCity() == user.getCity())
-            .filter(o -> o.getStatus() == Status.READY)
-            .collect(Collectors.toList());
+        List<Order> orders =
+            orderService.findAll().stream()
+                .filter(o -> o.getCity() == user.getCity())
+                .filter(o -> o.getStatus() == Status.READY)
+                .collect(Collectors.toList());
         String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
         if (names.isBlank()) {
           sendMessage(user, NOBODY_COMES_TODAY, getMessageId(update), sender);
         } else {
-          sendMessage(user, String.format(WHO_COMES, orders.size(), names),
-              getMessageId(update), sender);
+          sendMessage(
+              user, String.format(WHO_COMES, orders.size(), names), getMessageId(update), sender);
         }
       }
     }

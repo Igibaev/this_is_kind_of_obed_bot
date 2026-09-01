@@ -34,11 +34,7 @@ public class ChangeOrderCallbackHandler extends AbstractHandler implements Callb
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.CHANGE_ORDER.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.CHANGE_ORDER);
   }
 
   private static final String MENU_DEADLINE_IS_PASSED = "Дедлайн уже прошел.";

@@ -86,8 +86,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void
-      getCurrentMonthAttendanceStats_givenAttendancesInOtherMonths_whenCalled_thenExcludesThem() {
+  void getCurrentMonthAttendanceStats_givenAttendancesInOtherMonths_whenCalled_thenExcludesThem() {
     // given
     YearMonth currentMonth = YearMonth.now();
     String pastMonthDate = currentMonth.minusMonths(1).atDay(1).toString();
@@ -123,8 +122,7 @@ class OfficeAttendanceServiceTest {
   }
 
   @Test
-  void
-      getCurrentMonthAttendanceStats_givenNullOrMalformedDates_whenCalled_thenExcludesThem() {
+  void getCurrentMonthAttendanceStats_givenNullOrMalformedDates_whenCalled_thenExcludesThem() {
     // given
     when(repository.getAll())
         .thenReturn(

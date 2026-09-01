@@ -1,22 +1,18 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
-import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler implements CallbackHandler {
+public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler
+    implements CallbackHandler {
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.GET_ORDER_TOMORROW_ALMATA.name().equals(data[0]);
+    return canHandle(callback, CallbackState.GET_ORDER_TOMORROW_ALMATA);
   }
 
   @Override

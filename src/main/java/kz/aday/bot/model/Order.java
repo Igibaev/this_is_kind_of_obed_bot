@@ -3,7 +3,6 @@ package kz.aday.bot.model;
 
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -27,5 +26,4 @@ public class Order implements Id {
   public String getId() {
     return chatId;
   }
-
 }

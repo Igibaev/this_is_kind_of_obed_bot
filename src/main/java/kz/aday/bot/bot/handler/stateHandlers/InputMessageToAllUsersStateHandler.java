@@ -31,18 +31,18 @@ public class InputMessageToAllUsersStateHandler extends AbstractHandler implemen
           Message message = update.getMessage();
 
           List<User> recipients =
-                  userService.findAll().stream()
-                          .filter(u -> u.getCity() == user.getCity())
-                          .collect(Collectors.toList());
+              userService.findAll().stream()
+                  .filter(u -> u.getCity() == user.getCity())
+                  .collect(Collectors.toList());
           boolean hasContent =
-                  message.hasText()
-                          || message.hasPhoto()
-                          || message.hasVideo()
-                          || message.hasAudio()
-                          || message.hasDocument()
-                          || message.hasVoice()
-                          || message.hasAnimation()
-                          || message.hasSticker();
+              message.hasText()
+                  || message.hasPhoto()
+                  || message.hasVideo()
+                  || message.hasAudio()
+                  || message.hasDocument()
+                  || message.hasVoice()
+                  || message.hasAnimation()
+                  || message.hasSticker();
 
           if (!hasContent) {
             log.info("No message found");

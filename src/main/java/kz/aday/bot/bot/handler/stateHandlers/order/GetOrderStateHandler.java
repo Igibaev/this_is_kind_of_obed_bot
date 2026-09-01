@@ -24,12 +24,14 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
     if (isUserExistAndReady(update)) {
       User user = userService.findById(getChatId(update).toString());
       if (user.getCity().isNextDayOrderCycle()) {
-        List<UserButton> buttons = List.of(
-            new UserButton(CallbackState.GET_ORDER_TODAY_ALMATA.getDisplayName(),
-                CallbackState.GET_ORDER_TODAY_ALMATA.name()),
-            new UserButton(CallbackState.GET_ORDER_TOMORROW_ALMATA.getDisplayName(),
-                CallbackState.GET_ORDER_TOMORROW_ALMATA.name())
-        );
+        List<UserButton> buttons =
+            List.of(
+                new UserButton(
+                    CallbackState.GET_ORDER_TODAY_ALMATA.getDisplayName(),
+                    CallbackState.GET_ORDER_TODAY_ALMATA.name()),
+                new UserButton(
+                    CallbackState.GET_ORDER_TOMORROW_ALMATA.getDisplayName(),
+                    CallbackState.GET_ORDER_TOMORROW_ALMATA.name()));
         sendMessageWithKeyboard(
             user,
             CHOOSE_DATE_MESSAGE,

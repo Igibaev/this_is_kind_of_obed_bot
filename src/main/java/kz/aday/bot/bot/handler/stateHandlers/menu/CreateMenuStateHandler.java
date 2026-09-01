@@ -51,31 +51,31 @@ public class CreateMenuStateHandler extends AbstractHandler implements StateHand
                 sender);
           } else {
             if (menu.getStatus() == Status.PENDING) {
-            InlineKeyboardMarkup markup =
-                KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
-            KeyboardUtil.addButton(
-                List.of(
-                    new UserButton(
-                        CallbackState.SUBMIT_MENU.getDisplayName(),
-                        CallbackState.SUBMIT_MENU.toString()),
-                    new UserButton(
-                        CallbackState.CHANGE_MENU.getDisplayName(),
-                        CallbackState.CHANGE_MENU.toString()),
-                    new UserButton(
-                        CallbackState.CLEAR_MENU.getDisplayName(),
-                        CallbackState.CLEAR_MENU.toString())),
-                markup);
-            sendMessageWithKeyboard(
-                user,
-                String.format(
-                    MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
-                markup,
-                getMessageId(update),
-                sender);
-	     } else {
-	               user.setState(State.SET_MENU);
-          sendMessage(user, MENU_TEMPLATE, getMessageId(update), sender);
-             }
+              InlineKeyboardMarkup markup =
+                  KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.NONE);
+              KeyboardUtil.addButton(
+                  List.of(
+                      new UserButton(
+                          CallbackState.SUBMIT_MENU.getDisplayName(),
+                          CallbackState.SUBMIT_MENU.toString()),
+                      new UserButton(
+                          CallbackState.CHANGE_MENU.getDisplayName(),
+                          CallbackState.CHANGE_MENU.toString()),
+                      new UserButton(
+                          CallbackState.CLEAR_MENU.getDisplayName(),
+                          CallbackState.CLEAR_MENU.toString())),
+                  markup);
+              sendMessageWithKeyboard(
+                  user,
+                  String.format(
+                      MENU_PENDING_MESSAGE, menu.getDeadlineAsText(), user.getCity().getValue()),
+                  markup,
+                  getMessageId(update),
+                  sender);
+            } else {
+              user.setState(State.SET_MENU);
+              sendMessage(user, MENU_TEMPLATE, getMessageId(update), sender);
+            }
           }
         } else {
           user.setState(State.SET_MENU);

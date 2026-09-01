@@ -18,11 +18,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.ADD_ITEM_TO_ORDER.toString().equals(data[0].trim());
+    return canHandle(callback, CallbackState.ADD_ITEM_TO_ORDER);
   }
 
   @Override

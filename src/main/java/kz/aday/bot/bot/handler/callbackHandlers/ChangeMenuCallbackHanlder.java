@@ -23,11 +23,7 @@ public class ChangeMenuCallbackHanlder extends AbstractHandler implements Callba
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    String[] data = callback.getData().split(":");
-    if (data.length <= 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return CallbackState.CHANGE_MENU.toString().equals(data[0]);
+    return canHandle(callback, CallbackState.CHANGE_MENU);
   }
 
   private static final String PERMISSION_DENIED = "Нет доступа.";

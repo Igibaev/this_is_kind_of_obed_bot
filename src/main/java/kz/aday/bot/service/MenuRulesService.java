@@ -3,7 +3,6 @@ package kz.aday.bot.service;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.MenuRules;
 

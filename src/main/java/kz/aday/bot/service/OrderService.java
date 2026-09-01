@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import kz.aday.bot.model.*;
 import kz.aday.bot.repository.BaseRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +17,7 @@ public class OrderService extends BaseService<Order> {
 
   public Optional<Order> findByIdOnDate(String userId, LocalDate date) {
     log.debug("Finding order by id {} on date {}", userId, date);
-    return repository.getAll(date).stream()
-        .filter(o -> o.getId().equals(userId))
-        .findFirst();
+    return repository.getAll(date).stream().filter(o -> o.getId().equals(userId)).findFirst();
   }
 
   public Collection<Order> findAllOnDate(LocalDate date) {
@@ -32,7 +29,8 @@ public class OrderService extends BaseService<Order> {
     StringBuilder result = new StringBuilder();
     LocalDate from = LocalDate.now().minusDays(30);
     while (from.isBefore(LocalDate.now())) {
-      List<Order> orderList = repository.getAll(from).stream().filter(o -> o.getCity() == city).toList();
+      List<Order> orderList =
+          repository.getAll(from).stream().filter(o -> o.getCity() == city).toList();
       result.append(printAttendanceSheetByOrders(orderList, from));
       from = from.plusDays(1);
     }
@@ -43,21 +41,19 @@ public class OrderService extends BaseService<Order> {
     if (orders.isEmpty()) {
       return String.format("*%s* никто не пришёл.\n", date.toString());
     }
-    long peopleCount = orders.stream()
+    long peopleCount =
+        orders.stream()
             .filter(order -> order.getStatus() == Status.READY)
             .filter(o -> !o.getOrderItemList().isEmpty())
             .count();
-    String peopleList = orders.stream()
+    String peopleList =
+        orders.stream()
             .filter(order -> order.getStatus() == Status.READY)
             .filter(o -> !o.getOrderItemList().isEmpty())
             .map(Order::getUsername)
             .collect(Collectors.joining(","));
     return String.format(
-            "*%s* в офисе заказли еду:*%s*\n%s\n",
-            date.toString(),
-            peopleCount,
-            peopleList
-    );
+        "*%s* в офисе заказли еду:*%s*\n%s\n", date.toString(), peopleCount, peopleList);
   }
 
   public void addItemToOrder(Order order, Item item, MenuRules menuRules) {

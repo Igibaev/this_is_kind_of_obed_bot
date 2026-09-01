@@ -38,17 +38,20 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
         repository.getAll().stream()
             .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
             .filter(a -> city.equals(a.getCity()))
+            .filter(a -> !isAfter(a, LocalDate.now()))
             .toList();
     return formatStats(attendances);
   }
 
   public String getCurrentMonthAttendanceStats(City city) {
     YearMonth currentMonth = YearMonth.now();
+    LocalDate today = LocalDate.now();
     List<OfficeAttendance> attendances =
         repository.getAll().stream()
             .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
             .filter(a -> city.equals(a.getCity()))
             .filter(a -> isInMonth(a, currentMonth))
+            .filter(a -> !isAfter(a, today))
             .toList();
     return formatStats(attendances);
   }
@@ -61,6 +64,14 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
       return YearMonth.from(LocalDate.parse(attendance.getDate())).equals(month);
     } catch (DateTimeParseException e) {
       return false;
+    }
+  }
+
+  private boolean isAfter(OfficeAttendance attendance, LocalDate date) {
+    try {
+      return LocalDate.parse(attendance.getDate()).isAfter(date);
+    } catch (DateTimeParseException e) {
+      return true;
     }
   }
 

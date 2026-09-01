@@ -6,6 +6,8 @@ import kz.aday.bot.model.User;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+import java.util.Optional;
+
 public class GetAttendanceStatsForMonthStateHandler extends AbstractHandler
     implements StateHandler {
   @Override
@@ -15,12 +17,15 @@ public class GetAttendanceStatsForMonthStateHandler extends AbstractHandler
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
-    if (isUserExistAndReady(update)) {
-      User user = userService.findById(getChatId(update).toString());
+    Optional<User> optionalUser = findReadyUserByChatId(update);
+
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
       if (user.getRole() == User.Role.USER) {
         sendMessage(user, PERMISSION_DENIED, getMessageId(update), sender);
         return;
       }
+
       sendMessage(
           user,
           REPORT_MESSAGE

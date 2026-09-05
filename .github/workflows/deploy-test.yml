@@ -1,12 +1,12 @@
-name: Build Docker Image, Deploy on Server
+name: Build Docker Image, Deploy on Test Server
 
 on:
   push:
     branches:
-      - main
+      - develop
+  workflow_dispatch: {}
 
 jobs:
-  # --- ЗАДАЧА №1: ПРОВЕРКА, СБОРКА DOCKER-ОБРАЗА И ЗАПУСК ТЕСТОВ/ЛОГОВ В ОБЛАКЕ ---
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -34,24 +34,6 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Run application for a short period and capture logs
-        run: |
-          ./gradlew assemble
-
-          echo "Attempting to run application for a short period to capture startup logs..."
-          java -Dserver.port=0 -jar build/libs/*.jar > startup.log 2>&1 &
-          APP_PID=$!
-
-          echo "Waiting for application to start (max 30 seconds)..."
-          sleep 30
-
-          echo "Killing application process..."
-          kill $APP_PID || true
-
-          echo "Printing captured startup logs:"
-          cat startup.log
-          echo "End of application startup logs."
-
       - name: Convert repository name to lowercase
         id: string
         run: echo "DOCKER_IMAGE_NAME_LC=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
@@ -68,9 +50,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest
+          tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:test
 
-  # --- ЗАДАЧА №2: ДЕПЛОЙ НА СЕРВЕР (PROD) ---
+  # --- ДЕПЛОЙ НА ТЕСТОВЫЙ СТЕК (отдельный Compose project, не трогает прод и не трогает KTStore) ---
   deploy:
     needs: build
     runs-on: self-hosted
@@ -88,18 +70,18 @@ jobs:
 
       - name: Deploy new version with Docker Compose
         env:
-          IMAGE_NAME: ${{ needs.build.outputs.image_name }}:latest
-          CONTAINER_NAME: obed-bot
-          DATA_PATH: /opt/obed-bot/data
-          LOGS_PATH: /opt/obed-bot/logs
+          IMAGE_NAME: ${{ needs.build.outputs.image_name }}:test
+          CONTAINER_NAME: obed-bot-test
+          DATA_PATH: /opt/obed-bot-test/data
+          LOGS_PATH: /opt/obed-bot-test/logs
         run: |
-          cp /opt/obed-bot/.env .env
+          cp /opt/obed-bot-test/.env .env
 
           echo "Pulling latest Docker image: $IMAGE_NAME"
-          docker compose -p obed-bot pull
+          docker compose -p obed-bot-test pull
 
-          echo "Starting/updating obed-bot stack..."
-          docker compose -p obed-bot up -d
+          echo "Starting/updating obed-bot-test stack..."
+          docker compose -p obed-bot-test up -d
 
           echo "Cleaning up old images..."
           docker image prune -f

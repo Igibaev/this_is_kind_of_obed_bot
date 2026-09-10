@@ -10,7 +10,7 @@ import lombok.Getter;
 public enum City {
   ASTANA("Астана", false),
   ALMATA("Алматы", true),
-  KARAGANDA("Караганда", false);
+  KARAGANDA("Караганда", true);
 
   private final String value;
   private final boolean nextDayOrderCycle;

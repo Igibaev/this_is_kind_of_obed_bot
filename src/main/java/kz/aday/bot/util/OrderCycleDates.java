@@ -56,8 +56,17 @@ public final class OrderCycleDates {
     return orderDates;
   }
 
-  /** Дни, заказы за которые обслуживают сегодняшний обед. */
+  /**
+   * Дни, заказы за которые обслуживают ближайший обед: сегодняшний, если сегодня рабочий день,
+   * иначе обед ближайшего рабочего дня. В выходные это даёт заказы на понедельник — в субботу и
+   * воскресенье их всё равно нужно видеть.
+   */
   public static List<LocalDate> orderDatesForToday() {
-    return orderDatesFor(LocalDate.now());
+    return orderDatesForNearestLunch(LocalDate.now());
+  }
+
+  /** То же самое для произвольного дня. */
+  public static List<LocalDate> orderDatesForNearestLunch(LocalDate today) {
+    return orderDatesFor(isWorkDay(today) ? today : lunchDateFor(today));
   }
 }

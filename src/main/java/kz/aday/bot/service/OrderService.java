@@ -28,26 +28,48 @@ public class OrderService extends BaseService<Order> {
   /**
    * Заказы за несколько дней сразу: нужно, чтобы обед понедельника собирался из заказов, сделанных
    * в пятницу, субботу и воскресенье. Если один и тот же пользователь заказывал в несколько дней,
-   * остаётся самый поздний заказ.
+   * остаётся самый поздний подтверждённый заказ, см. {@link #preferred(Order, Order)}.
    */
   public Collection<Order> findAllOnDates(Collection<LocalDate> dates) {
     log.debug("Finding all orders on dates {}", dates);
     Map<String, Order> ordersByUser = new LinkedHashMap<>();
     dates.stream()
         .sorted()
-        .forEach(date -> repository.getAll(date).forEach(o -> ordersByUser.put(o.getId(), o)));
+        .forEach(
+            date ->
+                repository
+                    .getAll(date)
+                    .forEach(o -> ordersByUser.merge(o.getId(), o, OrderService::preferred)));
     return ordersByUser.values();
   }
 
-  /** Заказ пользователя за несколько дней сразу, самый поздний из найденных. */
+  /** Заказ пользователя за несколько дней сразу, самый поздний подтверждённый. */
   public Optional<Order> findByIdOnDates(String userId, Collection<LocalDate> dates) {
     log.debug("Finding order by id {} on dates {}", userId, dates);
     return dates.stream()
-        .sorted(Comparator.reverseOrder())
+        .sorted()
         .map(date -> findByIdOnDate(userId, date))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .findFirst();
+        .flatMap(Optional::stream)
+        .reduce(OrderService::preferred);
+  }
+
+  /**
+   * Какой из двух заказов одного пользователя считать актуальным. Заказы приходят по возрастанию
+   * даты, поэтому обычно побеждает более поздний. Но незавершённый заказ не должен вытеснять
+   * подтверждённый: бот сохраняет пустой PENDING сразу по нажатию "Сделать заказ", и такой
+   * черновик, брошенный в выходные, иначе стёр бы подтверждённый пятничный заказ из отчёта на
+   * понедельник.
+   */
+  private static Order preferred(Order earlier, Order later) {
+    if (isSubmitted(later)) {
+      return later;
+    }
+    return isSubmitted(earlier) ? earlier : later;
+  }
+
+  /** Заказ подтверждён и непустой — то есть человека действительно кормят. */
+  private static boolean isSubmitted(Order order) {
+    return order.getStatus() == Status.READY && !order.getOrderItemList().isEmpty();
   }
 
   public String getAllOrdersGropedByDate(City city) {

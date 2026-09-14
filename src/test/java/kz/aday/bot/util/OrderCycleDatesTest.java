@@ -57,6 +57,30 @@ class OrderCycleDatesTest {
   }
 
   @Test
+  void orderDatesForNearestLunch_onWorkDay_isTodaysLunch() {
+    assertEquals(
+        List.of(FRIDAY, SATURDAY, SUNDAY), OrderCycleDates.orderDatesForNearestLunch(MONDAY));
+    assertEquals(List.of(MONDAY), OrderCycleDates.orderDatesForNearestLunch(TUESDAY));
+  }
+
+  @Test
+  void orderDatesForNearestLunch_onWeekend_isMondaysLunch() {
+    List<LocalDate> mondayLunch = List.of(FRIDAY, SATURDAY, SUNDAY);
+    assertEquals(mondayLunch, OrderCycleDates.orderDatesForNearestLunch(SATURDAY));
+    assertEquals(mondayLunch, OrderCycleDates.orderDatesForNearestLunch(SUNDAY));
+  }
+
+  @Test
+  void orderDatesForNearestLunch_isNeverEmpty() {
+    LocalDate date = LocalDate.of(2026, 1, 1);
+    for (int i = 0; i < 400; i++, date = date.plusDays(1)) {
+      assertTrue(
+          !OrderCycleDates.orderDatesForNearestLunch(date).isEmpty(),
+          "ближайший обед должен быть найден для " + date);
+    }
+  }
+
+  @Test
   void isWorkDay_falseOnWeekend() {
     assertTrue(OrderCycleDates.isWorkDay(FRIDAY));
     assertTrue(OrderCycleDates.isWorkDay(MONDAY));

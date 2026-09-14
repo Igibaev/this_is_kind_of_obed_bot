@@ -1,12 +1,12 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
-import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.OrderCycleDates;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -22,9 +22,10 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // "Заказ на сегодня" = что едим сегодня = заказ сделанный вчера
-      LocalDate yesterday = LocalDate.now().minusDays(1);
-      Optional<Order> orderOpt = orderService.findByIdOnDate(user.getId(), yesterday);
+      // "Заказ на сегодня" = что едим сегодня = заказ сделанный в предыдущий рабочий день
+      // (для понедельника это пятница, суббота и воскресенье)
+      Optional<Order> orderOpt =
+          orderService.findByIdOnDates(user.getId(), OrderCycleDates.orderDatesForToday());
       if (orderOpt.isPresent() && !orderOpt.get().getOrderItemList().isEmpty()) {
         sendMessage(
             user,

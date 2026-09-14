@@ -25,6 +25,31 @@ public class OrderService extends BaseService<Order> {
     return repository.getAll(date);
   }
 
+  /**
+   * Заказы за несколько дней сразу: нужно, чтобы обед понедельника собирался из заказов, сделанных
+   * в пятницу, субботу и воскресенье. Если один и тот же пользователь заказывал в несколько дней,
+   * остаётся самый поздний заказ.
+   */
+  public Collection<Order> findAllOnDates(Collection<LocalDate> dates) {
+    log.debug("Finding all orders on dates {}", dates);
+    Map<String, Order> ordersByUser = new LinkedHashMap<>();
+    dates.stream()
+        .sorted()
+        .forEach(date -> repository.getAll(date).forEach(o -> ordersByUser.put(o.getId(), o)));
+    return ordersByUser.values();
+  }
+
+  /** Заказ пользователя за несколько дней сразу, самый поздний из найденных. */
+  public Optional<Order> findByIdOnDates(String userId, Collection<LocalDate> dates) {
+    log.debug("Finding order by id {} on dates {}", userId, dates);
+    return dates.stream()
+        .sorted(Comparator.reverseOrder())
+        .map(date -> findByIdOnDate(userId, date))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst();
+  }
+
   public String getAllOrdersGropedByDate(City city) {
     StringBuilder result = new StringBuilder();
     LocalDate from = LocalDate.now().minusDays(30);

@@ -4,10 +4,14 @@ package kz.aday.bot.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.model.Item;
+import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.UserButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -98,6 +102,29 @@ public class KeyboardUtil {
   private static String getTextButton(Set<Item> selectedItems, Item item) {
     String emoji = item.getCategory().getDisplayName().split(" ")[0];
     return (selectedItems.contains(item) ? "✅ " : "") + emoji + " " + item.getName();
+  }
+
+  public static InlineKeyboardMarkup createPoolInlineKeyboard(
+      List<SharedOrderItem> entries, CallbackState state) {
+    InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+    List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+    Map<Item, List<SharedOrderItem>> entriesByItem =
+        entries.stream()
+            .collect(Collectors.groupingBy(SharedOrderItem::getItem, LinkedHashMap::new, Collectors.toList()));
+
+    for (Map.Entry<Item, List<SharedOrderItem>> group : entriesByItem.entrySet()) {
+      Item item = group.getKey();
+      List<SharedOrderItem> itemEntries = group.getValue();
+      String emoji = item.getCategory().getDisplayName().split(" ")[0];
+      InlineKeyboardButton button = new InlineKeyboardButton();
+      button.setText(emoji + " " + item.getName() + ": " + itemEntries.size() + ".");
+      button.setCallbackData(state + ":" + itemEntries.get(0).getEntryId());
+      keyboard.add(List.of(button));
+    }
+
+    markup.setKeyboard(keyboard);
+    return markup;
   }
 
   public static void addButton(List<UserButton> userButtons, InlineKeyboardMarkup markup) {

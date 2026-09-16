@@ -4,8 +4,10 @@ package kz.aday.bot.bot.handler;
 import static kz.aday.bot.model.User.Role.ADMIN;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
@@ -16,6 +18,7 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -24,6 +27,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
@@ -45,6 +49,7 @@ public abstract class AbstractHandler {
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
+  protected final SharedOrderItemPoolService sharedOrderItemPoolService = ServiceContainer.getPoolService();
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
     String[] data = callback.getData().split(":");
@@ -133,6 +138,24 @@ public abstract class AbstractHandler {
     return orderService.existsById(user.getId());
   }
 
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user) {
+    if (!isOrderExist(user)) {
+      return List.of();
+    }
+    Order order = orderService.findById(user.getId());
+    orderService.deleteById(user.getId());
+    if (order.getOrderItemList().isEmpty()) {
+      return List.of();
+    }
+    sharedOrderItemPoolService.addItems(
+        user.getCity(), user.getId(), user.getPreferedName(), order.getOrderItemList());
+    return List.copyOf(order.getOrderItemList());
+  }
+
+  protected String joinItemNames(Collection<Item> items) {
+    return items.stream().map(Item::getName).collect(Collectors.joining(", "));
+  }
+
   public ReplyKeyboard getUserMenuKeyboard(User user) {
     List<String> items = new ArrayList<>();
     boolean isAdmin = user.getRole() == ADMIN;
@@ -171,6 +194,7 @@ public abstract class AbstractHandler {
     items.add(State.EDIT_USERNAME.getDisplayName());
     items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
     items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
+    items.add(State.VIEW_POOL.getDisplayName());
 
     if (isAdmin) {
       items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());

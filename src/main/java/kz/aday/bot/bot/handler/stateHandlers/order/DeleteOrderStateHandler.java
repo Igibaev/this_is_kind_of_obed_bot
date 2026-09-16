@@ -6,6 +6,7 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
@@ -40,8 +41,12 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
             user.setState(State.NONE);
             String message = update.getMessage().getText();
             if (message.equals("Да")) {
-              orderService.deleteById(order.getId());
-              sendMessage(user, Messages.ORDER_WAS_DELETED.getText(), getMessageId(update), sender);
+              List<Item> shared = releaseOrderToSharedOrderItemPool(user);
+              String text = Messages.ORDER_WAS_DELETED.getText();
+              if (!shared.isEmpty()) {
+                text += "\n\n" + Messages.POOL_ORDER_SHARED.getText(joinItemNames(shared));
+              }
+              sendMessage(user, text, getMessageId(update), sender);
             } else {
               sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);
             }

@@ -164,7 +164,19 @@ public abstract class AbstractHandler {
   }
 
   protected String formatNameList(Collection<String> names) {
-    return String.join("\n", names);
+    return names.stream().map(this::escapeMarkdown).collect(Collectors.joining("\n"));
+  }
+
+  protected String escapeMarkdown(String text) {
+    if (text == null) {
+      return "";
+    }
+    return text
+        .replace("\\", "\\\\")
+        .replace("_", "\\_")
+        .replace("*", "\\*")
+        .replace("`", "\\`")
+        .replace("[", "\\[");
   }
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {

@@ -25,7 +25,8 @@ public class ReturnCommandHandler extends AbstractHandler implements CommandHand
           Messages.RETURNING_NAVIGATION_MENU.getText(),
           getUserMenuKeyboard(user),
           getMessageId(update),
-          sender);
+          sender,
+          true);
     }
   }
 }

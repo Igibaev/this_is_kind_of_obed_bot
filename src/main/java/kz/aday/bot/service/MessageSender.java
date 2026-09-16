@@ -14,16 +14,21 @@ public class MessageSender {
 
   public Message sendMessage(SendMessage sendMessage, AbsSender absSender)
       throws TelegramApiException {
+    return sendMessage(sendMessage, absSender, false);
+  }
+
+  public Message sendMessage(
+      SendMessage sendMessage, AbsSender absSender, boolean suppressNavigationHint)
+      throws TelegramApiException {
     try {
-      if (sendMessage != null) {
-        if (!(sendMessage.getText().contains("/return")
-            || sendMessage.getText().contains("/menu")
-            || sendMessage.getText().contains("/start")
-            || sendMessage.getText().contains("/cancel"))) {
-          sendMessage.setText(
-              String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));
-          return absSender.execute(sendMessage);
-        }
+      if (sendMessage != null
+          && !suppressNavigationHint
+          && !(sendMessage.getText().contains("/return")
+              || sendMessage.getText().contains("/menu")
+              || sendMessage.getText().contains("/start")
+              || sendMessage.getText().contains("/cancel"))) {
+        sendMessage.setText(
+            String.format("%s\nЧтобы вернуться в меню нажмите /menu", sendMessage.getText()));
       }
       return absSender.execute(sendMessage);
     } catch (TelegramApiException e) {

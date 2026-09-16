@@ -90,7 +90,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
             Messages.NAVIGATION_MENU.getText(),
             getUserMenuKeyboard(user),
             getMessageId(update),
-            sender);
+            sender,
+            true);
       }
     } else {
       User createdUser =

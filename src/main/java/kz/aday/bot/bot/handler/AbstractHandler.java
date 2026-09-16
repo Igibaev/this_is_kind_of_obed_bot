@@ -200,8 +200,7 @@ public abstract class AbstractHandler {
   }
 
   private void addBaseMenuItems(boolean isAdmin, List<String> items) {
-    items.add(State.PROFILE.getDisplayName());
-    items.add(State.EDIT_USERNAME.getDisplayName());
+    items.add(State.PROFILE_MENU.getDisplayName());
     items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
     items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
     items.add(State.VIEW_POOL.getDisplayName());
@@ -234,12 +233,40 @@ public abstract class AbstractHandler {
     items.add(State.GET_ORDER.getDisplayName());
   }
 
+  public void sendProfileCard(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    ReplyKeyboard keyboard =
+        KeyboardUtil.createReplyKeyboard(
+            List.of(
+                State.CHANGE_NAME_ONLY.getDisplayName(),
+                State.CHANGE_CITY_ONLY.getDisplayName(),
+                State.BACK_TO_MENU.getDisplayName()));
+    sendMessageWithKeyboard(
+        user,
+        Messages.PROFILE_INFO.getText(user.getPreferedName(), user.getCity().getValue()),
+        keyboard,
+        messageId,
+        sender,
+        true);
+  }
+
   public void sendMessageWithKeyboard(
       User user,
       String text,
       ReplyKeyboard keyboard,
       Integer lastUserSentMessageId,
       AbsSender sender)
+      throws TelegramApiException {
+    sendMessageWithKeyboard(user, text, keyboard, lastUserSentMessageId, sender, false);
+  }
+
+  public void sendMessageWithKeyboard(
+      User user,
+      String text,
+      ReplyKeyboard keyboard,
+      Integer lastUserSentMessageId,
+      AbsSender sender,
+      boolean suppressNavigationHint)
       throws TelegramApiException {
     List<Integer> messagesToDelete = new ArrayList<>();
     if (lastUserSentMessageId != null) messagesToDelete.add(lastUserSentMessageId);
@@ -249,7 +276,10 @@ public abstract class AbstractHandler {
     message.setText(text);
     message.setReplyMarkup(keyboard);
     message.enableMarkdown(true);
-    Message sendedMessage = messageService.sendMessage(message, sender);
+    Message sendedMessage =
+        suppressNavigationHint
+            ? messageService.sendMessage(message, sender, true)
+            : messageService.sendMessage(message, sender);
     messageService.deleteMessage(user.getChatId(), messagesToDelete, sender);
 
     user.setLastMessageId(sendedMessage.getMessageId());

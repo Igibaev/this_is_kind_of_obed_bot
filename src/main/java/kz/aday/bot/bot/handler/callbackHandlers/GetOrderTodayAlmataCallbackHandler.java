@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
@@ -22,18 +23,22 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // "Заказ на сегодня" = что едим сегодня = заказ сделанный в предыдущий рабочий день
-      // (для понедельника это пятница, суббота и воскресенье)
+      LocalDate lunchDate = OrderCycleDates.nearestLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
       Optional<Order> orderOpt =
-          orderService.findByIdOnDates(user.getId(), OrderCycleDates.orderDatesForToday());
-      if (orderOpt.isPresent() && !orderOpt.get().getOrderItemList().isEmpty()) {
+          orderService.findByIdOnDates(user.getId(), OrderCycleDates.orderDatesFor(lunchDate));
+      if (orderOpt.isPresent()) {
         sendMessage(
             user,
-            Messages.YOUR_ORDER_IS_TODAY.getText(orderOpt.get().getOrderItemList()),
+            Messages.YOUR_ORDER_FOR_LUNCH.getText(lunchDateText, orderOpt.get().getOrderItemList()),
             getMessageId(callback),
             sender);
       } else {
-        sendMessage(user, Messages.ORDER_IS_EMPTY_TODAY.getText(), getMessageId(callback), sender);
+        sendMessage(
+            user,
+            Messages.ORDER_IS_EMPTY_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       }
     }
   }

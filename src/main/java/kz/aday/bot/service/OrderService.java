@@ -40,7 +40,7 @@ public class OrderService extends BaseService<Order> {
                 repository
                     .getAll(date)
                     .forEach(o -> ordersByUser.merge(o.getId(), o, OrderService::preferred)));
-    return ordersByUser.values();
+    return ordersByUser.values().stream().filter(OrderService::isSubmitted).toList();
   }
 
   /** Заказ пользователя за несколько дней сразу, самый поздний подтверждённый. */
@@ -50,7 +50,8 @@ public class OrderService extends BaseService<Order> {
         .sorted()
         .map(date -> findByIdOnDate(userId, date))
         .flatMap(Optional::stream)
-        .reduce(OrderService::preferred);
+        .filter(OrderService::isSubmitted)
+        .reduce((earlier, later) -> later);
   }
 
   /**

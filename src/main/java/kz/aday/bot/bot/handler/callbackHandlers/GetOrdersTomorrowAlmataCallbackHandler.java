@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Report;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.OrderCycleDates;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -30,21 +30,24 @@ public class GetOrdersTomorrowAlmataCallbackHandler extends AbstractHandler
       if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
-      // "Заказы на завтра" = кто обедает завтра = текущие заказы (сделанные сегодня)
+      LocalDate lunchDate = OrderCycleDates.nextLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
       List<Order> orders =
-          orderService.findAllOnDate(LocalDate.now()).stream()
+          orderService.findAllOnDates(OrderCycleDates.orderDatesFor(lunchDate)).stream()
               .filter(o -> o.getCity() == user.getCity())
-              .filter(o -> !o.getOrderItemList().isEmpty())
-              .filter(o -> o.getStatus() == Status.READY)
               .collect(Collectors.toList());
 
       if (orders.isEmpty()) {
-        sendMessage(user, Messages.EMPTY_ORDERS_TOMORROW.getText(), getMessageId(callback), sender);
+        sendMessage(
+            user,
+            Messages.EMPTY_ORDERS_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       } else {
         Report report = new Report(user.getCity(), orders);
         sendMessage(
             user,
-            Messages.REPORT_ORDERS_TOMORROW + report.printOrderReport(),
+            Messages.REPORT_ORDERS_FOR_LUNCH.getText(lunchDateText) + report.printOrderReport(),
             getMessageId(callback),
             sender);
       }

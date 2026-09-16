@@ -103,15 +103,23 @@ class OrderServiceTest {
   }
 
   @Test
-  void findAllOnDates_keepsLatestDraftWhenNothingSubmitted() {
+  void findAllOnDates_ignoresDraftsWhenNothingSubmitted() {
     when(repository.getAll(FRIDAY)).thenReturn(List.of(draft("1", "черновик в пятницу")));
     when(repository.getAll(SATURDAY)).thenReturn(List.of(draft("1", "черновик в субботу")));
     when(repository.getAll(SUNDAY)).thenReturn(List.of());
 
     List<Order> orders = List.copyOf(service.findAllOnDates(List.of(FRIDAY, SATURDAY, SUNDAY)));
 
-    assertEquals(1, orders.size());
-    assertEquals("черновик в субботу", orders.get(0).getUsername());
+    assertTrue(orders.isEmpty());
+  }
+
+  @Test
+  void findByIdOnDates_ignoresNonEmptyDraft() {
+    Order draft = draft("1", "незавершённый заказ");
+    draft.setOrderItemList(Set.of(new Item(2, "Суп", Category.FIRST)));
+    when(repository.getAll(FRIDAY)).thenReturn(List.of(draft));
+
+    assertTrue(service.findByIdOnDates("1", List.of(FRIDAY)).isEmpty());
   }
 
   @Test

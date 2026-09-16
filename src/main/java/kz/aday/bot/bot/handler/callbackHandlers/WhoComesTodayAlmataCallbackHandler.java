@@ -1,12 +1,12 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import kz.aday.bot.util.OrderCycleDates;
@@ -25,20 +25,23 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // Кто приходит сегодня = заказы сделанные в предыдущий рабочий день
-      // (для понедельника это пятница, суббота и воскресенье)
+      LocalDate lunchDate = OrderCycleDates.nearestLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
       List<Order> orders =
-          orderService.findAllOnDates(OrderCycleDates.orderDatesForToday()).stream()
+          orderService.findAllOnDates(OrderCycleDates.orderDatesFor(lunchDate)).stream()
               .filter(o -> o.getCity() == user.getCity())
-              .filter(o -> o.getStatus() == Status.READY)
               .toList();
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
       if (names.isBlank()) {
-        sendMessage(user, Messages.NOBODY_COMES_TODAY.getText(), getMessageId(callback), sender);
+        sendMessage(
+            user,
+            Messages.NOBODY_COMES_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       } else {
         sendMessage(
             user,
-            Messages.WHO_COMES_TODAY.getText(orders.size(), names),
+            Messages.WHO_COMES_FOR_LUNCH.getText(lunchDateText, orders.size(), names),
             getMessageId(callback),
             sender);
       }

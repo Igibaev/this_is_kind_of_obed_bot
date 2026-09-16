@@ -1,13 +1,13 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Report;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import kz.aday.bot.util.OrderCycleDates;
@@ -30,22 +30,24 @@ public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler
       if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
-      // "Заказы на сегодня" = кто обедает сегодня = заказы сделанные в предыдущий рабочий день
-      // (для понедельника это пятница, суббота и воскресенье)
+      LocalDate lunchDate = OrderCycleDates.nearestLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
       List<Order> orders =
-          orderService.findAllOnDates(OrderCycleDates.orderDatesForToday()).stream()
+          orderService.findAllOnDates(OrderCycleDates.orderDatesFor(lunchDate)).stream()
               .filter(o -> o.getCity() == user.getCity())
-              .filter(o -> !o.getOrderItemList().isEmpty())
-              .filter(o -> o.getStatus() == Status.READY)
               .collect(Collectors.toList());
 
       if (orders.isEmpty()) {
-        sendMessage(user, Messages.EMPTY_ORDERS_TODAY.getText(), getMessageId(callback), sender);
+        sendMessage(
+            user,
+            Messages.EMPTY_ORDERS_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       } else {
         Report report = new Report(user.getCity(), orders);
         sendMessage(
             user,
-            Messages.REPORT_ORDERS_TODAY + report.printOrderReport(),
+            Messages.REPORT_ORDERS_FOR_LUNCH.getText(lunchDateText) + report.printOrderReport(),
             getMessageId(callback),
             sender);
       }

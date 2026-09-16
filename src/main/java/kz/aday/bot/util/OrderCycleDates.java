@@ -3,6 +3,7 @@ package kz.aday.bot.util;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.List;
  * пятницу, субботу или воскресенье, обслуживает обед в понедельник.
  */
 public final class OrderCycleDates {
+
+  private static final DateTimeFormatter DISPLAY_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
   private OrderCycleDates() {}
 
@@ -67,6 +70,26 @@ public final class OrderCycleDates {
 
   /** То же самое для произвольного дня. */
   public static List<LocalDate> orderDatesForNearestLunch(LocalDate today) {
-    return orderDatesFor(isWorkDay(today) ? today : lunchDateFor(today));
+    return orderDatesFor(nearestLunchDate(today));
+  }
+
+  /** Сегодняшний обед в рабочий день или ближайший обед после выходных. */
+  public static LocalDate nearestLunchDate(LocalDate today) {
+    return isWorkDay(today) ? today : lunchDateFor(today);
+  }
+
+  /** Рабочий обед, следующий за ближайшим доступным обедом. */
+  public static LocalDate nextLunchDate(LocalDate today) {
+    return lunchDateFor(nearestLunchDate(today));
+  }
+
+  /** Дни заказов для рабочего обеда, следующего за ближайшим доступным обедом. */
+  public static List<LocalDate> orderDatesForNextLunch(LocalDate today) {
+    return orderDatesFor(nextLunchDate(today));
+  }
+
+  /** Дата обеда для пользовательских сообщений. */
+  public static String formatLunchDate(LocalDate lunchDate) {
+    return lunchDate.format(DISPLAY_DATE);
   }
 }

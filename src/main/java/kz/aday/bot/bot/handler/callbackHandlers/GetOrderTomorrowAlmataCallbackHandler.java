@@ -1,11 +1,13 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.OrderCycleDates;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -22,17 +24,22 @@ public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // "Заказ на завтра" = что едим завтра = текущий заказ (сделанный сегодня)
-      if (isOrderExist(user)) {
-        Order order = orderService.findById(user.getId());
+      LocalDate lunchDate = OrderCycleDates.nextLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
+      Optional<Order> orderOpt =
+          orderService.findByIdOnDates(user.getId(), OrderCycleDates.orderDatesFor(lunchDate));
+      if (orderOpt.isPresent()) {
         sendMessage(
             user,
-            Messages.YOUR_ORDER_IS_TOMORROW.getText(order.getOrderItemList()),
+            Messages.YOUR_ORDER_FOR_LUNCH.getText(lunchDateText, orderOpt.get().getOrderItemList()),
             getMessageId(callback),
             sender);
       } else {
         sendMessage(
-            user, Messages.ORDER_IS_EMPTY_TOMORROW.getText(), getMessageId(callback), sender);
+            user,
+            Messages.ORDER_IS_EMPTY_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       }
     }
   }

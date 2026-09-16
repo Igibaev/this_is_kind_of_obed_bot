@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.OrderCycleDates;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -26,19 +26,23 @@ public class WhoComesTomorrowAlmataCallbackHandler extends AbstractHandler
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // Кто придет завтра = текущие заказы (сделанные сегодня)
+      LocalDate lunchDate = OrderCycleDates.nextLunchDate(LocalDate.now());
+      String lunchDateText = OrderCycleDates.formatLunchDate(lunchDate);
       List<Order> orders =
-          orderService.findAllOnDate(LocalDate.now()).stream()
+          orderService.findAllOnDates(OrderCycleDates.orderDatesFor(lunchDate)).stream()
               .filter(o -> o.getCity() == user.getCity())
-              .filter(o -> o.getStatus() == Status.READY)
               .toList();
       String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
       if (names.isBlank()) {
-        sendMessage(user, Messages.NOBODY_COMES_TOMORROW.getText(), getMessageId(callback), sender);
+        sendMessage(
+            user,
+            Messages.NOBODY_COMES_FOR_LUNCH.getText(lunchDateText),
+            getMessageId(callback),
+            sender);
       } else {
         sendMessage(
             user,
-            Messages.WHO_COMES_TOMORROW.getText(orders.size(), names),
+            Messages.WHO_COMES_FOR_LUNCH.getText(lunchDateText, orders.size(), names),
             getMessageId(callback),
             sender);
       }

@@ -2,8 +2,10 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -27,13 +29,15 @@ public class OfficeAttendanceNoCallbackHandler extends AbstractHandler implement
       LocalDate date = isToday ? LocalDate.now() : LocalDate.now().plusDays(1);
       officeAttendanceService.save(
           user.getId(), user.getPreferedName(), user.getCity(), false, date);
-      sendMessage(
-          user,
+      String text =
           isToday
               ? Messages.THANKS_WONT_COME_TODAY.getText()
-              : Messages.THANKS_WONT_COME_TOMORROW.getText(),
-          getMessageId(callback),
-          sender);
+              : Messages.THANKS_WONT_COME_TOMORROW.getText();
+      List<Item> shared = releaseOrderToSharedOrderItemPool(user, date);
+      if (!shared.isEmpty()) {
+        text += "\n\n" + Messages.POOL_ORDER_SHARED.getText(joinItemNames(shared));
+      }
+      sendMessage(user, text, getMessageId(callback), sender);
     }
   }
 }

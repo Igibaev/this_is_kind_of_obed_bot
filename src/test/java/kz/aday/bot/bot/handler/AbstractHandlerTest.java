@@ -5,16 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -25,6 +29,7 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -33,6 +38,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,12 +76,14 @@ class AbstractHandlerTest {
           State.PROFILE.getDisplayName(),
           State.EDIT_USERNAME.getDisplayName(),
           State.WHO_WILL_COME_TO_OFFICE.getDisplayName(),
-          State.SET_OFFICE_ATTENDANCE.getDisplayName());
+          State.SET_OFFICE_ATTENDANCE.getDisplayName(),
+          State.VIEW_POOL.getDisplayName());
 
   private UserService userService;
   private MenuService menuService;
   private OrderService orderService;
   private MessageSender messageSender;
+  private SharedOrderItemPoolService sharedOrderItemPoolService;
   private AbstractHandler handler;
   private MockedStatic<ServiceContainer> serviceContainer;
 
@@ -85,12 +93,14 @@ class AbstractHandlerTest {
     messageSender = mock(MessageSender.class);
     menuService = mock(MenuService.class);
     orderService = mock(OrderService.class);
+    sharedOrderItemPoolService = mock(SharedOrderItemPoolService.class);
     OfficeAttendanceService officeAttendanceService = mock(OfficeAttendanceService.class);
     serviceContainer = mockStatic(ServiceContainer.class);
     serviceContainer.when(ServiceContainer::getUserService).thenReturn(userService);
     serviceContainer.when(ServiceContainer::getMessageService).thenReturn(messageSender);
     serviceContainer.when(ServiceContainer::getMenuService).thenReturn(menuService);
     serviceContainer.when(ServiceContainer::getOrderService).thenReturn(orderService);
+    serviceContainer.when(ServiceContainer::getPoolService).thenReturn(sharedOrderItemPoolService);
     serviceContainer
         .when(ServiceContainer::getOfficeAttendanceService)
         .thenReturn(officeAttendanceService);
@@ -316,11 +326,139 @@ class AbstractHandlerTest {
       boolean orderPresent) {
     // given
     User user = userWithStatus(Status.READY);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(orderPresent);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(orderPresent);
     // when
     boolean actual = handler.isOrderExist(user);
     // then
     assertEquals(orderPresent, actual);
+  }
+
+  @Test
+  void releaseOrderToPool_returnsEmptyList_whenNoOrderSharedOrderItem() {
+    // given
+    User user = userWithStatus(Status.READY);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(false);
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService, never()).deleteByChatId(any(), any());
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_returnsEmptyListAndDeletesOrder_whenOrderHasNoItemsSharedOrderItem() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_movesItemsToPoolAndDeletesOrder_whenOrderHasItemsAndDeadlinePassed() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(item), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService)
+        .addItems(
+            user.getCity(), order.getDate(), user.getId(), user.getPreferedName(), Set.of(item));
+  }
+
+  @Test
+  void releaseOrderToPool_deletesWithoutSharing_whenDeadlineNotPassed() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    // submittedAt stays null: order not yet submitted to vendor
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_usesOrdersOwnStoredDate_regardlessOfCurrentCityCycle() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    LocalDate storedDate = LocalDate.now().plusDays(5);
+    order.setDate(storedDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(eq(City.ALMATA), eq(storedDate), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_fallsBackToCityCurrentOrderDate_whenOrderHasNoStoredDate() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(null);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(
+            eq(City.ALMATA), eq(City.ALMATA.getCurrentOrderDate()), any(), any(), anyCollection());
+  }
+
+  @Test
+  void joinItemNames_returnsCommaSeparatedNames_whenCalled() {
+    // given
+    Item first = new Item(1, "Плов", null);
+    Item second = new Item(2, "Лагман", null);
+    // when
+    String actual = handler.joinItemNames(List.of(first, second));
+    // then
+    assertEquals("Плов, Лагман", actual);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -331,11 +469,15 @@ class AbstractHandlerTest {
     User user = userWithRole(testCase.role());
     stubMenu(testCase.menuStatus());
     if (testCase.menuStatus() == Status.READY) {
-      when(orderService.findByIdOptional(CHAT_ID_STRING))
+      when(orderService.findByChatIdOptional(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
           .thenReturn(
               testCase.orderStatus() == null
                   ? Optional.empty()
                   : Optional.of(orderWithStatus(testCase.orderStatus())));
+    }
+    if (testCase.menuStatus() == Status.DEADLINE) {
+      when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+          .thenReturn(testCase.orderStatus() != null);
     }
     // when
     ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
@@ -412,6 +554,21 @@ class AbstractHandlerTest {
             Status.DEADLINE,
             null,
             List.of(State.GET_ORDER.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, user, with order",
+            User.Role.USER,
+            Status.DEADLINE,
+            Status.READY,
+            List.of(State.GET_ORDER.getDisplayName(), State.SHARE_LUNCH.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, admin, with order",
+            User.Role.ADMIN,
+            Status.DEADLINE,
+            Status.READY,
+            List.of(
+                State.GET_ORDER.getDisplayName(),
+                State.SHARE_LUNCH.getDisplayName(),
+                State.CHANGE_MENU.getDisplayName())),
         new MenuKeyboardCase("pending menu, user", User.Role.USER, Status.PENDING, null, List.of()),
         new MenuKeyboardCase(
             "pending menu, admin",
@@ -601,6 +758,15 @@ class AbstractHandlerTest {
         .city(City.ALMATA)
         .role(User.Role.USER)
         .status(status)
+        .build();
+  }
+
+  private static User userWithCity(City city) {
+    return User.builder()
+        .chatId(CHAT_ID)
+        .city(city)
+        .role(User.Role.USER)
+        .status(Status.READY)
         .build();
   }
 

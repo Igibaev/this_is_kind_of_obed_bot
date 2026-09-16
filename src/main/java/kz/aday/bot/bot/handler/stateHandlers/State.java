@@ -19,11 +19,13 @@ public enum State {
   SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
   WHO_WILL_COME_TO_OFFICE("Посмотреть кто придет в офис", Type.ACTION),
   SET_OFFICE_ATTENDANCE("Пойду ли я в офис", Type.ACTION),
+  VIEW_POOL("Общий пул обедов", Type.ACTION),
 
   CREATE_ORDER("Сделать заказ", Type.ACTION),
   GET_ORDER("Посмотреть заказ", Type.ACTION),
   CHANGE_ORDER("Изменить заказ", Type.ACTION),
   DELETE_ORDER("Удалить заказ", Type.ACTION),
+  SHARE_LUNCH("Поделиться обедом", Type.ACTION),
   RANDOM_ORDER("Рандомный заказ", Type.ACTION),
   SUBMIT_ORDER("Подтвердить заказ", Type.ACTION),
 

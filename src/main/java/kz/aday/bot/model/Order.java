@@ -1,6 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
@@ -14,6 +16,8 @@ public class Order implements Id {
   private String username;
   private City city;
   private Status status;
+  private LocalDate date;
+  private LocalDateTime submittedAt;
   private Set<Item> orderItemList = new HashSet<>(5);
   private Set<Category> categoryItemList = new HashSet<>(5);
 
@@ -24,6 +28,11 @@ public class Order implements Id {
 
   @Override
   public String getId() {
-    return chatId;
+    return chatId + "_" + date;
+  }
+
+  @Override
+  public LocalDate getStorageDate() {
+    return date;
   }
 }

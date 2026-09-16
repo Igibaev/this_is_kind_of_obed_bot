@@ -28,7 +28,9 @@ public enum CallbackState {
   ATTENDANCE_DAY_TODAY("Сегодня"),
   ATTENDANCE_DAY_TOMORROW("Завтра"),
   ATTENDANCE_YES("Да, приду"),
-  ATTENDANCE_NO("Нет, не приду");
+  ATTENDANCE_NO("Нет, не приду"),
+
+  POOL_CLAIM("Забрать");
 
   @Getter private String displayName;
 

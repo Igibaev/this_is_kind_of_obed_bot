@@ -5,6 +5,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import lombok.Getter;
 
@@ -16,6 +17,8 @@ public class ServiceContainer {
   private static final MenuService menuService = new MenuService();
   private static final OfficeAttendanceService officeAttendanceService =
       new OfficeAttendanceService();
+  private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE =
+      new SharedOrderItemPoolService();
 
   private ServiceContainer() {}
 
@@ -37,5 +40,9 @@ public class ServiceContainer {
 
   public static OfficeAttendanceService getOfficeAttendanceService() {
     return officeAttendanceService;
+  }
+
+  public static SharedOrderItemPoolService getPoolService() {
+    return SHARED_ORDER_ITEM_POOL_SERVICE;
   }
 }

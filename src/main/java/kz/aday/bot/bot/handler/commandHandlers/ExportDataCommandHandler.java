@@ -87,8 +87,7 @@ public class ExportDataCommandHandler extends AbstractHandler implements Command
       userService.save(user);
       messageService.deleteMessage(user.getChatId(), messagesToDelete, sender);
     } catch (TelegramApiException e) {
-      log.error(
-          "Error sending data export zip to chat {}: {}", user.getId(), e.getMessage(), e);
+      log.error("Error sending data export zip to chat {}: {}", user.getId(), e.getMessage(), e);
     }
   }
 }

@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  # --- ЗАДАЧА №1: ПРОВЕРКА, СБОРКА DOCKER-ОБРАЗА И ЗАПУСК ТЕСТОВ/ЛОГОВ В ОБЛАКЕ ---
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -31,18 +30,10 @@ jobs:
       - name: Apply code formatting with Spotless
         run: ./gradlew spotlessApply
 
-      # --- НОВЫЙ ШАГ: ЗАПУСК SPRING BOOT ТЕСТОВ ---
       - name: Run Spring Boot Tests
-        run: ./gradlew test # Запускает все JUnit тесты, включая Spring Boot тесты
-        # Если у вас есть профили Spring, и тесты требуют определенный профиль, используйте:
-        # run: ./gradlew test -Dspring.profiles.active=test
+        run: ./gradlew test
 
-      # --- НОВЫЙ ШАГ: ЗАПУСК ПРИЛОЖЕНИЯ В ТЕСТОВОМ РЕЖИМЕ И СБОР ЛОГОВ В СБОРКЕ ---
       - name: Run application for a short period and capture logs
-        # Цель этого шага: убедиться, что приложение стартует, и увидеть начальные логи.
-        # Это не полноценный запуск, а скорее "проверка на жизнеспособность".
-        # Перенаправляем STDOUT/STDERR в файл, чтобы потом его вывести, если понадобится,
-        # хотя в GitHub Actions весь вывод консоли и так сохраняется.
         run: |
           # Собираем JAR-файл, если 'test' его не создал (зависит от вашей gradle-конфигурации)
           ./gradlew assemble
@@ -67,9 +58,6 @@ jobs:
           echo "Printing captured startup logs:"
           cat startup.log # Выводим содержимое файла логов в консоль сборки GitHub Actions
           echo "End of application startup logs."
-        # Если вы хотите, чтобы сборка провалилась, если приложение не стартует успешно,
-        # то шагу 'java -jar...' не нужно запускаться в фоне, и 'sleep' нужно заменить
-        # на более надёжный механизм ожидания старта.
 
       - name: Convert repository name to lowercase
         id: string
@@ -89,7 +77,6 @@ jobs:
           push: true
           tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest
 
-  # --- ЗАДАЧА №2: ДЕПЛОЙ НА RASPBERRY PI ---
   deploy:
     needs: build
     runs-on: self-hosted

@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
@@ -22,12 +23,13 @@ public class GetOrderTomorrowAlmataCallbackHandler extends AbstractHandler
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // "Заказ на завтра" = что едим завтра = текущий заказ (сделанный сегодня)
-      if (isOrderExist(user)) {
-        Order order = orderService.findById(user.getId());
+      // "Заказ на завтра" = что едим завтра = заказ с датой "завтра"
+      LocalDate tomorrow = LocalDate.now().plusDays(1);
+      Optional<Order> orderOpt = orderService.findByChatIdOptional(user.getId(), tomorrow);
+      if (orderOpt.isPresent()) {
         sendMessage(
             user,
-            Messages.YOUR_ORDER_IS_TOMORROW.getText(order.getOrderItemList()),
+            Messages.YOUR_ORDER_IS_TOMORROW.getText(orderOpt.get().getOrderItemList()),
             getMessageId(callback),
             sender);
       } else {

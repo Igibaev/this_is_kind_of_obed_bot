@@ -3,9 +3,12 @@ package kz.aday.bot.bot.handler;
 
 import static kz.aday.bot.model.User.Role.ADMIN;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
@@ -16,6 +19,7 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -24,6 +28,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
@@ -45,6 +50,8 @@ public abstract class AbstractHandler {
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
+  protected final SharedOrderItemPoolService sharedOrderItemPoolService =
+      ServiceContainer.getPoolService();
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
     String[] data = callback.getData().split(":");
@@ -130,7 +137,30 @@ public abstract class AbstractHandler {
   }
 
   public boolean isOrderExist(User user) {
-    return orderService.existsById(user.getId());
+    return orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate());
+  }
+
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user) {
+    return releaseOrderToSharedOrderItemPool(user, user.getCity().getCurrentOrderDate());
+  }
+
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user, LocalDate orderDate) {
+    if (!orderService.existsByChatId(user.getId(), orderDate)) {
+      return List.of();
+    }
+    Order order = orderService.findByChatId(user.getId(), orderDate);
+    orderService.deleteByChatId(user.getId(), orderDate);
+    if (order.getOrderItemList().isEmpty() || order.getSubmittedAt() == null) {
+      return List.of();
+    }
+    LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;
+    sharedOrderItemPoolService.addItems(
+        user.getCity(), shareDate, user.getId(), user.getPreferedName(), order.getOrderItemList());
+    return List.copyOf(order.getOrderItemList());
+  }
+
+  protected String joinItemNames(Collection<Item> items) {
+    return items.stream().map(Item::getName).collect(Collectors.joining(", "));
   }
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {
@@ -148,9 +178,12 @@ public abstract class AbstractHandler {
     }
 
     switch (menu.get().getStatus()) {
-      case READY -> addReadyMenuItems(user.getId(), isAdmin, items);
+      case READY -> addReadyMenuItems(user, isAdmin, items);
       case DEADLINE -> {
         items.add(State.GET_ORDER.getDisplayName());
+        if (isOrderExist(user)) {
+          items.add(State.SHARE_LUNCH.getDisplayName());
+        }
         if (isAdmin) {
           items.add(State.CHANGE_MENU.getDisplayName());
         }
@@ -171,6 +204,7 @@ public abstract class AbstractHandler {
     items.add(State.EDIT_USERNAME.getDisplayName());
     items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
     items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
+    items.add(State.VIEW_POOL.getDisplayName());
 
     if (isAdmin) {
       items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
@@ -180,12 +214,13 @@ public abstract class AbstractHandler {
     }
   }
 
-  private void addReadyMenuItems(String userId, boolean isAdmin, List<String> items) {
+  private void addReadyMenuItems(User user, boolean isAdmin, List<String> items) {
     if (isAdmin) {
       items.add(State.CLEAR_MENU.getDisplayName());
       items.add(State.CHANGE_MENU.getDisplayName());
     }
-    Optional<Order> order = orderService.findByIdOptional(userId);
+    Optional<Order> order =
+        orderService.findByChatIdOptional(user.getId(), user.getCity().getCurrentOrderDate());
     if (order.isEmpty()) {
       items.add(State.CREATE_ORDER.getDisplayName());
       items.add(State.RANDOM_ORDER.getDisplayName());

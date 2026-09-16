@@ -54,6 +54,7 @@ public enum Messages {
   MENU_IS_NOT_READY_TODAY("Меню на сегодня еще не готово. /return"),
   CHOOSE_ITEM("Выберите что хотите заказать:"),
   CREATING_ORDER("Собираем ваш заказ."),
+  VIEW_MENU_TODAY_HEADER("Меню на сегодня:\n"),
 
   // Просмотр, подтверждение и удаление конкретного заказа
   YOUR_ORDER_IS("Твой заказ %s."),
@@ -85,6 +86,8 @@ public enum Messages {
   REPORT_ORDERS_TOMORROW("Заказы на завтра.\n"),
   REPORT_OVERALL_ATTENDANCE("Общая статистика посещений:\n"),
   REPORT_MONTH_ATTENDANCE("Статистика посещений за текущий месяц:\n"),
+  REPORT_MY_OVERALL_ATTENDANCE("Моя общая статистика посещений:\n"),
+  REPORT_MY_MONTH_ATTENDANCE("Моя статистика посещений за текущий месяц:\n"),
 
   // Кто придёт в офис сегодня/завтра
   NOBODY_COMES_TODAY("Сегодня никто в офис не придет( хнык хнык"),

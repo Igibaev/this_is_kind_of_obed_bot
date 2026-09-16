@@ -8,6 +8,7 @@ public enum CallbackState {
   ADD_ITEM_TO_ORDER("Добавить пункт в заказ"),
 
   CANCEL("Отменить/Вернуться"),
+  BACK_TO_ORDER_MENU("Назад к заказу и меню"),
 
   SUBMIT_MENU("Опубликовать меню"),
   CHANGE_MENU("Изменить меню"),

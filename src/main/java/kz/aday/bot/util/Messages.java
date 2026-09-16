@@ -47,6 +47,7 @@ public enum Messages {
   NAVIGATION_MENU("Меню навигации по боту."),
   RETURNING_NAVIGATION_MENU("Возвращаемся. Меню навигации по боту."),
   OK_RETURN_TO_MENU("Окей. Вернитесь в меню тогда /return"),
+  CATEGORY_PROMPT("Выберите действие:"),
 
   // Начало оформления заказа: меню недоступно / выбор блюда / сбор заказа
   MENU_DEADLINE_IS_PASSED("Дедлайн уже прошел."),

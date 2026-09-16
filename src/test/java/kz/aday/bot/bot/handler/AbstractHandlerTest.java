@@ -72,12 +72,12 @@ class AbstractHandlerTest {
   private static final Integer PREVIOUS_SENT_MESSAGE_ID = 5;
   private static final Integer PREVIOUS_USER_MESSAGE_ID = 6;
 
-  private static final List<String> BASE_ITEMS =
+  private static final List<String> USER_BASE_ITEMS =
       List.of(
           State.PROFILE_MENU.getDisplayName(),
+          State.MENU_CATEGORY_ORDER.getDisplayName(),
           State.WHO_WILL_COME_TO_OFFICE.getDisplayName(),
-          State.SET_OFFICE_ATTENDANCE.getDisplayName(),
-          State.VIEW_POOL.getDisplayName());
+          State.SET_OFFICE_ATTENDANCE.getDisplayName());
 
   private UserService userService;
   private MenuService menuService;
@@ -462,11 +462,11 @@ class AbstractHandlerTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("menuKeyboardCases")
-  void getUserMenuKeyboard_givenRoleAndMenuAndOrderState_whenCalled_thenBuildsExpectedButtons(
+  @MethodSource("orderMenuItemsCases")
+  void getOrderMenuItems_givenUserMenuAndOrderState_whenCalled_thenBuildsExpectedItems(
       MenuKeyboardCase testCase) {
     // given
-    User user = userWithRole(testCase.role());
+    User user = userWithRole(User.Role.USER);
     stubMenu(testCase.menuStatus());
     if (testCase.menuStatus() == Status.READY) {
       when(orderService.findByChatIdOptional(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
@@ -480,43 +480,77 @@ class AbstractHandlerTest {
           .thenReturn(testCase.orderStatus() != null);
     }
     // when
-    ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
+    List<String> actual = handler.getOrderMenuItems(user, false);
     // then
-    List<String> expected = concat(baseItems(testCase.role()), testCase.extraItems());
-    assertEquals(expected, buttonTexts(actual));
+    List<String> expected =
+        concat(List.of(State.VIEW_POOL.getDisplayName()), testCase.extraItems());
+    assertEquals(expected, actual);
   }
 
-  record MenuKeyboardCase(
-      String name, User.Role role, Status menuStatus, Status orderStatus, List<String> extraItems) {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("adminOrderMenuItemsCases")
+  void getOrderMenuItems_givenAdminMenuAndOrderState_whenCalled_thenBuildsExpectedItems(
+      MenuKeyboardCase testCase) {
+    // given
+    User user = userWithRole(User.Role.ADMIN);
+    stubMenu(testCase.menuStatus());
+    if (testCase.menuStatus() == Status.READY) {
+      when(orderService.findByChatIdOptional(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+          .thenReturn(
+              testCase.orderStatus() == null
+                  ? Optional.empty()
+                  : Optional.of(orderWithStatus(testCase.orderStatus())));
+    }
+    if (testCase.menuStatus() == Status.DEADLINE) {
+      when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+          .thenReturn(testCase.orderStatus() != null);
+    }
+    // when
+    List<String> actual = handler.getOrderMenuItems(user, true);
+    // then
+    List<String> expected =
+        concat(List.of(State.VIEW_POOL.getDisplayName()), testCase.extraItems());
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  void getUserMenuKeyboard_givenUser_whenCalled_thenAlwaysShowsOrderMenuCategoryButton() {
+    // given
+    User user = userWithRole(User.Role.USER);
+    stubMenu(null);
+    // when
+    ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
+    // then
+    assertEquals(USER_BASE_ITEMS, buttonTexts(actual));
+  }
+
+  @Test
+  void getUserMenuKeyboard_givenAdmin_whenCalled_thenAlwaysShowsOrderMenuCategoryButton() {
+    // given
+    User user = userWithRole(User.Role.ADMIN);
+    stubMenu(null);
+    // when
+    ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
+    // then
+    assertEquals(adminBaseItems(), buttonTexts(actual));
+  }
+
+  record MenuKeyboardCase(String name, Status menuStatus, Status orderStatus, List<String> extraItems) {
     @Override
     public String toString() {
       return name;
     }
   }
 
-  static Stream<MenuKeyboardCase> menuKeyboardCases() {
+  static Stream<MenuKeyboardCase> adminOrderMenuItemsCases() {
     return Stream.of(
         new MenuKeyboardCase(
-            "no menu, user",
-            User.Role.USER,
-            null,
-            null,
-            List.of(State.CREATE_ORDER.getDisplayName())),
-        new MenuKeyboardCase(
             "no menu, admin",
-            User.Role.ADMIN,
             null,
             null,
             List.of(State.CREATE_ORDER.getDisplayName(), State.CREATE_MENU.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, user, no order",
-            User.Role.USER,
-            Status.READY,
-            null,
-            List.of(State.CREATE_ORDER.getDisplayName(), State.RANDOM_ORDER.getDisplayName())),
-        new MenuKeyboardCase(
             "ready menu, admin, no order",
-            User.Role.ADMIN,
             Status.READY,
             null,
             List.of(
@@ -525,8 +559,35 @@ class AbstractHandlerTest {
                 State.CREATE_ORDER.getDisplayName(),
                 State.RANDOM_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, user, pending order",
-            User.Role.USER,
+            "deadline menu, admin",
+            Status.DEADLINE,
+            null,
+            List.of(State.GET_ORDER.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, admin, with order",
+            Status.DEADLINE,
+            Status.READY,
+            List.of(
+                State.GET_ORDER.getDisplayName(),
+                State.SHARE_LUNCH.getDisplayName(),
+                State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase(
+            "pending menu, admin",
+            Status.PENDING,
+            null,
+            List.of(State.PUBLISH_MENU.getDisplayName(), State.CHANGE_MENU.getDisplayName())));
+  }
+
+  static Stream<MenuKeyboardCase> orderMenuItemsCases() {
+    return Stream.of(
+        new MenuKeyboardCase("no menu", null, null, List.of(State.CREATE_ORDER.getDisplayName())),
+        new MenuKeyboardCase(
+            "ready menu, no order",
+            Status.READY,
+            null,
+            List.of(State.CREATE_ORDER.getDisplayName(), State.RANDOM_ORDER.getDisplayName())),
+        new MenuKeyboardCase(
+            "ready menu, pending order",
             Status.READY,
             Status.PENDING,
             List.of(
@@ -534,8 +595,7 @@ class AbstractHandlerTest {
                 State.CHANGE_ORDER.getDisplayName(),
                 State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, user, ready order",
-            User.Role.USER,
+            "ready menu, ready order",
             Status.READY,
             Status.READY,
             List.of(
@@ -543,42 +603,15 @@ class AbstractHandlerTest {
                 State.CHANGE_ORDER.getDisplayName(),
                 State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "deadline menu, user",
-            User.Role.USER,
-            Status.DEADLINE,
-            null,
-            List.of(State.GET_ORDER.getDisplayName())),
+            "deadline menu", Status.DEADLINE, null, List.of(State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "deadline menu, admin",
-            User.Role.ADMIN,
-            Status.DEADLINE,
-            null,
-            List.of(State.GET_ORDER.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
-        new MenuKeyboardCase(
-            "deadline menu, user, with order",
-            User.Role.USER,
+            "deadline menu, with order",
             Status.DEADLINE,
             Status.READY,
             List.of(State.GET_ORDER.getDisplayName(), State.SHARE_LUNCH.getDisplayName())),
-        new MenuKeyboardCase(
-            "deadline menu, admin, with order",
-            User.Role.ADMIN,
-            Status.DEADLINE,
-            Status.READY,
-            List.of(
-                State.GET_ORDER.getDisplayName(),
-                State.SHARE_LUNCH.getDisplayName(),
-                State.CHANGE_MENU.getDisplayName())),
-        new MenuKeyboardCase("pending menu, user", User.Role.USER, Status.PENDING, null, List.of()),
-        new MenuKeyboardCase(
-            "pending menu, admin",
-            User.Role.ADMIN,
-            Status.PENDING,
-            null,
-            List.of(State.PUBLISH_MENU.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
-        new MenuKeyboardCase("deleted menu, user", User.Role.USER, Status.DELETED, null, List.of()),
-        new MenuKeyboardCase(
-            "over-changing menu, user", User.Role.USER, Status.OVER_CHANGING, null, List.of()));
+        new MenuKeyboardCase("pending menu", Status.PENDING, null, List.of()),
+        new MenuKeyboardCase("deleted menu", Status.DELETED, null, List.of()),
+        new MenuKeyboardCase("over-changing menu", Status.OVER_CHANGING, null, List.of()));
   }
 
   @ParameterizedTest(name = "lastSentId={0}, userLastMessageId={1} -> deletes={2}")
@@ -674,6 +707,32 @@ class AbstractHandlerTest {
         List.of(
             State.CHANGE_NAME_ONLY.getDisplayName(),
             State.CHANGE_CITY_ONLY.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(actualMessage.getReplyMarkup()));
+  }
+
+  @Test
+  void sendOrderMenuCategory_givenUser_whenCalled_thenSendsCategoryPromptAndActionButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithStatus(Status.READY);
+    user.setChatId(OTHER_CHAT_ID);
+    stubMenu(null);
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendOrderMenuCategory(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    SendMessage actualMessage = messageCaptor.getValue();
+    assertEquals(Messages.CATEGORY_PROMPT.getText(), actualMessage.getText());
+    assertEquals(
+        List.of(
+            State.VIEW_POOL.getDisplayName(),
+            State.CREATE_ORDER.getDisplayName(),
             State.BACK_TO_MENU.getDisplayName()),
         buttonTexts(actualMessage.getReplyMarkup()));
   }
@@ -831,12 +890,9 @@ class AbstractHandlerTest {
     return callbackQuery;
   }
 
-  private static List<String> baseItems(User.Role role) {
-    if (role != User.Role.ADMIN) {
-      return BASE_ITEMS;
-    }
+  private static List<String> adminBaseItems() {
     return concat(
-        BASE_ITEMS,
+        USER_BASE_ITEMS,
         List.of(
             State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName(),
             State.GET_TODAY_ORDERS.getDisplayName(),

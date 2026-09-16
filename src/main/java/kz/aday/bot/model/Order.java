@@ -1,6 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import static kz.aday.bot.util.StringUtils.escapeMarkdown;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -23,7 +25,7 @@ public class Order implements Id {
 
   @Override
   public String toString() {
-    return String.format("*%s*: [%s]", username, StringUtils.join(orderItemList, ","));
+    return String.format("*%s*: [%s]", escapeMarkdown(username), StringUtils.join(orderItemList, ","));
   }
 
   @Override

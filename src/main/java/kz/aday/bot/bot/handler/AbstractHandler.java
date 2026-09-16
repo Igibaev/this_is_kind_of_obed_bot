@@ -32,6 +32,7 @@ import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -164,18 +165,7 @@ public abstract class AbstractHandler {
   }
 
   protected String formatNameList(Collection<String> names) {
-    return names.stream().map(this::escapeMarkdown).collect(Collectors.joining("\n"));
-  }
-
-  protected String escapeMarkdown(String text) {
-    if (text == null) {
-      return "";
-    }
-    return text.replace("\\", "\\\\")
-        .replace("_", "\\_")
-        .replace("*", "\\*")
-        .replace("`", "\\`")
-        .replace("[", "\\[");
+    return names.stream().map(StringUtils::escapeMarkdown).collect(Collectors.joining("\n"));
   }
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {
@@ -285,7 +275,8 @@ public abstract class AbstractHandler {
                 State.BACK_TO_MENU.getDisplayName()));
     sendMessageWithKeyboard(
         user,
-        Messages.PROFILE_INFO.getText(user.getPreferedName(), user.getCity().getValue()),
+        Messages.PROFILE_INFO.getText(
+            StringUtils.escapeMarkdown(user.getPreferedName()), user.getCity().getValue()),
         keyboard,
         messageId,
         sender,

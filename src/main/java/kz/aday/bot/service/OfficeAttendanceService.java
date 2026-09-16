@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.util.StringUtils;
 
 public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
 
@@ -111,7 +112,7 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
         attendances.stream().collect(Collectors.groupingBy(OfficeAttendance::getChatId));
     return byChatId.values().stream()
         .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
-        .map(list -> String.format("%s: %d", list.get(0).getUsername(), list.size()))
+        .map(list -> String.format("%s: %d", StringUtils.escapeMarkdown(list.get(0).getUsername()), list.size()))
         .collect(Collectors.joining("\n"));
   }
 }

@@ -12,14 +12,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
+import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
+import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
@@ -42,8 +45,9 @@ class OfficeAttendanceNoCallbackHandlerTest {
   private static final Integer MESSAGE_ID = 42;
 
   private UserService userService;
-  private OrderService orderService;
   private OfficeAttendanceService officeAttendanceService;
+  private OrderService orderService;
+  private MenuService menuService;
   private SharedOrderItemPoolService sharedOrderItemPoolService;
   private MessageSender messageSender;
   private AbsSender sender;
@@ -53,18 +57,20 @@ class OfficeAttendanceNoCallbackHandlerTest {
   @BeforeEach
   void setUp() throws Exception {
     userService = mock(UserService.class);
-    orderService = mock(OrderService.class);
     officeAttendanceService = mock(OfficeAttendanceService.class);
+    orderService = mock(OrderService.class);
+    menuService = mock(MenuService.class);
     sharedOrderItemPoolService = mock(SharedOrderItemPoolService.class);
     messageSender = mock(MessageSender.class);
     sender = mock(AbsSender.class);
 
     serviceContainer = mockStatic(ServiceContainer.class);
     serviceContainer.when(ServiceContainer::getUserService).thenReturn(userService);
-    serviceContainer.when(ServiceContainer::getOrderService).thenReturn(orderService);
     serviceContainer
         .when(ServiceContainer::getOfficeAttendanceService)
         .thenReturn(officeAttendanceService);
+    serviceContainer.when(ServiceContainer::getOrderService).thenReturn(orderService);
+    serviceContainer.when(ServiceContainer::getMenuService).thenReturn(menuService);
     serviceContainer.when(ServiceContainer::getPoolService).thenReturn(sharedOrderItemPoolService);
     serviceContainer.when(ServiceContainer::getMessageService).thenReturn(messageSender);
 
@@ -85,13 +91,11 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
     CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
     // when
     handler.handle(callback, sender);
     // then
-    verify(officeAttendanceService)
-        .save(CHAT_ID_STRING, "me", City.ALMATA, false, LocalDate.now());
+    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, false, LocalDate.now());
   }
 
   @Test
@@ -99,7 +103,6 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
     CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TOMORROW");
     // when
     handler.handle(callback, sender);
@@ -109,38 +112,61 @@ class OfficeAttendanceNoCallbackHandlerTest {
   }
 
   @Test
-  void handle_appendsPoolSharedText_whenOrderExisted() throws Exception {
+  void handle_sharesOrderToPool_whenTomorrowAndOrderExistsAndDeadlinePassed() throws Exception {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
+    LocalDate tomorrow = LocalDate.now().plusDays(1);
     Item item = new Item(1, "Плов", null);
     Order order = new Order();
     order.setChatId(CHAT_ID_STRING);
     order.setStatus(Status.READY);
-    order.setDate(City.ALMATA.getCurrentOrderDate());
+    order.setDate(tomorrow);
     order.getOrderItemList().add(item);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
-    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
+    when(orderService.existsByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(order);
+    Menu menu = new Menu();
+    menu.setCity(City.ALMATA);
+    menu.setStatus(Status.DEADLINE);
+    menu.setDeadline(LocalDateTime.now().minusMinutes(1));
+    when(menuService.existsById(City.ALMATA.toString())).thenReturn(true);
+    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
+    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TOMORROW");
     // when
     handler.handle(callback, sender);
     // then
-    verify(sharedOrderItemPoolService).addItems(City.ALMATA, City.ALMATA.getCurrentOrderDate(), CHAT_ID_STRING, "me", Set.of(item));
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, tomorrow);
+    verify(sharedOrderItemPoolService)
+        .addItems(City.ALMATA, tomorrow, CHAT_ID_STRING, "me", Set.of(item));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertTrue(messageCaptor.getValue().getText().contains("расшарен: Плов"));
+    assertTrue(messageCaptor.getValue().getText().contains("расшарен"));
   }
 
   @Test
-  void handle_doesNotAppendPoolSharedText_whenNoOrder() throws Exception {
+  void handle_doesNotShareOrder_whenTomorrowButDeadlineNotPassed() throws Exception {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
-    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
+    LocalDate tomorrow = LocalDate.now().plusDays(1);
+    Order order = new Order();
+    order.setChatId(CHAT_ID_STRING);
+    order.setStatus(Status.READY);
+    order.setDate(tomorrow);
+    order.getOrderItemList().add(new Item(1, "Плов", null));
+    when(orderService.existsByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(order);
+    Menu menu = new Menu();
+    menu.setCity(City.ALMATA);
+    menu.setStatus(Status.READY);
+    menu.setDeadline(LocalDateTime.now().plusMinutes(1));
+    when(menuService.existsById(City.ALMATA.toString())).thenReturn(true);
+    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
+    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TOMORROW");
     // when
     handler.handle(callback, sender);
     // then
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, tomorrow);
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));

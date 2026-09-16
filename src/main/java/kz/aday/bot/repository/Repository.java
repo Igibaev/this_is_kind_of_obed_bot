@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import java.util.Collection;
 
 public interface Repository<T> {
-  T getById(String id);
+  T getById(String id, LocalDate date);
 
-  boolean existById(String id);
+  boolean existById(String id, LocalDate date);
 
   Collection<T> getAll(LocalDate date);
 
@@ -17,7 +17,7 @@ public interface Repository<T> {
 
   void clearLastWeek();
 
-  void deleteById(String id);
+  void deleteById(String id, LocalDate date);
 
   void clearStorage();
 }

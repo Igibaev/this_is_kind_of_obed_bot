@@ -9,8 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
-import kz.aday.bot.model.SharedOrderItemPool;
 import kz.aday.bot.model.SharedOrderItem;
+import kz.aday.bot.model.SharedOrderItemPool;
 import kz.aday.bot.repository.BaseRepository;
 
 public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool> {
@@ -19,14 +19,14 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
   }
 
   private SharedOrderItemPool getOrCreate(City city, LocalDate date) {
-    return findByIdOptional(city + "_" + date)
-        .orElseGet(
-            () -> {
-              SharedOrderItemPool sharedOrderItemPool = new SharedOrderItemPool();
-              sharedOrderItemPool.setCity(city);
-              sharedOrderItemPool.setDate(date);
-              return sharedOrderItemPool;
-            });
+    SharedOrderItemPool existing = repository.getById(city + "_" + date, date);
+    if (existing != null) {
+      return existing;
+    }
+    SharedOrderItemPool sharedOrderItemPool = new SharedOrderItemPool();
+    sharedOrderItemPool.setCity(city);
+    sharedOrderItemPool.setDate(date);
+    return sharedOrderItemPool;
   }
 
   public void addItems(
@@ -37,7 +37,8 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
       Collection<Item> items) {
     SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     for (Item item : items) {
-      sharedOrderItemPool.getItems()
+      sharedOrderItemPool
+          .getItems()
           .add(
               new SharedOrderItem(
                   UUID.randomUUID().toString(), item, sourceChatId, sourceUsername, null, null));

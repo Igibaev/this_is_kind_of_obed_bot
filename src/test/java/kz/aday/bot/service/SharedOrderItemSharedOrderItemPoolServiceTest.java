@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
-import kz.aday.bot.model.SharedOrderItemPool;
 import kz.aday.bot.model.SharedOrderItem;
+import kz.aday.bot.model.SharedOrderItemPool;
 import kz.aday.bot.repository.Repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
   @Test
   void addItems_appendsOneSharedOrderItemPerItem_whenCalled() {
     // given
-    when(repository.getById(POOL_ID)).thenReturn(null);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(null);
     Item first = new Item(1, "Плов", null);
     Item second = new Item(2, "Лагман", null);
     // when
@@ -62,8 +62,9 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
     // given
     SharedOrderItem available = entry("1", "item1", null, null);
     SharedOrderItem claimed = entry("2", "item2", "5", "user5");
-    SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE, available, claimed);
-    when(repository.getById(POOL_ID)).thenReturn(sharedOrderItemPool);
+    SharedOrderItemPool sharedOrderItemPool =
+        poolWithEntries(City.ALMATA, DATE, available, claimed);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
     List<SharedOrderItem> actual = service.getAvailableEntries(City.ALMATA, DATE);
     // then
@@ -75,8 +76,8 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
     // given
     SharedOrderItem tomorrowEntry = entry("1", "item1", null, null);
     SharedOrderItemPool tomorrowPool = poolWithEntries(City.ALMATA, OTHER_DATE, tomorrowEntry);
-    when(repository.getById(City.ALMATA + "_" + OTHER_DATE)).thenReturn(tomorrowPool);
-    when(repository.getById(POOL_ID)).thenReturn(null);
+    when(repository.getById(City.ALMATA + "_" + OTHER_DATE, OTHER_DATE)).thenReturn(tomorrowPool);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(null);
     // when
     List<SharedOrderItem> actual = service.getAvailableEntries(City.ALMATA, DATE);
     // then
@@ -88,7 +89,7 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
     // given
     SharedOrderItem available = entry("1", "item1", null, null);
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE, available);
-    when(repository.getById(POOL_ID)).thenReturn(sharedOrderItemPool);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
     Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
     // then
@@ -103,7 +104,7 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
     // given
     SharedOrderItem claimed = entry("1", "item1", "3", "user3");
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE, claimed);
-    when(repository.getById(POOL_ID)).thenReturn(sharedOrderItemPool);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
     Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
     // then
@@ -115,7 +116,7 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
   void claim_returnsEmpty_whenEntryIdNotFound() {
     // given
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE);
-    when(repository.getById(POOL_ID)).thenReturn(sharedOrderItemPool);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
     Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "unknown", "5", "user5");
     // then
@@ -127,8 +128,8 @@ class SharedOrderItemSharedOrderItemPoolServiceTest {
     // given
     SharedOrderItem tomorrowEntry = entry("1", "item1", null, null);
     SharedOrderItemPool tomorrowPool = poolWithEntries(City.ALMATA, OTHER_DATE, tomorrowEntry);
-    when(repository.getById(City.ALMATA + "_" + OTHER_DATE)).thenReturn(tomorrowPool);
-    when(repository.getById(POOL_ID)).thenReturn(null);
+    when(repository.getById(City.ALMATA + "_" + OTHER_DATE, OTHER_DATE)).thenReturn(tomorrowPool);
+    when(repository.getById(POOL_ID, DATE)).thenReturn(null);
     // when
     Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
     // then

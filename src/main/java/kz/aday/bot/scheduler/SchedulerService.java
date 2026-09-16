@@ -120,8 +120,9 @@ public class SchedulerService {
           if (handledNotifications.containsKey(user.getId())) {
             continue;
           }
-          if (orderService.existsById(user.getId())) {
-            Order order = orderService.findById(user.getId());
+          if (orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate())) {
+            Order order =
+                orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
             if (order.getStatus() == Status.PENDING) {
               sendMessageWithMenuToUser(menu, order.getOrderItemList(), user, telegramFoodBot);
               handledNotifications.put(user.getId(), true);

@@ -18,13 +18,13 @@ public abstract class BaseService<T extends Id> {
 
   public void deleteById(String id) {
     log.debug("Attempting to delete entity by ID: {}", id);
-    repository.deleteById(id);
+    repository.deleteById(id, LocalDate.now());
     log.warn("Entity with ID {} was deleted.", id);
   }
 
   public T findById(String id) {
     log.debug("Attempting to find entity by ID: {}", id);
-    T entity = repository.getById(id);
+    T entity = repository.getById(id, LocalDate.now());
     if (entity == null) {
       log.warn("Entity with ID {} not found.", id);
     } else {
@@ -35,7 +35,7 @@ public abstract class BaseService<T extends Id> {
 
   public Optional<T> findByIdOptional(String id) {
     log.debug("Attempting to find entity (Optional) by ID: {}", id);
-    Optional<T> entityOptional = Optional.ofNullable(repository.getById(id));
+    Optional<T> entityOptional = Optional.ofNullable(repository.getById(id, LocalDate.now()));
     if (entityOptional.isEmpty()) {
       log.warn("Entity with ID {} not found (Optional).", id);
     } else {
@@ -46,7 +46,7 @@ public abstract class BaseService<T extends Id> {
 
   public boolean existsById(String id) {
     log.debug("Checking existence of entity with ID: {}", id);
-    boolean exists = repository.existById(id);
+    boolean exists = repository.existById(id, LocalDate.now());
     log.debug("Entity with ID {} exists: {}", id, exists);
     return exists;
   }
@@ -61,7 +61,8 @@ public abstract class BaseService<T extends Id> {
   public T save(T entity) {
     String entityId = entity.getId();
     boolean isNew =
-        !repository.existById(entityId); // Проверяем, новая ли это сущность или обновление
+        !repository.existById(
+            entityId, entity.getStorageDate()); // Проверяем, новая ли это сущность или обновление
     repository.save(entity);
     if (isNew) {
       log.info("Saved new entity with ID: {}", entityId);

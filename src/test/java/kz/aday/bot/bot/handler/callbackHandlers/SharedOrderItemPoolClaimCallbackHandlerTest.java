@@ -106,7 +106,8 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     SharedOrderItem entry = new SharedOrderItem("e1", item, "9", "otherUser", null, null);
     when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING, "me"))
         .thenReturn(Optional.of(entry));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, TARGET_DATE))
+        .thenReturn(Optional.empty());
     when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
         .thenReturn(List.of());
     CallbackQuery callback = callbackQuery("POOL_CLAIM:e1");
@@ -120,8 +121,7 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     assertEquals(Status.READY, savedOrder.getStatus());
     assertEquals(TARGET_DATE, savedOrder.getDate());
     assertTrue(savedOrder.getOrderItemList().contains(item));
-    verify(officeAttendanceService)
-        .save(CHAT_ID_STRING, "me", City.ALMATA, true, LocalDate.now());
+    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, true, LocalDate.now());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("Плов"));
@@ -140,9 +140,10 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     Order existingOrder = new Order();
     existingOrder.setChatId(CHAT_ID_STRING);
     existingOrder.setStatus(Status.READY);
+    existingOrder.setDate(TARGET_DATE);
     existingOrder.getOrderItemList().add(existingItem);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(existingOrder);
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, TARGET_DATE))
+        .thenReturn(Optional.of(existingOrder));
     when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
         .thenReturn(List.of());
     CallbackQuery callback = callbackQuery("POOL_CLAIM:e1");
@@ -161,7 +162,8 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING, "me"))
         .thenReturn(Optional.empty());
     SharedOrderItem remaining =
-        new SharedOrderItem("e2", new Item(3, "Хлеб", Category.FIRST), "9", "otherUser", null, null);
+        new SharedOrderItem(
+            "e2", new Item(3, "Хлеб", Category.FIRST), "9", "otherUser", null, null);
     when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
         .thenReturn(List.of(remaining));
     CallbackQuery callback = callbackQuery("POOL_CLAIM:e1");

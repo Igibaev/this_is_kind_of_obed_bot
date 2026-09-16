@@ -326,7 +326,8 @@ class AbstractHandlerTest {
       boolean orderPresent) {
     // given
     User user = userWithStatus(Status.READY);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(orderPresent);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(orderPresent);
     // when
     boolean actual = handler.isOrderExist(user);
     // then
@@ -337,12 +338,13 @@ class AbstractHandlerTest {
   void releaseOrderToPool_returnsEmptyList_whenNoOrderSharedOrderItem() {
     // given
     User user = userWithStatus(Status.READY);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(false);
     // when
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
     assertEquals(List.of(), actual);
-    verify(orderService, never()).deleteById(any());
+    verify(orderService, never()).deleteByChatId(any(), any());
     verify(sharedOrderItemPoolService, never())
         .addItems(any(), any(), any(), any(), anyCollection());
   }
@@ -351,53 +353,76 @@ class AbstractHandlerTest {
   void releaseOrderToPool_returnsEmptyListAndDeletesOrder_whenOrderHasNoItemsSharedOrderItem() {
     // given
     User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
     Order order = orderWithStatus(Status.READY);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    order.setDate(orderDate);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
     // when
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
     assertEquals(List.of(), actual);
-    verify(orderService).deleteById(CHAT_ID_STRING);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
     verify(sharedOrderItemPoolService, never())
         .addItems(any(), any(), any(), any(), anyCollection());
   }
 
   @Test
-  void releaseOrderToPool_movesItemsToPoolAndDeletesOrder_whenOrderHasItemsSharedOrderItem() {
+  void releaseOrderToPool_movesItemsToPoolAndDeletesOrder_whenOrderHasItemsAndDeadlinePassed() {
     // given
     User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
     Item item = new Item(1, "Плов", null);
     Order order = orderWithStatus(Status.READY);
-    order.setDate(LocalDate.now().plusDays(1));
+    order.setDate(orderDate);
     order.getOrderItemList().add(item);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
     // when
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
     assertEquals(List.of(item), actual);
-    verify(orderService).deleteById(CHAT_ID_STRING);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
     verify(sharedOrderItemPoolService)
         .addItems(
-            user.getCity(),
-            order.getDate(),
-            user.getId(),
-            user.getPreferedName(),
-            Set.of(item));
+            user.getCity(), order.getDate(), user.getId(), user.getPreferedName(), Set.of(item));
+  }
+
+  @Test
+  void releaseOrderToPool_deletesWithoutSharing_whenDeadlineNotPassed() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    stubMenuWithDeadline(LocalDateTime.now().plusMinutes(1));
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
   }
 
   @Test
   void releaseOrderToPool_usesOrdersOwnStoredDate_regardlessOfCurrentCityCycle() {
     // given
     User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
     Item item = new Item(1, "Плов", null);
     Order order = orderWithStatus(Status.READY);
     LocalDate storedDate = LocalDate.now().plusDays(5);
     order.setDate(storedDate);
     order.getOrderItemList().add(item);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
     // when
     handler.releaseOrderToSharedOrderItemPool(user);
     // then
@@ -409,12 +434,14 @@ class AbstractHandlerTest {
   void releaseOrderToPool_fallsBackToCityCurrentOrderDate_whenOrderHasNoStoredDate() {
     // given
     User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
     Item item = new Item(1, "Плов", null);
     Order order = orderWithStatus(Status.READY);
     order.setDate(null);
     order.getOrderItemList().add(item);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
     // when
     handler.releaseOrderToSharedOrderItemPool(user);
     // then
@@ -442,11 +469,15 @@ class AbstractHandlerTest {
     User user = userWithRole(testCase.role());
     stubMenu(testCase.menuStatus());
     if (testCase.menuStatus() == Status.READY) {
-      when(orderService.findByIdOptional(CHAT_ID_STRING))
+      when(orderService.findByChatIdOptional(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
           .thenReturn(
               testCase.orderStatus() == null
                   ? Optional.empty()
                   : Optional.of(orderWithStatus(testCase.orderStatus())));
+    }
+    if (testCase.menuStatus() == Status.DEADLINE) {
+      when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+          .thenReturn(testCase.orderStatus() != null);
     }
     // when
     ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
@@ -523,6 +554,21 @@ class AbstractHandlerTest {
             Status.DEADLINE,
             null,
             List.of(State.GET_ORDER.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, user, with order",
+            User.Role.USER,
+            Status.DEADLINE,
+            Status.READY,
+            List.of(State.GET_ORDER.getDisplayName(), State.SHARE_LUNCH.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, admin, with order",
+            User.Role.ADMIN,
+            Status.DEADLINE,
+            Status.READY,
+            List.of(
+                State.GET_ORDER.getDisplayName(),
+                State.SHARE_LUNCH.getDisplayName(),
+                State.CHANGE_MENU.getDisplayName())),
         new MenuKeyboardCase("pending menu, user", User.Role.USER, Status.PENDING, null, List.of()),
         new MenuKeyboardCase(
             "pending menu, admin",

@@ -33,13 +33,35 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   }
 
   @Override
-  public T getById(String id) {
-    return database.get(createRepoKey(id));
+  public T getById(String id, LocalDate date) {
+    BaseRepoKey key = createRepoKey(id, date);
+    T cached = database.get(key);
+    if (cached != null) {
+      return cached;
+    }
+    T fromDisk = readFromDisk(id, date);
+    if (fromDisk != null) {
+      database.put(key, fromDisk);
+    }
+    return fromDisk;
   }
 
   @Override
-  public boolean existById(String id) {
-    return database.containsKey(createRepoKey(id));
+  public boolean existById(String id, LocalDate date) {
+    return getById(id, date) != null;
+  }
+
+  private T readFromDisk(String id, LocalDate date) {
+    Path file = getFolderPath(date).resolve(id + JSON);
+    if (!Files.exists(file)) {
+      return null;
+    }
+    try {
+      return objectMapper.readValue(file.toFile(), type);
+    } catch (IOException e) {
+      log.warn("Failed to parse [{}], skip.", file);
+      return null;
+    }
   }
 
   @Override
@@ -101,14 +123,15 @@ public class BaseRepository<T extends Id> implements Repository<T> {
 
   @Override
   public void save(T t) {
-    saveToStorage(t);
-    database.put(createRepoKey(t.getId()), t);
+    LocalDate date = t.getStorageDate();
+    saveToStorage(t, date);
+    database.put(createRepoKey(t.getId(), date), t);
   }
 
   @Override
-  public void deleteById(String id) {
-    database.remove(createRepoKey(id));
-    deleteFromStorage(id);
+  public void deleteById(String id, LocalDate date) {
+    database.remove(createRepoKey(id, date));
+    deleteFromStorage(id, date);
   }
 
   @Override
@@ -141,7 +164,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
                   if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
                     try {
                       T item = objectMapper.readValue(path.toFile(), type);
-                      database.put(createRepoKey(item.getId()), item);
+                      database.put(createRepoKey(item.getId(), item.getStorageDate()), item);
                     } catch (IOException e) {
                       log.warn("Failed to parse [{}], skip.", path);
                     }
@@ -156,11 +179,11 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
   }
 
-  private void saveToStorage(T t) {
-    Path todayPath = getTodayFolderPath();
-    JsonFileStorageSupport.createStorageIfNotExist(todayPath);
+  private void saveToStorage(T t, LocalDate date) {
+    Path folderPath = getFolderPath(date);
+    JsonFileStorageSupport.createStorageIfNotExist(folderPath);
 
-    Path file = todayPath.resolve(t.getId() + JSON);
+    Path file = folderPath.resolve(t.getId() + JSON);
     try {
       if (Files.exists(file)) {
         Files.delete(file);
@@ -173,14 +196,14 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
   }
 
-  private void deleteFromStorage(String id) {
-    Path todayPath = getTodayFolderPath();
-    if (!Files.exists(todayPath)) {
-      log.info("No folder for today [{}]", todayPath);
+  private void deleteFromStorage(String id, LocalDate date) {
+    Path folderPath = getFolderPath(date);
+    if (!Files.exists(folderPath)) {
+      log.info("No folder for [{}]", folderPath);
       return;
     }
 
-    Path file = todayPath.resolve(id + JSON);
+    Path file = folderPath.resolve(id + JSON);
     try {
       if (Files.exists(file)) {
         Files.delete(file);
@@ -219,12 +242,12 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     }
   }
 
-  private Path getTodayFolderPath() {
-    String dateFolder = LocalDate.now().format(DATE_FOLDER_FORMATTER);
+  private Path getFolderPath(LocalDate date) {
+    String dateFolder = date.format(DATE_FOLDER_FORMATTER);
     return BASE_PATH.resolve(dateFolder);
   }
 
-  private static BaseRepoKey createRepoKey(String id) {
-    return new BaseRepoKey(id, LocalDate.now());
+  private static BaseRepoKey createRepoKey(String id, LocalDate date) {
+    return new BaseRepoKey(id, date);
   }
 }

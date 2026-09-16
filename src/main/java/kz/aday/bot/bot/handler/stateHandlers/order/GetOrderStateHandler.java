@@ -43,7 +43,8 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
             sender);
       } else {
         if (isOrderExist(user)) {
-          Order order = orderService.findById(user.getId());
+          Order order =
+              orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
           sendMessage(
               user,
               Messages.YOUR_ORDER_IS.getText(order.getOrderItemList()),

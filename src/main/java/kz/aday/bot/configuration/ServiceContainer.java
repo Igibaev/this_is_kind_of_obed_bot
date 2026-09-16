@@ -17,7 +17,8 @@ public class ServiceContainer {
   private static final MenuService menuService = new MenuService();
   private static final OfficeAttendanceService officeAttendanceService =
       new OfficeAttendanceService();
-  private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE = new SharedOrderItemPoolService();
+  private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE =
+      new SharedOrderItemPoolService();
 
   private ServiceContainer() {}
 

@@ -31,7 +31,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
       Menu menu = menuService.findById(user.getCity().toString());
       Order order;
       if (isOrderExist(user)) {
-        order = orderService.findById(user.getId());
+        order = orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
       } else {
         order = new Order();
         order.setCity(user.getCity());

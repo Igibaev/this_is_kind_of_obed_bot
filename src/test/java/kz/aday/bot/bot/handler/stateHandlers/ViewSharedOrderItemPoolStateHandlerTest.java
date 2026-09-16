@@ -77,7 +77,8 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of());
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
+        .thenReturn(List.of());
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);
@@ -93,8 +94,10 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     SharedOrderItem entry =
-        new SharedOrderItem("e1", new Item(1, "Плов", Category.FIRST), "9", "otherUser", null, null);
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of(entry));
+        new SharedOrderItem(
+            "e1", new Item(1, "Плов", Category.FIRST), "9", "otherUser", null, null);
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
+        .thenReturn(List.of(entry));
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);
@@ -110,7 +113,8 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     User user = readyUser();
     user.setState(State.VIEW_POOL);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of());
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
+        .thenReturn(List.of());
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);

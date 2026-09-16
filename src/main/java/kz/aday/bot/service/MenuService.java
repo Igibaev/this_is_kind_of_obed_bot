@@ -13,7 +13,7 @@ public class MenuService extends BaseService<Menu> {
 
   @Override
   public Menu save(Menu entity) {
-    Menu result = repository.getById(entity.getId());
+    Menu result = repository.getById(entity.getId(), entity.getStorageDate());
     if (result == null) {
       return super.save(entity);
     } else {

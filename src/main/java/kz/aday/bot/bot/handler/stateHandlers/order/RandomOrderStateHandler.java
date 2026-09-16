@@ -45,7 +45,9 @@ public class RandomOrderStateHandler extends AbstractHandler implements StateHan
           user.setState(State.NONE);
           Menu menu = menuService.findById(user.getCity().toString());
           if (message.equals("Удиви меня") || message.equals("Давай") || message.equals("Ехала")) {
-            Order order = orderService.findById(user.getChatId().toString());
+            Order order =
+                orderService.findByChatId(
+                    user.getChatId().toString(), user.getCity().getCurrentOrderDate());
             order.setStatus(Status.READY);
             order.setOrderItemList(randomOrder(menu, menu.getItemList()));
             orderService.save(order);

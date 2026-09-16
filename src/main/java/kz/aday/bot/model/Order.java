@@ -26,6 +26,11 @@ public class Order implements Id {
 
   @Override
   public String getId() {
-    return chatId;
+    return chatId + "_" + date;
+  }
+
+  @Override
+  public LocalDate getStorageDate() {
+    return date;
   }
 }

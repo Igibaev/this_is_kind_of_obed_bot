@@ -50,7 +50,8 @@ public abstract class AbstractHandler {
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
-  protected final SharedOrderItemPoolService sharedOrderItemPoolService = ServiceContainer.getPoolService();
+  protected final SharedOrderItemPoolService sharedOrderItemPoolService =
+      ServiceContainer.getPoolService();
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
     String[] data = callback.getData().split(":");
@@ -136,22 +137,25 @@ public abstract class AbstractHandler {
   }
 
   public boolean isOrderExist(User user) {
-    return orderService.existsById(user.getId());
+    return orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate());
   }
 
   protected List<Item> releaseOrderToSharedOrderItemPool(User user) {
-    if (!isOrderExist(user)) {
+    return releaseOrderToSharedOrderItemPool(user, user.getCity().getCurrentOrderDate());
+  }
+
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user, LocalDate orderDate) {
+    if (!orderService.existsByChatId(user.getId(), orderDate)) {
       return List.of();
     }
-    Order order = orderService.findById(user.getId());
-    orderService.deleteById(user.getId());
-    if (order.getOrderItemList().isEmpty()) {
+    Order order = orderService.findByChatId(user.getId(), orderDate);
+    orderService.deleteByChatId(user.getId(), orderDate);
+    if (order.getOrderItemList().isEmpty() || !isDeadLinePassed(user.getCity())) {
       return List.of();
     }
-    LocalDate date =
-        order.getDate() != null ? order.getDate() : user.getCity().getCurrentOrderDate();
+    LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;
     sharedOrderItemPoolService.addItems(
-        user.getCity(), date, user.getId(), user.getPreferedName(), order.getOrderItemList());
+        user.getCity(), shareDate, user.getId(), user.getPreferedName(), order.getOrderItemList());
     return List.copyOf(order.getOrderItemList());
   }
 
@@ -174,9 +178,12 @@ public abstract class AbstractHandler {
     }
 
     switch (menu.get().getStatus()) {
-      case READY -> addReadyMenuItems(user.getId(), isAdmin, items);
+      case READY -> addReadyMenuItems(user, isAdmin, items);
       case DEADLINE -> {
         items.add(State.GET_ORDER.getDisplayName());
+        if (isOrderExist(user)) {
+          items.add(State.SHARE_LUNCH.getDisplayName());
+        }
         if (isAdmin) {
           items.add(State.CHANGE_MENU.getDisplayName());
         }
@@ -207,12 +214,13 @@ public abstract class AbstractHandler {
     }
   }
 
-  private void addReadyMenuItems(String userId, boolean isAdmin, List<String> items) {
+  private void addReadyMenuItems(User user, boolean isAdmin, List<String> items) {
     if (isAdmin) {
       items.add(State.CLEAR_MENU.getDisplayName());
       items.add(State.CHANGE_MENU.getDisplayName());
     }
-    Optional<Order> order = orderService.findByIdOptional(userId);
+    Optional<Order> order =
+        orderService.findByChatIdOptional(user.getId(), user.getCity().getCurrentOrderDate());
     if (order.isEmpty()) {
       items.add(State.CREATE_ORDER.getDisplayName());
       items.add(State.RANDOM_ORDER.getDisplayName());

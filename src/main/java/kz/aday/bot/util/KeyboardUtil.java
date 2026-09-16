@@ -111,7 +111,9 @@ public class KeyboardUtil {
 
     Map<Item, List<SharedOrderItem>> entriesByItem =
         entries.stream()
-            .collect(Collectors.groupingBy(SharedOrderItem::getItem, LinkedHashMap::new, Collectors.toList()));
+            .collect(
+                Collectors.groupingBy(
+                    SharedOrderItem::getItem, LinkedHashMap::new, Collectors.toList()));
 
     for (Map.Entry<Item, List<SharedOrderItem>> group : entriesByItem.entrySet()) {
       Item item = group.getKey();

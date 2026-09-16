@@ -27,7 +27,7 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
-        Order order = orderService.findById(user.getId());
+        Order order = orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
         Menu menu = menuService.findById(user.getCity().toString());
         if (menu.isDeadlinePassed()) {
           sendMessage(
@@ -40,7 +40,7 @@ public class DeleteOrderStateHandler extends AbstractHandler implements StateHan
             user.setState(State.NONE);
             String message = update.getMessage().getText();
             if (message.equals("Да")) {
-              orderService.deleteById(order.getId());
+              orderService.deleteByChatId(order.getChatId(), order.getStorageDate());
               sendMessage(user, Messages.ORDER_WAS_DELETED.getText(), getMessageId(update), sender);
             } else {
               sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);

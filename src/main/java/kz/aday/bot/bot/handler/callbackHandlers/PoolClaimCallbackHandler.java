@@ -60,10 +60,8 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
   }
 
   private void addItemToUserOrder(User user, Item item, LocalDate date) {
-    Order order;
-    if (isOrderExist(user)) {
-      order = orderService.findById(user.getId());
-    } else {
+    Order order = orderService.findByChatIdOptional(user.getId(), date).orElse(null);
+    if (order == null) {
       order = new Order();
       order.setChatId(user.getChatId().toString());
       order.setUsername(user.getPreferedName());

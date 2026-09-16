@@ -18,4 +18,9 @@ public class SharedOrderItemPool implements Id {
   public String getId() {
     return city + "_" + date;
   }
+
+  @Override
+  public LocalDate getStorageDate() {
+    return date;
+  }
 }

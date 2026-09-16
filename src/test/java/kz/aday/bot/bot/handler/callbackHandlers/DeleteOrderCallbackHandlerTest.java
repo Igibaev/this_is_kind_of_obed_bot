@@ -76,12 +76,13 @@ class DeleteOrderCallbackHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(false);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(false);
     CallbackQuery callback = callbackQuery();
     // when
     handler.handle(callback, sender);
     // then
-    verify(orderService, never()).deleteById(any());
+    verify(orderService, never()).deleteByChatId(any(), any());
     verify(messageSender, never()).sendMessage(any(), eq(sender));
   }
 
@@ -90,16 +91,18 @@ class DeleteOrderCallbackHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(true);
     Item item = new Item(1, "Плов", null);
     Order order = order();
     order.getOrderItemList().add(item);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    when(orderService.findByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(order);
     CallbackQuery callback = callbackQuery();
     // when
     handler.handle(callback, sender);
     // then
-    verify(orderService).deleteById(CHAT_ID_STRING);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate());
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));

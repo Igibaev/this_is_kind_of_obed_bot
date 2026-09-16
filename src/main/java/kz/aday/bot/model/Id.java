@@ -12,4 +12,7 @@ public interface Id {
   default LocalDate getStorageDate() {
     return LocalDate.now();
   }
+
+  @JsonIgnore
+  default void backfillDateIfMissing(LocalDate folderDate) {}
 }

@@ -33,11 +33,9 @@ public class OfficeAttendanceNoCallbackHandler extends AbstractHandler implement
           isToday
               ? Messages.THANKS_WONT_COME_TODAY.getText()
               : Messages.THANKS_WONT_COME_TOMORROW.getText();
-      if (!isToday) {
-        List<Item> shared = releaseOrderToSharedOrderItemPool(user, date);
-        if (!shared.isEmpty()) {
-          text += "\n\n" + Messages.POOL_ORDER_SHARED.getText(joinItemNames(shared));
-        }
+      List<Item> shared = releaseOrderToSharedOrderItemPool(user, date);
+      if (!shared.isEmpty()) {
+        text += "\n\n" + Messages.POOL_ORDER_SHARED.getText(joinItemNames(shared));
       }
       sendMessage(user, text, getMessageId(callback), sender);
     }

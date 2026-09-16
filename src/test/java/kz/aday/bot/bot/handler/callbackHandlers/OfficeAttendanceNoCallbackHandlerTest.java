@@ -18,7 +18,6 @@ import java.util.Set;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
-import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -122,15 +121,10 @@ class OfficeAttendanceNoCallbackHandlerTest {
     order.setChatId(CHAT_ID_STRING);
     order.setStatus(Status.READY);
     order.setDate(tomorrow);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
     order.getOrderItemList().add(item);
     when(orderService.existsByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(order);
-    Menu menu = new Menu();
-    menu.setCity(City.ALMATA);
-    menu.setStatus(Status.DEADLINE);
-    menu.setDeadline(LocalDateTime.now().minusMinutes(1));
-    when(menuService.existsById(City.ALMATA.toString())).thenReturn(true);
-    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
     CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TOMORROW");
     // when
     handler.handle(callback, sender);
@@ -156,17 +150,64 @@ class OfficeAttendanceNoCallbackHandlerTest {
     order.getOrderItemList().add(new Item(1, "Плов", null));
     when(orderService.existsByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, tomorrow)).thenReturn(order);
-    Menu menu = new Menu();
-    menu.setCity(City.ALMATA);
-    menu.setStatus(Status.READY);
-    menu.setDeadline(LocalDateTime.now().plusMinutes(1));
-    when(menuService.existsById(City.ALMATA.toString())).thenReturn(true);
-    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
+    // order.submittedAt stays null: vendor deadline not passed yet
     CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TOMORROW");
     // when
     handler.handle(callback, sender);
     // then
     verify(orderService).deleteByChatId(CHAT_ID_STRING, tomorrow);
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertFalse(messageCaptor.getValue().getText().contains("расшарен"));
+  }
+
+  @Test
+  void handle_sharesOrderToPool_whenTodayAndOrderSubmittedToVendor() throws Exception {
+    // given
+    User user = readyUser();
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    LocalDate today = LocalDate.now();
+    Item item = new Item(1, "Плов", null);
+    Order order = new Order();
+    order.setChatId(CHAT_ID_STRING);
+    order.setStatus(Status.READY);
+    order.setDate(today);
+    order.setSubmittedAt(LocalDateTime.now().minusHours(12));
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, today)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, today)).thenReturn(order);
+    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
+    // when
+    handler.handle(callback, sender);
+    // then
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, today);
+    verify(sharedOrderItemPoolService)
+        .addItems(City.ALMATA, today, CHAT_ID_STRING, "me", Set.of(item));
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertTrue(messageCaptor.getValue().getText().contains("расшарен"));
+  }
+
+  @Test
+  void handle_doesNotShareOrder_whenTodayButOrderNotYetSubmittedToVendor() throws Exception {
+    // given
+    User user = readyUser();
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    LocalDate today = LocalDate.now();
+    Order order = new Order();
+    order.setChatId(CHAT_ID_STRING);
+    order.setStatus(Status.READY);
+    order.setDate(today);
+    order.getOrderItemList().add(new Item(1, "Плов", null));
+    when(orderService.existsByChatId(CHAT_ID_STRING, today)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, today)).thenReturn(order);
+    // order.submittedAt stays null: not yet submitted to vendor
+    CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
+    // when
+    handler.handle(callback, sender);
+    // then
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, today);
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));

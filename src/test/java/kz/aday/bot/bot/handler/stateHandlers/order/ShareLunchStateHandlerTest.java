@@ -17,7 +17,6 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
-import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -123,10 +122,10 @@ class ShareLunchStateHandlerTest {
         .thenReturn(true);
     Item item = new Item(1, "Плов", null);
     Order order = order();
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
     order.getOrderItemList().add(item);
     when(orderService.findByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
         .thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
     Update update = updateWithText("Да");
     // when
     handler.handle(update, sender);
@@ -150,7 +149,7 @@ class ShareLunchStateHandlerTest {
     order.getOrderItemList().add(new Item(1, "Плов", null));
     when(orderService.findByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
         .thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().plusMinutes(1));
+    // order.submittedAt stays null: vendor deadline not passed yet
     Update update = updateWithText("Да");
     // when
     handler.handle(update, sender);
@@ -175,15 +174,6 @@ class ShareLunchStateHandlerTest {
     // then
     verify(orderService, never()).deleteByChatId(any(), any());
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
-  }
-
-  private void stubMenuWithDeadline(LocalDateTime deadline) {
-    Menu menu = new Menu();
-    menu.setCity(City.ALMATA);
-    menu.setStatus(Status.DEADLINE);
-    menu.setDeadline(deadline);
-    when(menuService.existsById(City.ALMATA.toString())).thenReturn(true);
-    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
   }
 
   private static User readyUser(State state) {

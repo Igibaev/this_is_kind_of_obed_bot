@@ -39,7 +39,7 @@ class ViewSharedOrderItemPoolStateHandlerTest {
   private static final Long CHAT_ID = 1L;
   private static final String CHAT_ID_STRING = "1";
   private static final Integer MESSAGE_ID = 42;
-  private static final LocalDate TARGET_DATE = LocalDate.now();
+  private static final LocalDate TARGET_DATE = City.ALMATA.getCurrentOrderDate();
 
   private UserService userService;
   private SharedOrderItemPoolService sharedOrderItemPoolService;

@@ -29,7 +29,7 @@ public class ViewPoolStateHandler extends AbstractHandler implements StateHandle
       user.setState(State.NONE);
       userService.save(user);
 
-      LocalDate targetDate = LocalDate.now();
+      LocalDate targetDate = user.getCity().getCurrentOrderDate();
       List<SharedOrderItem> entries =
           sharedOrderItemPoolService.getAvailableEntries(user.getCity(), targetDate);
       if (entries.isEmpty()) {

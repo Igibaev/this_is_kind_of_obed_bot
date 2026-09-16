@@ -378,7 +378,7 @@ class AbstractHandlerTest {
     order.getOrderItemList().add(item);
     when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
     // when
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
@@ -400,7 +400,7 @@ class AbstractHandlerTest {
     order.getOrderItemList().add(item);
     when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().plusMinutes(1));
+    // submittedAt stays null: order not yet submitted to vendor
     // when
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
@@ -422,7 +422,7 @@ class AbstractHandlerTest {
     order.getOrderItemList().add(item);
     when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
     // when
     handler.releaseOrderToSharedOrderItemPool(user);
     // then
@@ -441,7 +441,7 @@ class AbstractHandlerTest {
     order.getOrderItemList().add(item);
     when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
     when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
-    stubMenuWithDeadline(LocalDateTime.now().minusMinutes(1));
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
     // when
     handler.releaseOrderToSharedOrderItemPool(user);
     // then

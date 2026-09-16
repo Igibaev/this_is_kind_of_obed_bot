@@ -74,6 +74,7 @@ public class SchedulerService {
       if (menu.isDeadlinePassed() && menu.getStatus() != Status.DEADLINE) {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
+        orderService.markOrdersAsSubmitted(menu.getCity(), menu.getCity().getCurrentOrderDate());
         sendMenuIsClosedNotification(menu.getCity());
         sendReportToUsers(menu.getCity());
         handledNotifications.clear();

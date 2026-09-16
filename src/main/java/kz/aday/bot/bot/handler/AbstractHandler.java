@@ -150,7 +150,7 @@ public abstract class AbstractHandler {
     }
     Order order = orderService.findByChatId(user.getId(), orderDate);
     orderService.deleteByChatId(user.getId(), orderDate);
-    if (order.getOrderItemList().isEmpty() || !isDeadLinePassed(user.getCity())) {
+    if (order.getOrderItemList().isEmpty() || order.getSubmittedAt() == null) {
       return List.of();
     }
     LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;

@@ -44,7 +44,7 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
   private static final Long CHAT_ID = 1L;
   private static final String CHAT_ID_STRING = "1";
   private static final Integer MESSAGE_ID = 42;
-  private static final LocalDate TARGET_DATE = LocalDate.now();
+  private static final LocalDate TARGET_DATE = City.ALMATA.getCurrentOrderDate();
 
   private UserService userService;
   private OrderService orderService;
@@ -121,7 +121,7 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     assertEquals(Status.READY, savedOrder.getStatus());
     assertEquals(TARGET_DATE, savedOrder.getDate());
     assertTrue(savedOrder.getOrderItemList().contains(item));
-    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, true, LocalDate.now());
+    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, true, TARGET_DATE);
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("Плов"));

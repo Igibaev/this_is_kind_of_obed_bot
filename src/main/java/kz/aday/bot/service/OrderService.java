@@ -2,6 +2,7 @@
 package kz.aday.bot.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -35,6 +36,16 @@ public class OrderService extends BaseService<Order> {
   public Collection<Order> findAllOnDate(LocalDate date) {
     log.debug("Finding all orders on date {}", date);
     return repository.getAll(date);
+  }
+
+  public void markOrdersAsSubmitted(City city, LocalDate date) {
+    LocalDateTime now = LocalDateTime.now();
+    for (Order order : findAllOnDate(date)) {
+      if (order.getCity() == city) {
+        order.setSubmittedAt(now);
+        save(order);
+      }
+    }
   }
 
   public String getAllOrdersGropedByDate(City city) {

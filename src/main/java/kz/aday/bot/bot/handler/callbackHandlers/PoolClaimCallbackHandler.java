@@ -30,7 +30,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       String entryId = getEntryId(callback);
-      LocalDate targetDate = LocalDate.now();
+      LocalDate targetDate = user.getCity().getCurrentOrderDate();
       Optional<SharedOrderItem> claimed =
           sharedOrderItemPoolService.claim(
               user.getCity(), targetDate, entryId, user.getId(), user.getPreferedName());
@@ -39,7 +39,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
       if (claimed.isPresent()) {
         addItemToUserOrder(user, claimed.get().getItem(), targetDate);
         officeAttendanceService.save(
-            user.getId(), user.getPreferedName(), user.getCity(), true, LocalDate.now());
+            user.getId(), user.getPreferedName(), user.getCity(), true, targetDate);
         message = Messages.POOL_ITEM_CLAIMED.getText(claimed.get().getItem().getName());
       } else {
         message = Messages.POOL_ITEM_ALREADY_TAKEN.getText();

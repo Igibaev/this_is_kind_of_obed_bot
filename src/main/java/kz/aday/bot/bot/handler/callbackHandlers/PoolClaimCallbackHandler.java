@@ -53,7 +53,8 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
         InlineKeyboardMarkup keyboard =
             KeyboardUtil.createPoolInlineKeyboard(remaining, CallbackState.POOL_CLAIM);
         KeyboardUtil.addButton(
-            List.of(new UserButton("Назад", CallbackState.CANCEL.toString())), keyboard);
+            List.of(new UserButton("Назад", CallbackState.BACK_TO_ORDER_MENU.toString())),
+            keyboard);
         sendMessageWithKeyboard(user, message, keyboard, getMessageId(callback), sender);
       }
     }

@@ -38,7 +38,8 @@ public class ViewPoolStateHandler extends AbstractHandler implements StateHandle
         InlineKeyboardMarkup keyboard =
             KeyboardUtil.createPoolInlineKeyboard(entries, CallbackState.POOL_CLAIM);
         KeyboardUtil.addButton(
-            List.of(new UserButton("Назад", CallbackState.CANCEL.toString())), keyboard);
+            List.of(new UserButton("Назад", CallbackState.BACK_TO_ORDER_MENU.toString())),
+            keyboard);
         sendMessageWithKeyboard(
             user, Messages.POOL_HEADER.getText(), keyboard, getMessageId(update), sender);
       }

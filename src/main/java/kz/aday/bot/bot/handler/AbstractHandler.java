@@ -167,6 +167,26 @@ public abstract class AbstractHandler {
     List<String> items = new ArrayList<>();
     boolean isAdmin = user.getRole() == ADMIN;
     addBaseMenuItems(isAdmin, items);
+    return KeyboardUtil.createReplyKeyboard(items);
+  }
+
+  private void addBaseMenuItems(boolean isAdmin, List<String> items) {
+    items.add(State.PROFILE_MENU.getDisplayName());
+    items.add(State.MENU_CATEGORY_ORDER.getDisplayName());
+    items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
+    items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
+
+    if (isAdmin) {
+      items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
+      items.add(State.GET_TODAY_ORDERS.getDisplayName());
+      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
+      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
+    }
+  }
+
+  public List<String> getOrderMenuItems(User user, boolean isAdmin) {
+    List<String> items = new ArrayList<>();
+    items.add(State.VIEW_POOL.getDisplayName());
 
     Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
     if (menu.isEmpty()) {
@@ -174,7 +194,7 @@ public abstract class AbstractHandler {
       if (isAdmin) {
         items.add(State.CREATE_MENU.getDisplayName());
       }
-      return KeyboardUtil.createReplyKeyboard(items);
+      return items;
     }
 
     switch (menu.get().getStatus()) {
@@ -196,21 +216,21 @@ public abstract class AbstractHandler {
       }
       default -> {}
     }
-    return KeyboardUtil.createReplyKeyboard(items);
+    return items;
   }
 
-  private void addBaseMenuItems(boolean isAdmin, List<String> items) {
-    items.add(State.PROFILE_MENU.getDisplayName());
-    items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
-    items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
-    items.add(State.VIEW_POOL.getDisplayName());
-
-    if (isAdmin) {
-      items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
-      items.add(State.GET_TODAY_ORDERS.getDisplayName());
-      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
-      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
-    }
+  public void sendOrderMenuCategory(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    boolean isAdmin = user.getRole() == ADMIN;
+    List<String> items = new ArrayList<>(getOrderMenuItems(user, isAdmin));
+    items.add(State.BACK_TO_MENU.getDisplayName());
+    sendMessageWithKeyboard(
+        user,
+        Messages.CATEGORY_PROMPT.getText(),
+        KeyboardUtil.createReplyKeyboard(items),
+        messageId,
+        sender,
+        true);
   }
 
   private void addReadyMenuItems(User user, boolean isAdmin, List<String> items) {

@@ -15,6 +15,7 @@ public enum State {
 
   // --- Стейты-действия (кнопки меню) ---
   PROFILE_MENU("👤 Профиль", Type.ACTION),
+  MENU_CATEGORY_ORDER("🍽 Заказ и меню", Type.ACTION),
   BACK_TO_MENU("⬅️ Назад", Type.ACTION),
   CHANGE_NAME_ONLY("Изменить имя", Type.ACTION),
   CHANGE_CITY_ONLY("Изменить город", Type.ACTION),
@@ -22,7 +23,7 @@ public enum State {
   SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
   WHO_WILL_COME_TO_OFFICE("Посмотреть кто придет в офис", Type.ACTION),
   SET_OFFICE_ATTENDANCE("Пойду ли я в офис", Type.ACTION),
-  VIEW_POOL("Общий пул обедов", Type.ACTION),
+  VIEW_POOL("Свободные обеды", Type.ACTION),
 
   CREATE_ORDER("Сделать заказ", Type.ACTION),
   GET_ORDER("Посмотреть заказ", Type.ACTION),

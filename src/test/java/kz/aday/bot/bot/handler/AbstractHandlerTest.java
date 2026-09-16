@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -343,7 +344,7 @@ class AbstractHandlerTest {
     assertEquals(List.of(), actual);
     verify(orderService, never()).deleteById(any());
     verify(sharedOrderItemPoolService, never())
-        .addItems(any(), any(), any(), anyCollection());
+        .addItems(any(), any(), any(), any(), anyCollection());
   }
 
   @Test
@@ -359,7 +360,7 @@ class AbstractHandlerTest {
     assertEquals(List.of(), actual);
     verify(orderService).deleteById(CHAT_ID_STRING);
     verify(sharedOrderItemPoolService, never())
-        .addItems(any(), any(), any(), anyCollection());
+        .addItems(any(), any(), any(), any(), anyCollection());
   }
 
   @Test
@@ -368,6 +369,7 @@ class AbstractHandlerTest {
     User user = userWithStatus(Status.READY);
     Item item = new Item(1, "Плов", null);
     Order order = orderWithStatus(Status.READY);
+    order.setDate(LocalDate.now().plusDays(1));
     order.getOrderItemList().add(item);
     when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
     when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
@@ -377,7 +379,48 @@ class AbstractHandlerTest {
     assertEquals(List.of(item), actual);
     verify(orderService).deleteById(CHAT_ID_STRING);
     verify(sharedOrderItemPoolService)
-        .addItems(user.getCity(), user.getId(), user.getPreferedName(), Set.of(item));
+        .addItems(
+            user.getCity(),
+            order.getDate(),
+            user.getId(),
+            user.getPreferedName(),
+            Set.of(item));
+  }
+
+  @Test
+  void releaseOrderToPool_usesOrdersOwnStoredDate_regardlessOfCurrentCityCycle() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    LocalDate storedDate = LocalDate.now().plusDays(5);
+    order.setDate(storedDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
+    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(eq(City.ALMATA), eq(storedDate), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_fallsBackToCityCurrentOrderDate_whenOrderHasNoStoredDate() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(null);
+    order.getOrderItemList().add(item);
+    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
+    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(
+            eq(City.ALMATA), eq(City.ALMATA.getCurrentOrderDate()), any(), any(), anyCollection());
   }
 
   @Test
@@ -669,6 +712,15 @@ class AbstractHandlerTest {
         .city(City.ALMATA)
         .role(User.Role.USER)
         .status(status)
+        .build();
+  }
+
+  private static User userWithCity(City city) {
+    return User.builder()
+        .chatId(CHAT_ID)
+        .city(city)
+        .role(User.Role.USER)
+        .status(Status.READY)
         .build();
   }
 

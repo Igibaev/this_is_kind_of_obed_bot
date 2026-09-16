@@ -44,3 +44,7 @@ bin/
 
 ### Local config ###
 local.properties
+
+### Runtime data ###
+data/
+logs/

@@ -1,10 +1,8 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.callbackHandlers;
 
-import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.model.Item;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -17,12 +15,8 @@ public class DeleteOrderCallbackHandler extends AbstractHandler implements Callb
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       if (isOrderExist(user)) {
-        List<Item> shared = releaseOrderToSharedOrderItemPool(user);
-        String text = Messages.ORDER_DELETED_RETURN.getText();
-        if (!shared.isEmpty()) {
-          text += "\n\n" + Messages.POOL_ORDER_SHARED.getText(joinItemNames(shared));
-        }
-        sendMessage(user, text, getMessageId(callback), sender);
+        orderService.deleteById(user.getId());
+        sendMessage(user, Messages.ORDER_DELETED_RETURN.getText(), getMessageId(callback), sender);
       }
     }
   }

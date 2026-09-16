@@ -118,13 +118,14 @@ class OfficeAttendanceNoCallbackHandlerTest {
     Order order = new Order();
     order.setChatId(CHAT_ID_STRING);
     order.setStatus(Status.READY);
+    order.setDate(City.ALMATA.getCurrentOrderDate());
     order.getOrderItemList().add(item);
     when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
     CallbackQuery callback = callbackQuery("ATTENDANCE_NO:TODAY");
     // when
     handler.handle(callback, sender);
     // then
-    verify(sharedOrderItemPoolService).addItems(City.ALMATA, CHAT_ID_STRING, "me", Set.of(item));
+    verify(sharedOrderItemPoolService).addItems(City.ALMATA, City.ALMATA.getCurrentOrderDate(), CHAT_ID_STRING, "me", Set.of(item));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("расшарен: Плов"));
@@ -140,7 +141,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // when
     handler.handle(callback, sender);
     // then
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertFalse(messageCaptor.getValue().getText().contains("расшарен"));

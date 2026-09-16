@@ -38,6 +38,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
         order.setUsername(user.getPreferedName());
         order.setStatus(Status.PENDING);
         order.setChatId(user.getChatId().toString());
+        order.setDate(user.getCity().getCurrentOrderDate());
       }
 
       if (menu.isDeadlinePassed()) {

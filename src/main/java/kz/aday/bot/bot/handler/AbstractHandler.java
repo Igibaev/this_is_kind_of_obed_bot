@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler;
 
 import static kz.aday.bot.model.User.Role.ADMIN;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -147,8 +148,10 @@ public abstract class AbstractHandler {
     if (order.getOrderItemList().isEmpty()) {
       return List.of();
     }
+    LocalDate date =
+        order.getDate() != null ? order.getDate() : user.getCity().getCurrentOrderDate();
     sharedOrderItemPoolService.addItems(
-        user.getCity(), user.getId(), user.getPreferedName(), order.getOrderItemList());
+        user.getCity(), date, user.getId(), user.getPreferedName(), order.getOrderItemList());
     return List.copyOf(order.getOrderItemList());
   }
 

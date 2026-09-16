@@ -2,7 +2,6 @@
 package kz.aday.bot.bot.handler.callbackHandlers;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -12,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Set;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
@@ -88,25 +86,7 @@ class DeleteOrderCallbackHandlerTest {
   }
 
   @Test
-  void handle_deletesOrderWithoutPoolText_whenOrderIsEmpty() throws Exception {
-    // given
-    User user = readyUser();
-    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order());
-    CallbackQuery callback = callbackQuery();
-    // when
-    handler.handle(callback, sender);
-    // then
-    verify(orderService).deleteById(CHAT_ID_STRING);
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
-    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertFalse(messageCaptor.getValue().getText().contains("расшарен"));
-  }
-
-  @Test
-  void handle_deletesOrderAndAppendsPoolSharedText_whenOrderHasItems() throws Exception {
+  void handle_deletesOrderAndSendsConfirmation_whenOrderExists() throws Exception {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
@@ -120,10 +100,10 @@ class DeleteOrderCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService).deleteById(CHAT_ID_STRING);
-    verify(sharedOrderItemPoolService).addItems(City.ALMATA, CHAT_ID_STRING, "me", Set.of(item));
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertTrue(messageCaptor.getValue().getText().contains("расшарен: Плов"));
+    assertFalse(messageCaptor.getValue().getText().contains("расшарен"));
   }
 
   private static User readyUser() {
@@ -140,6 +120,7 @@ class DeleteOrderCallbackHandlerTest {
     Order order = new Order();
     order.setChatId(CHAT_ID_STRING);
     order.setStatus(Status.READY);
+    order.setDate(City.ALMATA.getCurrentOrderDate());
     return order;
   }
 

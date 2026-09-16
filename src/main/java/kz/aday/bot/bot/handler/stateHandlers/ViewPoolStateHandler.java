@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
@@ -28,7 +29,9 @@ public class ViewPoolStateHandler extends AbstractHandler implements StateHandle
       user.setState(State.NONE);
       userService.save(user);
 
-      List<SharedOrderItem> entries = sharedOrderItemPoolService.getAvailableEntries(user.getCity());
+      LocalDate targetDate = LocalDate.now();
+      List<SharedOrderItem> entries =
+          sharedOrderItemPoolService.getAvailableEntries(user.getCity(), targetDate);
       if (entries.isEmpty()) {
         sendMessage(user, Messages.POOL_EMPTY.getText(), getMessageId(update), sender);
       } else {

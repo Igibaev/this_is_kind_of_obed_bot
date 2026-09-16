@@ -3,6 +3,7 @@ package kz.aday.bot.model;
 
 import static kz.aday.bot.util.Messages.RETURN_TO_MENU;
 
+import java.time.LocalDate;
 import kz.aday.bot.exception.TelegramMessageException;
 import lombok.Getter;
 
@@ -27,5 +28,10 @@ public enum City {
       }
     }
     throw new TelegramMessageException("Введенный город не найден. " + RETURN_TO_MENU);
+  }
+
+  public LocalDate getCurrentOrderDate() {
+    LocalDate now = LocalDate.now();
+    return nextDayOrderCycle ? now.plusDays(1) : now;
   }
 }

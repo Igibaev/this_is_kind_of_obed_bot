@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
@@ -14,6 +15,7 @@ public class Order implements Id {
   private String username;
   private City city;
   private Status status;
+  private LocalDate date;
   private Set<Item> orderItemList = new HashSet<>(5);
   private Set<Category> categoryItemList = new HashSet<>(5);
 

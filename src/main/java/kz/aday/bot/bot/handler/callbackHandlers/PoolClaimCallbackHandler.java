@@ -30,12 +30,14 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       String entryId = getEntryId(callback);
+      LocalDate targetDate = LocalDate.now();
       Optional<SharedOrderItem> claimed =
-          sharedOrderItemPoolService.claim(user.getCity(), entryId, user.getId(), user.getPreferedName());
+          sharedOrderItemPoolService.claim(
+              user.getCity(), targetDate, entryId, user.getId(), user.getPreferedName());
 
       String message;
       if (claimed.isPresent()) {
-        addItemToUserOrder(user, claimed.get().getItem());
+        addItemToUserOrder(user, claimed.get().getItem(), targetDate);
         officeAttendanceService.save(
             user.getId(), user.getPreferedName(), user.getCity(), true, LocalDate.now());
         message = Messages.POOL_ITEM_CLAIMED.getText(claimed.get().getItem().getName());
@@ -43,7 +45,8 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
         message = Messages.POOL_ITEM_ALREADY_TAKEN.getText();
       }
 
-      List<SharedOrderItem> remaining = sharedOrderItemPoolService.getAvailableEntries(user.getCity());
+      List<SharedOrderItem> remaining =
+          sharedOrderItemPoolService.getAvailableEntries(user.getCity(), targetDate);
       if (remaining.isEmpty()) {
         sendMessage(user, message, getMessageId(callback), sender);
       } else {
@@ -56,7 +59,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
     }
   }
 
-  private void addItemToUserOrder(User user, Item item) {
+  private void addItemToUserOrder(User user, Item item, LocalDate date) {
     Order order;
     if (isOrderExist(user)) {
       order = orderService.findById(user.getId());
@@ -66,6 +69,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
       order.setUsername(user.getPreferedName());
       order.setCity(user.getCity());
       order.setStatus(Status.READY);
+      order.setDate(date);
     }
     order.getOrderItemList().add(item);
     order.getCategoryItemList().add(item.getCategory());

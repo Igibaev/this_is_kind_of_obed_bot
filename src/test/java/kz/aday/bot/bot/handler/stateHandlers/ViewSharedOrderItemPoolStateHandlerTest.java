@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.configuration.ServiceContainer;
@@ -38,6 +39,7 @@ class ViewSharedOrderItemPoolStateHandlerTest {
   private static final Long CHAT_ID = 1L;
   private static final String CHAT_ID_STRING = "1";
   private static final Integer MESSAGE_ID = 42;
+  private static final LocalDate TARGET_DATE = LocalDate.now();
 
   private UserService userService;
   private SharedOrderItemPoolService sharedOrderItemPoolService;
@@ -75,7 +77,7 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA)).thenReturn(List.of());
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of());
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);
@@ -92,7 +94,7 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     SharedOrderItem entry =
         new SharedOrderItem("e1", new Item(1, "Плов", Category.FIRST), "9", "otherUser", null, null);
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA)).thenReturn(List.of(entry));
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of(entry));
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);
@@ -108,7 +110,7 @@ class ViewSharedOrderItemPoolStateHandlerTest {
     User user = readyUser();
     user.setState(State.VIEW_POOL);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA)).thenReturn(List.of());
+    when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE)).thenReturn(List.of());
     Update update = updateWithChatId();
     // when
     handler.handle(update, sender);

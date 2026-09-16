@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.service;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -17,19 +18,24 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
     super(new BaseRepository<>(new ConcurrentHashMap<>(), SharedOrderItemPool.class, "pool"));
   }
 
-  private SharedOrderItemPool getOrCreate(City city) {
-    return findByIdOptional(city.toString())
+  private SharedOrderItemPool getOrCreate(City city, LocalDate date) {
+    return findByIdOptional(city + "_" + date)
         .orElseGet(
             () -> {
               SharedOrderItemPool sharedOrderItemPool = new SharedOrderItemPool();
               sharedOrderItemPool.setCity(city);
+              sharedOrderItemPool.setDate(date);
               return sharedOrderItemPool;
             });
   }
 
   public void addItems(
-      City city, String sourceChatId, String sourceUsername, Collection<Item> items) {
-    SharedOrderItemPool sharedOrderItemPool = getOrCreate(city);
+      City city,
+      LocalDate date,
+      String sourceChatId,
+      String sourceUsername,
+      Collection<Item> items) {
+    SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     for (Item item : items) {
       sharedOrderItemPool.getItems()
           .add(
@@ -39,15 +45,15 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
     save(sharedOrderItemPool);
   }
 
-  public List<SharedOrderItem> getAvailableEntries(City city) {
-    return getOrCreate(city).getItems().stream()
+  public List<SharedOrderItem> getAvailableEntries(City city, LocalDate date) {
+    return getOrCreate(city, date).getItems().stream()
         .filter(entry -> entry.getClaimedByChatId() == null)
         .toList();
   }
 
   public Optional<SharedOrderItem> claim(
-      City city, String entryId, String claimerChatId, String claimerUsername) {
-    SharedOrderItemPool sharedOrderItemPool = getOrCreate(city);
+      City city, LocalDate date, String entryId, String claimerChatId, String claimerUsername) {
+    SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     Optional<SharedOrderItem> entry =
         sharedOrderItemPool.getItems().stream()
             .filter(e -> e.getEntryId().equals(entryId) && e.getClaimedByChatId() == null)

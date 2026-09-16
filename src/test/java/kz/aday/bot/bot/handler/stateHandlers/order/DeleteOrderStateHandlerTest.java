@@ -3,7 +3,6 @@ package kz.aday.bot.bot.handler.stateHandlers.order;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -14,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Set;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
@@ -106,13 +104,12 @@ class DeleteOrderStateHandlerTest {
   }
 
   @Test
-  void handle_deletesOrderAndAppendsPoolSharedText_whenAnsweredYesWithItems() throws Exception {
+  void handle_deletesOrder_whenAnsweredYes() throws Exception {
     // given
     User user = readyUser(State.DELETE_ORDER);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     Order order = order();
-    Item item = new Item(1, "Плов", null);
-    order.getOrderItemList().add(item);
+    order.getOrderItemList().add(new Item(1, "Плов", null));
     when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
     when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
     Update update = updateWithText("Да");
@@ -120,26 +117,7 @@ class DeleteOrderStateHandlerTest {
     handler.handle(update, sender);
     // then
     verify(orderService).deleteById(CHAT_ID_STRING);
-    verify(sharedOrderItemPoolService).addItems(City.ALMATA, CHAT_ID_STRING, "me", Set.of(item));
-    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertTrue(messageCaptor.getValue().getText().contains("расшарен: Плов"));
-  }
-
-  @Test
-  void handle_deletesOrderWithoutPoolText_whenAnsweredYesWithEmptyOrder() throws Exception {
-    // given
-    User user = readyUser(State.DELETE_ORDER);
-    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    Order order = order();
-    when(orderService.findById(CHAT_ID_STRING)).thenReturn(order);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    Update update = updateWithText("Да");
-    // when
-    handler.handle(update, sender);
-    // then
-    verify(orderService).deleteById(CHAT_ID_STRING);
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertFalse(messageCaptor.getValue().getText().contains("расшарен"));
@@ -157,7 +135,7 @@ class DeleteOrderStateHandlerTest {
     handler.handle(update, sender);
     // then
     verify(orderService, never()).deleteById(any());
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
   }
 
   private static User readyUser(State state) {
@@ -175,6 +153,7 @@ class DeleteOrderStateHandlerTest {
     Order order = new Order();
     order.setChatId(CHAT_ID_STRING);
     order.setStatus(Status.READY);
+    order.setDate(City.ALMATA.getCurrentOrderDate());
     return order;
   }
 

@@ -4,7 +4,6 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -32,7 +31,7 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
               .filter(o -> o.getCity() == user.getCity())
               .filter(o -> o.getStatus() == Status.READY)
               .toList();
-      String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
+      String names = formatNameList(orders.stream().map(Order::getUsername).toList());
       if (names.isBlank()) {
         sendMessage(user, Messages.NOBODY_COMES_TODAY.getText(), getMessageId(callback), sender);
       } else {

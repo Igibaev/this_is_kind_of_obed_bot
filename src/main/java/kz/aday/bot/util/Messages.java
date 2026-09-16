@@ -89,9 +89,9 @@ public enum Messages {
   // Кто придёт в офис сегодня/завтра
   NOBODY_COMES_TODAY("Сегодня никто в офис не придет( хнык хнык"),
   NOBODY_COMES_TOMORROW("Завтра никто в офис не придет( хнык хнык"),
-  WHO_COMES_TODAY("Сегодня в офис придет [%s]:\n%s"),
-  WHO_COMES_TOMORROW("Завтра в офис придет [%s]:\n%s"),
-  WHO_COMES_OFFICE("Список людей кто придет в офис: [%s]\n%s"),
+  WHO_COMES_TODAY("Сегодня в офис придет человек:(%s)\n%s"),
+  WHO_COMES_TOMORROW("Завтра в офис придет: (%s)\n%s"),
+  WHO_COMES_OFFICE("Список людей кто придет в офис: (%s)\n%s"),
 
   // Случайный заказ
   CANCEL_RANDOM("Ну ладно, выбери сам. /return"),
@@ -174,7 +174,8 @@ public enum Messages {
   POOL_ITEM_ALREADY_TAKEN("Эту позицию уже забрали. Вот что осталось:"),
 
   // Ошибки
-  ERROR("Произошла ошибка: %s."),
+  ERROR("Произошла ошибка:\n```\n%s\n```"),
+  ERROR_WITH_DETAILS("Произошла ошибка:\n```\n%s\n\n%s\n```"),
   GO_TO_START_COMMAND("Чтобы начать взаимодейcтвовать с ботом, завершите команду /start.");
 
   private final String text;

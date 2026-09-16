@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Stream;
 import kz.aday.bot.configuration.BotConfig;
@@ -106,18 +107,30 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   }
 
   private void readFolder(Path dateFolder, List<T> items) throws IOException {
+    LocalDate folderDate = parseFolderDate(dateFolder);
     try (Stream<Path> files = Files.list(dateFolder)) {
       files.forEach(
           path -> {
             if (Files.isRegularFile(path) && path.toString().endsWith(JSON)) {
               try {
                 T item = objectMapper.readValue(path.toFile(), type);
+                if (folderDate != null) {
+                  item.backfillDateIfMissing(folderDate);
+                }
                 items.add(item);
               } catch (IOException e) {
                 log.warn("Failed to parse [{}], skip.", path);
               }
             }
           });
+    }
+  }
+
+  private LocalDate parseFolderDate(Path dateFolder) {
+    try {
+      return LocalDate.parse(dateFolder.getFileName().toString(), DATE_FOLDER_FORMATTER);
+    } catch (DateTimeParseException e) {
+      return null;
     }
   }
 

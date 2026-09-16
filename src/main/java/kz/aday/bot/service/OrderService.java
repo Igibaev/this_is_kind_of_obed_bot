@@ -41,7 +41,7 @@ public class OrderService extends BaseService<Order> {
   public void markOrdersAsSubmitted(City city, LocalDate date) {
     LocalDateTime now = LocalDateTime.now();
     for (Order order : findAllOnDate(date)) {
-      if (order.getCity() == city) {
+      if (order.getCity() == city && order.getDate() != null) {
         order.setSubmittedAt(now);
         save(order);
       }

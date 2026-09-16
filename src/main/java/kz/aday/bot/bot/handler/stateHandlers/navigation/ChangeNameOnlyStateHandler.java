@@ -1,22 +1,24 @@
 /* (C) 2024 Igibaev */
-package kz.aday.bot.bot.handler.stateHandlers;
+package kz.aday.bot.bot.handler.stateHandlers.navigation;
 
 import kz.aday.bot.bot.handler.AbstractHandler;
+import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class EditUsernameStateHandler extends AbstractHandler implements StateHandler {
+public class ChangeNameOnlyStateHandler extends AbstractHandler implements StateHandler {
   @Override
   public boolean canHandle(String state) {
-    return State.EDIT_USERNAME.getDisplayName().equals(state);
+    return State.CHANGE_NAME_ONLY.getDisplayName().equals(state);
   }
 
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     User user = userService.findById(getChatId(update).toString());
-    user.setState(State.SET_USERNAME_THEN_CHOOSE_CITY);
+    user.setState(State.SET_NAME_ONLY);
     sendMessage(user, Messages.CHANGE_NAME.getText(), getMessageId(update), sender);
   }
 }

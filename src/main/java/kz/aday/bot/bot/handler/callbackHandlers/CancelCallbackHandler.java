@@ -21,7 +21,8 @@ public class CancelCallbackHandler extends AbstractHandler implements CallbackHa
           Messages.NAVIGATION_MENU.getText(),
           getUserMenuKeyboard(user),
           getMessageId(callback),
-          sender);
+          sender,
+          true);
     }
   }
 

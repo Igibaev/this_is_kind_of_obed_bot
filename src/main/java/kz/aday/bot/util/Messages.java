@@ -98,7 +98,8 @@ public enum Messages {
   RANDOM_ORDER_CREATED("Ваш заказ улетел. Пусть содержимое заказа останется тайной. пока."),
 
   // Профиль пользователя
-  PROFILE("Ваше имя: %s \nГород: %s \nВернуться в меню /return"),
+  PROFILE_INFO("Ваше имя: %s \nГород: %s"),
+  CHOOSE_CITY_PROMPT("Выберите город:"),
 
   // Администрирование меню: дедлайн, создание, публикация, удаление
   DEADLINE_IS_SET_AND_MENU_IS_PUBLISHED(

@@ -21,6 +21,7 @@ public class DefaultStateHandler extends AbstractHandler implements StateHandler
         Messages.NAVIGATION_MENU.getText(),
         getUserMenuKeyboard(user),
         getMessageId(update),
-        sender);
+        sender,
+        true);
   }
 }

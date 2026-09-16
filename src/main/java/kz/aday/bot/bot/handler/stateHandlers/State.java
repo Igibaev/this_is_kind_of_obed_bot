@@ -14,8 +14,11 @@ public enum State {
   SET_CANCEL("Отменить", Type.INPUT),
 
   // --- Стейты-действия (кнопки меню) ---
-  PROFILE("Профиль", Type.ACTION),
-  EDIT_USERNAME("Изменить имя и город", Type.ACTION),
+  PROFILE_MENU("👤 Профиль", Type.ACTION),
+  BACK_TO_MENU("⬅️ Назад", Type.ACTION),
+  CHANGE_NAME_ONLY("Изменить имя", Type.ACTION),
+  CHANGE_CITY_ONLY("Изменить город", Type.ACTION),
+  SET_NAME_ONLY("Введите новое имя ✏️", Type.INPUT),
   SEND_MESSAGE_TO_ALL_USERS("Введите сообщение для рассылки", Type.ACTION),
   WHO_WILL_COME_TO_OFFICE("Посмотреть кто придет в офис", Type.ACTION),
   SET_OFFICE_ATTENDANCE("Пойду ли я в офис", Type.ACTION),

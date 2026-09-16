@@ -40,6 +40,7 @@ import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
+import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,8 +74,7 @@ class AbstractHandlerTest {
 
   private static final List<String> BASE_ITEMS =
       List.of(
-          State.PROFILE.getDisplayName(),
-          State.EDIT_USERNAME.getDisplayName(),
+          State.PROFILE_MENU.getDisplayName(),
           State.WHO_WILL_COME_TO_OFFICE.getDisplayName(),
           State.SET_OFFICE_ATTENDANCE.getDisplayName(),
           State.VIEW_POOL.getDisplayName());
@@ -649,6 +649,33 @@ class AbstractHandlerTest {
     assertEquals(expectedToDelete, actualMessagesToDelete);
     assertEquals(SENT_MESSAGE_ID, user.getLastMessageId());
     verify(userService).save(user);
+  }
+
+  @Test
+  void sendProfileCard_givenUser_whenCalled_thenSendsProfileInfoAndEditButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithStatus(Status.READY);
+    user.setChatId(OTHER_CHAT_ID);
+    user.setPreferedName("Alice");
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendProfileCard(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    SendMessage actualMessage = messageCaptor.getValue();
+    assertEquals(
+        Messages.PROFILE_INFO.getText("Alice", City.ALMATA.getValue()), actualMessage.getText());
+    assertEquals(
+        List.of(
+            State.CHANGE_NAME_ONLY.getDisplayName(),
+            State.CHANGE_CITY_ONLY.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(actualMessage.getReplyMarkup()));
   }
 
   @ParameterizedTest(name = "{0}")

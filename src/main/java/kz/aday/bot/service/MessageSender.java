@@ -36,7 +36,7 @@ public class MessageSender {
           "Failed to send message user:{}. \nReason: [{}]",
           sendMessage.getChatId(),
           e.getMessage());
-      return new Message();
+      throw e;
     }
   }
 

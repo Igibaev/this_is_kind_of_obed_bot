@@ -163,6 +163,10 @@ public abstract class AbstractHandler {
     return items.stream().map(Item::getName).collect(Collectors.joining(", "));
   }
 
+  protected String formatNameList(Collection<String> names) {
+    return String.join("\n", names);
+  }
+
   public ReplyKeyboard getUserMenuKeyboard(User user) {
     List<String> items = new ArrayList<>();
     boolean isAdmin = user.getRole() == ADMIN;

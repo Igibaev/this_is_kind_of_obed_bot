@@ -56,6 +56,31 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     return formatStats(attendances);
   }
 
+  public String getOverallAttendanceStatsForUser(City city, String userId) {
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
+            .filter(a -> userId.equals(a.getChatId()))
+            .filter(a -> !isAfter(a, LocalDate.now()))
+            .toList();
+    return formatStats(attendances);
+  }
+
+  public String getCurrentMonthAttendanceStatsForUser(City city, String userId) {
+    YearMonth currentMonth = YearMonth.now();
+    LocalDate today = LocalDate.now();
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
+            .filter(a -> userId.equals(a.getChatId()))
+            .filter(a -> isInMonth(a, currentMonth))
+            .filter(a -> !isAfter(a, today))
+            .toList();
+    return formatStats(attendances);
+  }
+
   private boolean isInMonth(OfficeAttendance attendance, YearMonth month) {
     if (attendance.getDate() == null) {
       return false;

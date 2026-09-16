@@ -15,7 +15,8 @@ public enum State {
 
   // --- Стейты-действия (кнопки меню) ---
   PROFILE_MENU("👤 Профиль", Type.ACTION),
-  MENU_CATEGORY_ORDER("🍽 Заказ и меню", Type.ACTION),
+  MENU_CATEGORY_ORDER("🍽 Обед", Type.ACTION),
+  STATISTICS_MENU("📊 Статистика", Type.ACTION),
   BACK_TO_MENU("⬅️ Назад", Type.ACTION),
   CHANGE_NAME_ONLY("Изменить имя", Type.ACTION),
   CHANGE_CITY_ONLY("Изменить город", Type.ACTION),
@@ -24,8 +25,9 @@ public enum State {
   WHO_WILL_COME_TO_OFFICE("Посмотреть кто придет в офис", Type.ACTION),
   SET_OFFICE_ATTENDANCE("Пойду ли я в офис", Type.ACTION),
   VIEW_POOL("Свободные обеды", Type.ACTION),
+  VIEW_MENU_TODAY("Посмотреть меню на сегодня", Type.ACTION),
 
-  CREATE_ORDER("Сделать заказ", Type.ACTION),
+  CREATE_ORDER("Заказать", Type.ACTION),
   GET_ORDER("Посмотреть заказ", Type.ACTION),
   CHANGE_ORDER("Изменить заказ", Type.ACTION),
   DELETE_ORDER("Удалить заказ", Type.ACTION),
@@ -36,6 +38,8 @@ public enum State {
   GET_TODAY_ORDERS("Выгрузить заказы", Type.ACTION),
   GET_ATTENDANCE_STATS("Общая статистика посещений", Type.ACTION),
   GET_ATTENDANCE_STATS_MONTH("Статистика посещений за месяц", Type.ACTION),
+  GET_MY_ATTENDANCE_STATS("Моя общая статистика", Type.ACTION),
+  GET_MY_ATTENDANCE_STATS_MONTH("Моя статистика посещений за месяц", Type.ACTION),
   PUBLISH_MENU("Опубликовать меню", Type.ACTION),
   CREATE_MENU("Создать меню", Type.ACTION),
   CLEAR_MENU("Очистить меню", Type.ACTION),

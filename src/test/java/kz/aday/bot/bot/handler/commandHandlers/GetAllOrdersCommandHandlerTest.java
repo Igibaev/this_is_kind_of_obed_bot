@@ -2,12 +2,15 @@
 package kz.aday.bot.bot.handler.commandHandlers;
 
 import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
+import static kz.aday.bot.testsupport.TestFixtures.adminUser;
 import static kz.aday.bot.testsupport.TestFixtures.readyUser;
 import static kz.aday.bot.testsupport.TestFixtures.update;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +20,7 @@ import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.ServiceContainerMockExtension;
+import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -57,7 +61,7 @@ class GetAllOrdersCommandHandlerTest {
 
   @Test
   void handle_sendsAttendanceSheet() throws Exception {
-    User user = readyUser(City.ALMATA);
+    User user = adminUser(City.ALMATA);
     when(userService.findById(CHAT_ID_STRING)).thenReturn(user);
     when(orderService.getAllOrdersGropedByDate(City.ALMATA)).thenReturn("report body");
     Update update = update();
@@ -67,5 +71,19 @@ class GetAllOrdersCommandHandlerTest {
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("report body"));
+  }
+
+  @Test
+  void handle_deniesAccess_whenNotAdmin() throws Exception {
+    User user = readyUser(City.ALMATA);
+    when(userService.findById(CHAT_ID_STRING)).thenReturn(user);
+    Update update = update();
+
+    handler.handle(update, sender);
+
+    verify(orderService, never()).getAllOrdersGropedByDate(any());
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(Messages.PERMISSION_DENIED.getText(), messageCaptor.getValue().getText());
   }
 }

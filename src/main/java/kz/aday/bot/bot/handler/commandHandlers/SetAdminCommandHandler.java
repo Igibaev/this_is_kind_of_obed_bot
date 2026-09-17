@@ -19,6 +19,11 @@ public class SetAdminCommandHandler extends AbstractHandler implements CommandHa
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     if (isUserExistAndReady(update)) {
+      User callingUser = userService.findById(getChatId(update).toString());
+      if (checkAdminRole(callingUser, getMessageId(update), sender)) {
+        return;
+      }
+
       String extractedChatId = update.getMessage().getText().replace("/setadmin", "").trim();
       if (userService
           .findByIdOptional(extractedChatId)
@@ -29,11 +34,7 @@ public class SetAdminCommandHandler extends AbstractHandler implements CommandHa
         userService.save(user);
         log.info(
             "Set admin role to user, {}", userService.findById(extractedChatId).getPreferedName());
-        sendMessage(
-            userService.findById(getChatId(update).toString()),
-            Messages.OK.getText(),
-            getMessageId(update),
-            sender);
+        sendMessage(callingUser, Messages.OK.getText(), getMessageId(update), sender);
       }
     }
   }

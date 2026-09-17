@@ -27,6 +27,10 @@ public class GetLogsCommandHandler extends AbstractHandler implements CommandHan
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     User user = userService.findById(getChatId(update).toString());
+    if (checkAdminRole(user, getMessageId(update), sender)) {
+      return;
+    }
+
     String messageText = update.getMessage().getText();
 
     // 2. Парсинг количества строк из команды

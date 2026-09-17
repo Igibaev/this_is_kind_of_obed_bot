@@ -33,6 +33,18 @@ dependencies {
 test {
     useJUnitPlatform()
     environment 'BOT_MAIN_USER_CHAT_ID', '1'
+
+    def testStoreDir = "$buildDir/test-data"
+    environment 'BOT_STORE_PATH', testStoreDir
+
+    doFirst {
+        delete testStoreDir
+        mkdir testStoreDir
+    }
+
+    doLast {
+        delete testStoreDir
+    }
 }
 
 java {

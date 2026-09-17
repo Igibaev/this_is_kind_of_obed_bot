@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import kz.aday.bot.bot.handler.stateHandlers.State;
@@ -24,6 +25,8 @@ public final class TestFixtures {
   public static final Long CHAT_ID = 1L;
   public static final String CHAT_ID_STRING = CHAT_ID.toString();
   public static final Integer MESSAGE_ID = 42;
+  private static final int VALID_MENU_DEADLINE_OFFSET_HOURS = 2;
+  private static final LocalTime END_OF_DAY_FALLBACK_DEADLINE = LocalTime.of(23, 59);
 
   private TestFixtures() {}
 
@@ -124,8 +127,12 @@ public final class TestFixtures {
   }
 
   public static String validMenuText() {
-    String deadline = LocalDateTime.now().plusHours(2).format(DateTimeFormatter.ofPattern("HH:mm"));
-    return "Второе\nПлов\n\nДедлайн " + deadline;
+    LocalTime now = LocalTime.now();
+    LocalTime deadline = now.plusHours(VALID_MENU_DEADLINE_OFFSET_HOURS);
+    if (deadline.isBefore(now)) {
+      deadline = END_OF_DAY_FALLBACK_DEADLINE;
+    }
+    return "Второе\nПлов\n\nДедлайн " + deadline.format(DateTimeFormatter.ofPattern("HH:mm"));
   }
 
   public static Update update() {

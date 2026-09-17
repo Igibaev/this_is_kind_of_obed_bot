@@ -30,10 +30,9 @@ public class GetOrdersTodayAlmataCallbackHandler extends AbstractHandler
       if (checkAdminRole(user, getMessageId(callback), sender)) {
         return;
       }
-      // "Заказы на сегодня" = кто обедает сегодня = заказы сделанные вчера
-      LocalDate yesterday = LocalDate.now().minusDays(1);
+
       List<Order> orders =
-          orderService.findAllOnDate(yesterday).stream()
+          orderService.findAllOnDate(LocalDate.now()).stream()
               .filter(o -> o.getCity() == user.getCity())
               .filter(o -> !o.getOrderItemList().isEmpty())
               .filter(o -> o.getStatus() == Status.READY)

@@ -3,6 +3,7 @@ package kz.aday.bot.bot;
 
 import kz.aday.bot.bot.dispatcher.CallbackDispatcher;
 import kz.aday.bot.bot.dispatcher.CommandDispatcher;
+import kz.aday.bot.bot.dispatcher.DispatcherRegistrationTarget;
 import kz.aday.bot.bot.dispatcher.StateDispatcher;
 import kz.aday.bot.bot.dispatcher.StateWithContentDispatcher;
 import kz.aday.bot.bot.handler.ErrorHandler;
@@ -10,6 +11,7 @@ import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.SendFeedbackStateHandler;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.configuration.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -17,7 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
-public class TelegramFoodBot extends TelegramLongPollingBot {
+public class TelegramFoodBot extends TelegramLongPollingBot implements DispatcherRegistrationTarget {
   private final CallbackDispatcher callbackDispatcher;
   private final CommandDispatcher commandDispatcher;
   private final StateDispatcher stateDispatcher;
@@ -31,10 +33,11 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
     this.chatBotName = chatBotName;
     this.callbackDispatcher = new CallbackDispatcher();
     this.commandDispatcher = new CommandDispatcher();
-    this.stateDispatcher = new StateDispatcher();
+    this.stateDispatcher = new StateDispatcher(ServiceContainer.getUserService());
     this.errorHandler = new ErrorHandler();
     this.sendFeedbackStateHandler = new SendFeedbackStateHandler();
-    this.stateWithContentDispatcher = new StateWithContentDispatcher();
+    this.stateWithContentDispatcher =
+        new StateWithContentDispatcher(ServiceContainer.getUserService());
   }
 
   @Override
@@ -80,18 +83,22 @@ public class TelegramFoodBot extends TelegramLongPollingBot {
     return chatBotName;
   }
 
+  @Override
   public void addCallbackHandler(CallbackHandler handler) {
     callbackDispatcher.addHandler(handler);
   }
 
+  @Override
   public void addCommandHandler(CommandHandler handler) {
     commandDispatcher.addHandler(handler);
   }
 
+  @Override
   public void addStateHandler(StateHandler handler) {
     stateDispatcher.addHandler(handler);
   }
 
+  @Override
   public void addStateWithContentHandler(StateHandler stateHandler) {
     stateWithContentDispatcher.addHandler(stateHandler);
   }

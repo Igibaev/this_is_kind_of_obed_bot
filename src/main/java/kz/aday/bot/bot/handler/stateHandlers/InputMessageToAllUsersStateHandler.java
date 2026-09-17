@@ -16,7 +16,8 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
-public class InputMessageToAllUsersStateHandler extends AbstractHandler implements StateHandler {
+public class InputMessageToAllUsersStateHandler extends AbstractHandler
+    implements ContentAwareStateHandler {
   @Override
   public boolean canHandle(String state) {
     return State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName().equals(state);

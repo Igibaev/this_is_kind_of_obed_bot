@@ -31,18 +31,12 @@ public class CommandDispatcher extends AbstractDispatcher<CommandHandler> {
     String text = update.getMessage().getText().trim();
     log.debug("Processing command: [{}]", text);
 
-    for (CommandHandler handler : handlers) {
-      if (handler.canHandle(text)) {
-        log.info("Command [{}] handler: [{}]", text, handler);
-        handler.handle(update, sender);
-        log.info("Command handled successfully: [{}]", text);
-        return; // Выходим после обработки команды
-      }
+    boolean matched =
+        tryDispatch(text, CommandHandler::canHandle, handler -> handler.handle(update, sender));
+    if (!matched) {
+      log.warn("Unknown command: [{}]", text);
+      throw unmatchedHandlerException(update.getMessage().getText());
     }
-
-    log.warn("Unknown command: [{}]", text);
-    throw new RuntimeException(
-        String.format(
-            "Неизвестная команда [%s]. Вернитесь в меню /return", update.getMessage().getText()));
+    log.info("Command handled successfully: [{}]", text);
   }
 }

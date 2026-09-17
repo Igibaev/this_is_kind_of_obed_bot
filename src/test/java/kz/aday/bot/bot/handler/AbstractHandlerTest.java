@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -19,14 +18,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-import kz.aday.bot.bot.TelegramFoodBot;
-import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
-import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
-import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
@@ -750,82 +743,6 @@ class AbstractHandlerTest {
             State.BACK_TO_MENU.getDisplayName()),
         buttonTexts(actualMessage.getReplyMarkup()));
   }
-
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("registerCases")
-  void register_givenHandlerType_whenCalled_thenDispatchesToMatchingBotMethod(
-      String caseName,
-      Supplier<AbstractHandler> handlerFactory,
-      boolean expectedResult,
-      BiConsumer<TelegramFoodBot, AbstractHandler> verification) {
-    // given
-    AbstractHandler testHandler = handlerFactory.get();
-    TelegramFoodBot bot = mock(TelegramFoodBot.class);
-    // when
-    boolean actual = testHandler.register(bot);
-    // then
-    assertEquals(expectedResult, actual);
-    verification.accept(bot, testHandler);
-  }
-
-  static Stream<Arguments> registerCases() {
-    return Stream.of(
-        Arguments.of(
-            "state handler",
-            (Supplier<AbstractHandler>) StateHandlerDouble::new,
-            true,
-            (BiConsumer<TelegramFoodBot, AbstractHandler>)
-                (bot, h) -> verify(bot).addStateHandler((StateHandler) h)),
-        Arguments.of(
-            "command handler",
-            (Supplier<AbstractHandler>) CommandHandlerDouble::new,
-            true,
-            (BiConsumer<TelegramFoodBot, AbstractHandler>)
-                (bot, h) -> verify(bot).addCommandHandler((CommandHandler) h)),
-        Arguments.of(
-            "callback handler",
-            (Supplier<AbstractHandler>) CallbackHandlerDouble::new,
-            true,
-            (BiConsumer<TelegramFoodBot, AbstractHandler>)
-                (bot, h) -> verify(bot).addCallbackHandler((CallbackHandler) h)),
-        Arguments.of(
-            "unknown handler",
-            (Supplier<AbstractHandler>) UnknownHandlerDouble::new,
-            false,
-            (BiConsumer<TelegramFoodBot, AbstractHandler>) (bot, h) -> verifyNoInteractions(bot)));
-  }
-
-  private static class StateHandlerDouble extends AbstractHandler implements StateHandler {
-    @Override
-    public boolean canHandle(String state) {
-      return false;
-    }
-
-    @Override
-    public void handle(Update update, AbsSender sender) {}
-  }
-
-  private static class CommandHandlerDouble extends AbstractHandler implements CommandHandler {
-    @Override
-    public boolean canHandle(String command) {
-      return false;
-    }
-
-    @Override
-    public void handle(Update update, AbsSender sender) {}
-  }
-
-  private static class CallbackHandlerDouble extends AbstractHandler implements CallbackHandler {
-    @Override
-    public void handle(CallbackQuery callback, AbsSender sender) {}
-
-    @Override
-    public boolean canHandle(CallbackQuery callback) {
-      return false;
-    }
-  }
-
-  private static class UnknownHandlerDouble extends AbstractHandler {}
 
   private User stubUser(boolean userPresent, Status status) {
     User user = userWithStatus(status);

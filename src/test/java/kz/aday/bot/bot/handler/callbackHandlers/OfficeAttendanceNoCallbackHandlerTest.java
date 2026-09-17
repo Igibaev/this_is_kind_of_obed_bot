@@ -138,7 +138,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // when
     handler.handle(callback, sender);
     // then
-    verify(orderService).deleteByChatId(CHAT_ID_STRING, tomorrow);
+    verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, tomorrow);
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
@@ -190,7 +190,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // when
     handler.handle(callback, sender);
     // then
-    verify(orderService).deleteByChatId(CHAT_ID_STRING, today);
+    verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, today);
     verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));

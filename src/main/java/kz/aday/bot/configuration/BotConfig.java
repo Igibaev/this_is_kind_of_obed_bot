@@ -32,7 +32,9 @@ public class BotConfig {
   }
 
   public static String getBotStorePath() {
-    return "/app/data";
+    String value = System.getenv("BOT_STORE_PATH");
+
+    return value == null || value.isBlank() ? "/app/data" : value;
   }
 
   public static String getMainUserChatId() {

@@ -24,10 +24,8 @@ public class WhoComesTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // Кто приходит сегодня = заказы сделанные вчера
-      LocalDate yesterday = LocalDate.now().minusDays(1);
       List<Order> orders =
-          orderService.findAllOnDate(yesterday).stream()
+          orderService.findAllOnDate(LocalDate.now()).stream()
               .filter(o -> o.getCity() == user.getCity())
               .filter(o -> o.getStatus() == Status.READY)
               .toList();

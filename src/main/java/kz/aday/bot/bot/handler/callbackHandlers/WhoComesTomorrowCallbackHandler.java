@@ -9,8 +9,7 @@ import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class WhoComesTomorrowCallbackHandler extends AbstractHandler
-    implements CallbackHandler {
+public class WhoComesTomorrowCallbackHandler extends AbstractHandler implements CallbackHandler {
 
   @Override
   public boolean canHandle(CallbackQuery callback) {

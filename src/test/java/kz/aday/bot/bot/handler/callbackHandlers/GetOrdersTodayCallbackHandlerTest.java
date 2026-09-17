@@ -117,8 +117,7 @@ class GetOrdersTodayCallbackHandlerTest {
     Order readyOrder = readyOrderWithItem(City.ALMATA, "ReadyUser");
     Order pendingOrder = readyOrderWithItem(City.ALMATA, "PendingUser");
     pendingOrder.setStatus(Status.PENDING);
-    when(orderService.findAllOnDate(LocalDate.now()))
-        .thenReturn(List.of(readyOrder, pendingOrder));
+    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of(readyOrder, pendingOrder));
 
     CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
     // when

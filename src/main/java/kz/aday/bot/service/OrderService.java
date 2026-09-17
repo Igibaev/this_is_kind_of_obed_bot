@@ -38,6 +38,11 @@ public class OrderService extends BaseService<Order> {
     return repository.getAll(date);
   }
 
+  public Order saveDraft(Order order) {
+    order.setStatus(Status.PENDING);
+    return save(order);
+  }
+
   public void markOrdersAsSubmitted(City city, LocalDate date) {
     LocalDateTime now = LocalDateTime.now();
     for (Order order : findAllOnDate(date)) {

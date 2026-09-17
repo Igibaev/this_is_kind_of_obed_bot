@@ -6,7 +6,6 @@ import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.service.MenuRulesService;
@@ -36,7 +35,6 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
         order = new Order();
         order.setCity(user.getCity());
         order.setUsername(user.getPreferedName());
-        order.setStatus(Status.PENDING);
         order.setChatId(user.getChatId().toString());
         order.setDate(user.getCity().getCurrentOrderDate());
       }
@@ -50,6 +48,7 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
                 item ->
                     orderService.addItemToOrder(
                         order, item, MenuRulesService.getMenuRule(user.getCity())));
+        orderService.saveDraft(order);
         InlineKeyboardMarkup keyboard =
             KeyboardUtil.createInlineKeyboard(
                 menu.getItemList(), order.getOrderItemList(), CallbackState.ADD_ITEM_TO_ORDER);
@@ -64,7 +63,6 @@ public class AddItemToOrderCallbackHandler extends AbstractHandler implements Ca
             keyboard,
             getMessageId(callback),
             sender);
-        orderService.save(order);
       }
     }
   }

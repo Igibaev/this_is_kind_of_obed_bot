@@ -10,9 +10,11 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+@Slf4j
 public class SubmitMenuCallbackHandler extends AbstractHandler implements CallbackHandler {
 
   @Override
@@ -40,16 +42,25 @@ public class SubmitMenuCallbackHandler extends AbstractHandler implements Callba
       sendMessage(user, Messages.MENU_IS_PUBLISHED.getText(), getMessageId(callback), sender);
       for (User userToNotificate :
           userService.findAll().stream().filter(u -> u.getCity() == menu.getCity()).toList()) {
-        sendMessageWithKeyboard(
-            userToNotificate,
-            Messages.NEW_MENU_IS_PUBLISHED.getText(
-                    menu.getCity().getValue(),
-                    menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
-                + "\n\n"
-                + menu.getMenuAsFormattedText(),
-            KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
-            userToNotificate.getLastMessageId(),
-            sender);
+        try {
+          sendMessageWithKeyboard(
+              userToNotificate,
+              Messages.NEW_MENU_IS_PUBLISHED.getText(
+                      menu.getCity().getValue(),
+                      menu.getDeadline().format(DateTimeFormatter.ISO_TIME))
+                  + "\n\n"
+                  + menu.getMenuAsFormattedText(),
+              KeyboardUtil.createInlineKeyboard(
+                  menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
+              userToNotificate.getLastMessageId(),
+              sender);
+        } catch (Exception e) {
+          log.warn(
+              "Failed to notify user [{}] about new menu: {}",
+              userToNotificate.getId(),
+              e.getMessage(),
+              e);
+        }
       }
     }
   }

@@ -1,13 +1,13 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers.order;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -30,11 +30,11 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
         List<UserButton> buttons =
             List.of(
                 new UserButton(
-                    CallbackState.GET_ORDER_TODAY_ALMATA.getDisplayName(),
-                    CallbackState.GET_ORDER_TODAY_ALMATA.name()),
+                    CallbackState.GET_ORDER_TODAY.getDisplayName(),
+                    CallbackState.GET_ORDER_TODAY.name()),
                 new UserButton(
-                    CallbackState.GET_ORDER_TOMORROW_ALMATA.getDisplayName(),
-                    CallbackState.GET_ORDER_TOMORROW_ALMATA.name()));
+                    CallbackState.GET_ORDER_TOMORROW.getDisplayName(),
+                    CallbackState.GET_ORDER_TOMORROW.name()));
         sendMessageWithKeyboard(
             user,
             Messages.CHOOSE_DATE_ORDER.getText(),
@@ -42,17 +42,13 @@ public class GetOrderStateHandler extends AbstractHandler implements StateHandle
             getMessageId(update),
             sender);
       } else {
-        if (isOrderExist(user)) {
-          Order order =
-              orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
-          sendMessage(
-              user,
-              Messages.YOUR_ORDER_IS.getText(order.getOrderItemList()),
-              getMessageId(update),
-              sender);
-        } else {
-          sendMessage(user, Messages.ORDER_IS_EMPTY.getText(), getMessageId(update), sender);
-        }
+        sendYourOrder(
+            user,
+            LocalDate.now(),
+            Messages.YOUR_ORDER_IS_TODAY,
+            Messages.ORDER_IS_EMPTY_TODAY,
+            getMessageId(update),
+            sender);
       }
     }
   }

@@ -1,12 +1,11 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
-import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -31,11 +30,11 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
         List<UserButton> buttons =
             List.of(
                 new UserButton(
-                    CallbackState.WHO_COMES_TODAY_ALMATA.getDisplayName(),
-                    CallbackState.WHO_COMES_TODAY_ALMATA.name()),
+                    CallbackState.WHO_COMES_TODAY.getDisplayName(),
+                    CallbackState.WHO_COMES_TODAY.name()),
                 new UserButton(
-                    CallbackState.WHO_COMES_TOMORROW_ALMATA.getDisplayName(),
-                    CallbackState.WHO_COMES_TOMORROW_ALMATA.name()));
+                    CallbackState.WHO_COMES_TOMORROW.getDisplayName(),
+                    CallbackState.WHO_COMES_TOMORROW.name()));
         sendMessageWithKeyboard(
             user,
             Messages.CHOOSE_DATE_WHO_COMES.getText(),
@@ -43,21 +42,13 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
             getMessageId(update),
             sender);
       } else {
-        List<Order> orders =
-            orderService.findAll().stream()
-                .filter(o -> o.getCity() == user.getCity())
-                .filter(o -> o.getStatus() == Status.READY)
-                .toList();
-        String names = formatNameList(orders.stream().map(Order::getUsername).toList());
-        if (names.isBlank()) {
-          sendMessage(user, Messages.NOBODY_COMES_TODAY.getText(), getMessageId(update), sender);
-        } else {
-          sendMessage(
-              user,
-              Messages.WHO_COMES_OFFICE.getText(orders.size(), names),
-              getMessageId(update),
-              sender);
-        }
+        sendWhoComes(
+            user,
+            LocalDate.now(),
+            Messages.WHO_COMES_TODAY,
+            Messages.NOBODY_COMES_TODAY,
+            getMessageId(update),
+            sender);
       }
     }
   }

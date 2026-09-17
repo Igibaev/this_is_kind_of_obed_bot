@@ -4,17 +4,16 @@ package kz.aday.bot.bot.handler.callbackHandlers;
 import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.AbstractHandler;
-import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.Messages;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implements CallbackHandler {
+public class GetOrdersTomorrowCallbackHandler extends AbstractHandler implements CallbackHandler {
 
   @Override
   public boolean canHandle(CallbackQuery callback) {
-    return canHandle(callback, CallbackState.GET_ORDER_TODAY_ALMATA);
+    return canHandle(callback, CallbackState.GET_ORDERS_TOMORROW);
   }
 
   @Override
@@ -22,16 +21,17 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      Optional<Order> orderOpt = orderService.findByChatIdOptional(user.getId(), LocalDate.now());
-      if (orderOpt.isPresent() && !orderOpt.get().getOrderItemList().isEmpty()) {
-        sendMessage(
-            user,
-            Messages.YOUR_ORDER_IS_TODAY.getText(orderOpt.get().getOrderItemList()),
-            getMessageId(callback),
-            sender);
-      } else {
-        sendMessage(user, Messages.ORDER_IS_EMPTY_TODAY.getText(), getMessageId(callback), sender);
+      if (checkAdminRole(user, getMessageId(callback), sender)) {
+        return;
       }
+
+      sendOrdersReport(
+          user,
+          LocalDate.now().plusDays(1),
+          Messages.EMPTY_ORDERS_TOMORROW,
+          Messages.REPORT_ORDERS_TOMORROW,
+          getMessageId(callback),
+          sender);
     }
   }
 }

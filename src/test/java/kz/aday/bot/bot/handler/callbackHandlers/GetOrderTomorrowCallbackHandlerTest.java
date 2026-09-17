@@ -31,7 +31,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-class GetOrderTomorrowAlmataCallbackHandlerTest {
+class GetOrderTomorrowCallbackHandlerTest {
 
   @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
 
@@ -39,7 +39,7 @@ class GetOrderTomorrowAlmataCallbackHandlerTest {
   private OrderService orderService;
   private MessageSender messageSender;
   private AbsSender sender;
-  private GetOrderTomorrowAlmataCallbackHandler handler;
+  private GetOrderTomorrowCallbackHandler handler;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -52,12 +52,12 @@ class GetOrderTomorrowAlmataCallbackHandlerTest {
     when(sentMessage.getMessageId()).thenReturn(999);
     when(messageSender.sendMessage(any(), eq(sender))).thenReturn(sentMessage);
 
-    handler = new GetOrderTomorrowAlmataCallbackHandler();
+    handler = new GetOrderTomorrowCallbackHandler();
   }
 
   @Test
-  void canHandle_returnsTrue_whenCallbackStateIsGetOrderTomorrowAlmata() {
-    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW_ALMATA.name());
+  void canHandle_returnsTrue_whenCallbackStateIsGetOrderTomorrow() {
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW.name());
     assertTrue(handler.canHandle(callback));
   }
 
@@ -70,7 +70,7 @@ class GetOrderTomorrowAlmataCallbackHandlerTest {
     LocalDate tomorrow = LocalDate.now().plusDays(1);
     when(orderService.findByChatIdOptional(CHAT_ID_STRING, tomorrow))
         .thenReturn(Optional.of(order));
-    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW_ALMATA.name());
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW.name());
 
     handler.handle(callback, sender);
 
@@ -87,7 +87,24 @@ class GetOrderTomorrowAlmataCallbackHandlerTest {
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     LocalDate tomorrow = LocalDate.now().plusDays(1);
     when(orderService.findByChatIdOptional(CHAT_ID_STRING, tomorrow)).thenReturn(Optional.empty());
-    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW_ALMATA.name());
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW.name());
+
+    handler.handle(callback, sender);
+
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(Messages.ORDER_IS_EMPTY_TOMORROW.getText(), messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_sendsEmptyMessage_whenOrderForTomorrowHasNoItems() throws Exception {
+    User user = readyUser();
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    LocalDate tomorrow = LocalDate.now().plusDays(1);
+    Order order = new Order();
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, tomorrow))
+        .thenReturn(Optional.of(order));
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDER_TOMORROW.name());
 
     handler.handle(callback, sender);
 

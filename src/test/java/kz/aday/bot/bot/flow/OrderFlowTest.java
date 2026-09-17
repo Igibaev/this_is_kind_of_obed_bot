@@ -69,7 +69,7 @@ class OrderFlowTest extends AbstractPersistenceTest {
     dispatchers.callbackDispatcher.dispatch(submitOrder, sender);
 
     CallbackQuery adminReport =
-        callbackQueryWithChatId(ADMIN_CHAT_ID, CallbackState.GET_ORDERS_TOMORROW_ALMATA.name());
+        callbackQueryWithChatId(ADMIN_CHAT_ID, CallbackState.GET_ORDERS_TOMORROW.name());
     dispatchers.callbackDispatcher.dispatch(adminReport, sender);
 
     assertTrue(orderExistsAndReady(USER_CHAT_ID, City.ALMATA.getCurrentOrderDate()));
@@ -94,7 +94,7 @@ class OrderFlowTest extends AbstractPersistenceTest {
     seedReadyUser(nonAdminChatId, City.ALMATA, User.Role.USER);
 
     CallbackQuery report =
-        callbackQueryWithChatId(nonAdminChatId, CallbackState.GET_ORDERS_TODAY_ALMATA.name());
+        callbackQueryWithChatId(nonAdminChatId, CallbackState.GET_ORDERS_TODAY.name());
     dispatchers.callbackDispatcher.dispatch(report, sender);
 
     ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
@@ -115,7 +115,7 @@ class OrderFlowTest extends AbstractPersistenceTest {
     seedReadyAdmin(ADMIN_CHAT_ID, City.ALMATA);
 
     CallbackQuery report =
-        callbackQueryWithChatId(ADMIN_CHAT_ID, CallbackState.GET_ORDERS_TODAY_ALMATA.name());
+        callbackQueryWithChatId(ADMIN_CHAT_ID, CallbackState.GET_ORDERS_TODAY.name());
     dispatchers.callbackDispatcher.dispatch(report, sender);
 
     ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);

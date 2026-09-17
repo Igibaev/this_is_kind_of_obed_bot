@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.model.City;
@@ -80,7 +81,7 @@ class WhoWillComeToOfficeStateHandlerTest {
     User user = readyUser(City.ASTANA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     Order order = readyOrderWithItem(City.ASTANA, "Carol");
-    when(orderService.findAll()).thenReturn(List.of(order));
+    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of(order));
     Update update = update();
 
     handler.handle(update, sender);
@@ -88,5 +89,19 @@ class WhoWillComeToOfficeStateHandlerTest {
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("Carol"));
+  }
+
+  @Test
+  void handle_sendsNobodyMessage_whenCityHasSameDayOrderCycleAndNoOrders() throws Exception {
+    User user = readyUser(City.ASTANA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of());
+    Update update = update();
+
+    handler.handle(update, sender);
+
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(Messages.NOBODY_COMES_TODAY.getText(), messageCaptor.getValue().getText());
   }
 }

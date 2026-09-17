@@ -33,7 +33,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-class WhoComesTodayAlmataCallbackHandlerTest {
+class WhoComesTomorrowCallbackHandlerTest {
 
   @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
 
@@ -41,7 +41,7 @@ class WhoComesTodayAlmataCallbackHandlerTest {
   private OrderService orderService;
   private MessageSender messageSender;
   private AbsSender sender;
-  private WhoComesTodayAlmataCallbackHandler handler;
+  private WhoComesTomorrowCallbackHandler handler;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -54,41 +54,41 @@ class WhoComesTodayAlmataCallbackHandlerTest {
     when(sentMessage.getMessageId()).thenReturn(999);
     when(messageSender.sendMessage(any(), eq(sender))).thenReturn(sentMessage);
 
-    handler = new WhoComesTodayAlmataCallbackHandler();
+    handler = new WhoComesTomorrowCallbackHandler();
   }
 
   @Test
-  void canHandle_returnsTrue_whenCallbackStateIsWhoComesTodayAlmata() {
-    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TODAY_ALMATA.name());
+  void canHandle_returnsTrue_whenCallbackStateIsWhoComesTomorrow() {
+    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TOMORROW.name());
     assertTrue(handler.canHandle(callback));
   }
 
   @Test
-  void handle_sendsNamesFromTodaysOrders_whenPresent() throws Exception {
+  void handle_sendsNamesFromTomorrowsOrders_whenPresent() throws Exception {
     User user = readyUser(City.ALMATA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    Order order = readyOrderWithItem(City.ALMATA, "Alice");
-    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of(order));
-    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TODAY_ALMATA.name());
+    Order order = readyOrderWithItem(City.ALMATA, "Bob");
+    when(orderService.findAllOnDate(LocalDate.now().plusDays(1))).thenReturn(List.of(order));
+    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TOMORROW.name());
 
     handler.handle(callback, sender);
 
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertTrue(messageCaptor.getValue().getText().contains("Alice"));
+    assertTrue(messageCaptor.getValue().getText().contains("Bob"));
   }
 
   @Test
-  void handle_sendsNobodyMessage_whenNoOrdersToday() throws Exception {
+  void handle_sendsNobodyMessage_whenNoOrdersTomorrow() throws Exception {
     User user = readyUser(City.ALMATA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of());
-    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TODAY_ALMATA.name());
+    when(orderService.findAllOnDate(LocalDate.now().plusDays(1))).thenReturn(List.of());
+    CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TOMORROW.name());
 
     handler.handle(callback, sender);
 
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
-    assertEquals(Messages.NOBODY_COMES_TODAY.getText(), messageCaptor.getValue().getText());
+    assertEquals(Messages.NOBODY_COMES_TOMORROW.getText(), messageCaptor.getValue().getText());
   }
 }

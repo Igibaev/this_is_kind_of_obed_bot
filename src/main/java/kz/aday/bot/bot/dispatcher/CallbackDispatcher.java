@@ -28,22 +28,22 @@ public class CallbackDispatcher extends AbstractDispatcher<CallbackHandler> {
       throw new IllegalArgumentException("Callback or callback data is null");
     }
 
-    for (CallbackHandler handler : handlers) {
-      log.debug("Try proccess callback data: [{}]", callback.getData());
-      if (handler.canHandle(callback)) {
-        try {
-          handler.handle(callback, sender);
-          log.info("Callback handled successfully: [{}]", callback.getData());
-          return;
-        } catch (Exception ex) {
-          log.error("Error handling callback: [{}]", callback.getData(), ex);
-          throw ex;
-        }
-      }
+    boolean matched =
+        tryDispatch(
+            callback,
+            CallbackHandler::canHandle,
+            handler -> {
+              try {
+                handler.handle(callback, sender);
+              } catch (Exception ex) {
+                log.error("Error handling callback: [{}]", callback.getData(), ex);
+                throw ex;
+              }
+            });
+    if (!matched) {
+      log.warn("Unknown callback: [{}]", callback.getData());
+      throw unmatchedHandlerException(callback.getMessage().getText());
     }
-    log.warn("Unknown callback: [{}]", callback.getData());
-    throw new RuntimeException(
-        String.format(
-            "Неизвестная команда [%s]. Вернитесь в меню /return", callback.getMessage().getText()));
+    log.info("Callback handled successfully: [{}]", callback.getData());
   }
 }

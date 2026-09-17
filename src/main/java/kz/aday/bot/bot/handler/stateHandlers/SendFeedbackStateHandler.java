@@ -12,7 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
 @Slf4j
-public class SendFeedbackStateHandler extends AbstractHandler implements StateHandler {
+public class SendFeedbackStateHandler extends AbstractHandler implements ContentAwareStateHandler {
   private final String mainUserChatId;
 
   public SendFeedbackStateHandler() {

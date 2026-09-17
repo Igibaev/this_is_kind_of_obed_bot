@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.Category;
@@ -120,6 +121,11 @@ public final class TestFixtures {
     Menu readyMenu = menu(city, Status.READY);
     readyMenu.setItemList(List.of(new Item(1, "Плов", Category.SECOND)));
     return readyMenu;
+  }
+
+  public static String validMenuText() {
+    String deadline = LocalDateTime.now().plusHours(2).format(DateTimeFormatter.ofPattern("HH:mm"));
+    return "Второе\nПлов\n\nДедлайн " + deadline;
   }
 
   public static Update update() {

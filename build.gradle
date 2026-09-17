@@ -32,6 +32,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    environment 'BOT_MAIN_USER_CHAT_ID', '1'
 }
 
 java {

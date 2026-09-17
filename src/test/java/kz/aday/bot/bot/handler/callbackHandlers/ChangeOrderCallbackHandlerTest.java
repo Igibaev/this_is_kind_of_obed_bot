@@ -1,0 +1,111 @@
+/* (C) 2024 Igibaev */
+package kz.aday.bot.bot.handler.callbackHandlers;
+
+import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
+import static kz.aday.bot.testsupport.TestFixtures.callbackQuery;
+import static kz.aday.bot.testsupport.TestFixtures.orderWithStatus;
+import static kz.aday.bot.testsupport.TestFixtures.readyMenu;
+import static kz.aday.bot.testsupport.TestFixtures.readyUser;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import kz.aday.bot.model.City;
+import kz.aday.bot.model.Menu;
+import kz.aday.bot.model.Order;
+import kz.aday.bot.model.Status;
+import kz.aday.bot.model.User;
+import kz.aday.bot.service.MenuService;
+import kz.aday.bot.service.MessageSender;
+import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.UserService;
+import kz.aday.bot.testsupport.ServiceContainerMockExtension;
+import kz.aday.bot.util.Messages;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.ArgumentCaptor;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.bots.AbsSender;
+
+class ChangeOrderCallbackHandlerTest {
+
+  @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
+
+  private UserService userService;
+  private MenuService menuService;
+  private OrderService orderService;
+  private MessageSender messageSender;
+  private AbsSender sender;
+  private ChangeOrderCallbackHandler handler;
+
+  @BeforeEach
+  void setUp() throws Exception {
+    userService = services.getUserService();
+    menuService = services.getMenuService();
+    orderService = services.getOrderService();
+    messageSender = services.getMessageService();
+    sender = mock(AbsSender.class);
+
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(999);
+    when(messageSender.sendMessage(any(), eq(sender))).thenReturn(sentMessage);
+
+    handler = new ChangeOrderCallbackHandler();
+  }
+
+  @Test
+  void canHandle_returnsTrue_whenCallbackStateIsChangeOrder() {
+    CallbackQuery callback = callbackQuery(CallbackState.CHANGE_ORDER.name());
+    assertTrue(handler.canHandle(callback));
+  }
+
+  @Test
+  void handle_movesOrderToPendingAndSendsItemKeyboard_whenDeadlineNotPassed() throws Exception {
+    User user = readyUser();
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    Menu menu = readyMenu(City.ALMATA);
+    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
+    Order order = orderWithStatus(Status.READY);
+    when(orderService.findByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(order);
+    CallbackQuery callback = callbackQuery(CallbackState.CHANGE_ORDER.name());
+
+    handler.handle(callback, sender);
+
+    assertEquals(Status.PENDING, order.getStatus());
+    verify(orderService).save(order);
+    verify(messageSender, times(1)).sendMessage(any(), eq(sender));
+  }
+
+  @Test
+  void handle_alsoWarnsAboutDeadline_whenMenuIsExpired() throws Exception {
+    User user = readyUser();
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    Menu menu = new Menu();
+    menu.setCity(City.ALMATA);
+    menu.setStatus(Status.DEADLINE);
+    menu.setDeadline(LocalDateTime.now().minusHours(1));
+    when(menuService.findById(City.ALMATA.toString())).thenReturn(menu);
+    Order order = orderWithStatus(Status.READY);
+    when(orderService.findByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(order);
+    CallbackQuery callback = callbackQuery(CallbackState.CHANGE_ORDER.name());
+
+    handler.handle(callback, sender);
+
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender, times(2)).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(
+        Messages.MENU_DEADLINE_IS_PASSED.getText(), messageCaptor.getAllValues().get(0).getText());
+  }
+}

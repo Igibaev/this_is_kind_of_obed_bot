@@ -35,11 +35,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-/**
- * Regression coverage for the bug fixed in commit ed12b52: the order draft must be persisted
- * (orderService.saveDraft) before the Telegram reply is sent, so a failed/aborted send never
- * silently drops the item the user just picked.
- */
 class AddItemToOrderCallbackHandlerTest {
 
   private static final Integer MESSAGE_ID = 42;

@@ -12,7 +12,8 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 
 @Slf4j
 public abstract class AbstractStateDispatcher extends AbstractDispatcher<StateHandler> {
-  protected static final String INVALID_STATE_INPUT_MESSAGE = "Некорректный state или текст команды";
+  protected static final String INVALID_STATE_INPUT_MESSAGE =
+      "Некорректный state или текст команды";
 
   protected final UserService userService;
 

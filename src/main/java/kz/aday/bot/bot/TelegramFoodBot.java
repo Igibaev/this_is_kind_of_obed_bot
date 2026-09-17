@@ -19,7 +19,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
-public class TelegramFoodBot extends TelegramLongPollingBot implements DispatcherRegistrationTarget {
+public class TelegramFoodBot extends TelegramLongPollingBot
+    implements DispatcherRegistrationTarget {
   private final CallbackDispatcher callbackDispatcher;
   private final CommandDispatcher commandDispatcher;
   private final StateDispatcher stateDispatcher;

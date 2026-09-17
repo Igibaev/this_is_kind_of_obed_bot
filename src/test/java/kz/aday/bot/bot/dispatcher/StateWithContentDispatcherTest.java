@@ -50,7 +50,8 @@ class StateWithContentDispatcherTest {
   void dispatch_fallsBackToRawText_whenUserStateIsNone() throws Exception {
     // given
     when(userService.existsById(CHAT_ID_STRING)).thenReturn(true);
-    when(userService.findById(CHAT_ID_STRING)).thenReturn(TestFixtures.readyUserWithState(State.NONE));
+    when(userService.findById(CHAT_ID_STRING))
+        .thenReturn(TestFixtures.readyUserWithState(State.NONE));
     StateHandler handler = mock(StateHandler.class);
     when(handler.canHandle("some raw text")).thenReturn(true);
     dispatcher.addHandler(handler);

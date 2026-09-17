@@ -16,6 +16,10 @@ public class GetAllOrdersCommandHandler extends AbstractHandler implements Comma
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     User user = userService.findById(getChatId(update).toString());
+    if (checkAdminRole(user, getMessageId(update), sender)) {
+      return;
+    }
+
     sendMessage(
         user,
         Messages.ATTENDANCE_SHEET.getText(

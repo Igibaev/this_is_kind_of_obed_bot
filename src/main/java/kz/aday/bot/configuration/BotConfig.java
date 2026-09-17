@@ -34,9 +34,7 @@ public class BotConfig {
   public static String getBotStorePath() {
     String value = System.getenv("BOT_STORE_PATH");
 
-    return value == null || value.isBlank()
-            ? "/app/data"
-            : value;
+    return value == null || value.isBlank() ? "/app/data" : value;
   }
 
   public static String getMainUserChatId() {

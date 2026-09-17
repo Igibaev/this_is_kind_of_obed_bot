@@ -64,11 +64,11 @@ class WhoComesTodayAlmataCallbackHandlerTest {
   }
 
   @Test
-  void handle_sendsNamesFromYesterdaysOrders_whenPresent() throws Exception {
+  void handle_sendsNamesFromTodaysOrders_whenPresent() throws Exception {
     User user = readyUser(City.ALMATA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     Order order = readyOrderWithItem(City.ALMATA, "Alice");
-    when(orderService.findAllOnDate(LocalDate.now().minusDays(1))).thenReturn(List.of(order));
+    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of(order));
     CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TODAY_ALMATA.name());
 
     handler.handle(callback, sender);
@@ -79,10 +79,10 @@ class WhoComesTodayAlmataCallbackHandlerTest {
   }
 
   @Test
-  void handle_sendsNobodyMessage_whenNoOrdersYesterday() throws Exception {
+  void handle_sendsNobodyMessage_whenNoOrdersToday() throws Exception {
     User user = readyUser(City.ALMATA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.findAllOnDate(LocalDate.now().minusDays(1))).thenReturn(List.of());
+    when(orderService.findAllOnDate(LocalDate.now())).thenReturn(List.of());
     CallbackQuery callback = callbackQuery(CallbackState.WHO_COMES_TODAY_ALMATA.name());
 
     handler.handle(callback, sender);

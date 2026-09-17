@@ -66,7 +66,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   }
 
   @Override
-  public Collection<T> getAll(LocalDate today) {
+  public Collection<T> getAll(LocalDate date) {
     if (!Files.exists(BASE_PATH)) {
       log.info("Storage not exist [{}]", BASE_PATH);
       return List.of();
@@ -75,7 +75,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
     try (Stream<Path> dateFolders = Files.list(BASE_PATH)) {
       for (Path dateFolder : dateFolders.toList()) {
         if (Files.isDirectory(dateFolder)
-            && dateFolder.getFileName().toString().equals(today.format(DATE_FOLDER_FORMATTER))) {
+            && dateFolder.getFileName().toString().equals(date.format(DATE_FOLDER_FORMATTER))) {
           readFolder(dateFolder, items);
         }
       }

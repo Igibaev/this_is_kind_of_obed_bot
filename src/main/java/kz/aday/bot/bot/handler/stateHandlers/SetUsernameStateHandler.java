@@ -8,6 +8,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -20,11 +21,12 @@ public class SetUsernameStateHandler extends AbstractHandler implements StateHan
   @Override
   public void handle(Update update, AbsSender sender) throws Exception {
     User user = userService.findById(getChatId(update).toString());
-    user.setPreferedName(update.getMessage().getText());
+    String rawName = update.getMessage().getText();
+    user.setPreferedName(rawName);
     user.setState(State.CHOOSE_CITY);
     sendMessageWithKeyboard(
         user,
-        Messages.SET_NAME.getText(update.getMessage().getText()),
+        Messages.SET_NAME.getText(StringUtils.escapeMarkdown(rawName)),
         KeyboardUtil.createReplyKeyboard(
             Arrays.stream(City.values()).map(City::getValue).collect(Collectors.toList())),
         getMessageId(update),

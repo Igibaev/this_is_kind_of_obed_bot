@@ -42,8 +42,11 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-### Bot runtime data ###
-/data/
-/logs/
+### Local config ###
+local.properties
+
+### Runtime data ###
+data/
+logs/
 /data_backup_*/
 .env

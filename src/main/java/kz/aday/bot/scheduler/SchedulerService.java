@@ -74,6 +74,7 @@ public class SchedulerService {
       if (menu.isDeadlinePassed() && menu.getStatus() != Status.DEADLINE) {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
+        orderService.markOrdersAsSubmitted(menu.getCity(), menu.getCity().getCurrentOrderDate());
         sendMenuIsClosedNotification(menu.getCity());
         sendReportToUsers(menu.getCity());
         handledNotifications.clear();
@@ -120,8 +121,9 @@ public class SchedulerService {
           if (handledNotifications.containsKey(user.getId())) {
             continue;
           }
-          if (orderService.existsById(user.getId())) {
-            Order order = orderService.findById(user.getId());
+          if (orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate())) {
+            Order order =
+                orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
             if (order.getStatus() == Status.PENDING) {
               sendMessageWithMenuToUser(menu, order.getOrderItemList(), user, telegramFoodBot);
               handledNotifications.put(user.getId(), true);

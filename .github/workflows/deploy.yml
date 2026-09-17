@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  # --- ЗАДАЧА №1: ПРОВЕРКА, СБОРКА DOCKER-ОБРАЗА И ЗАПУСК ТЕСТОВ/ЛОГОВ В ОБЛАКЕ ---
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -36,9 +35,15 @@ jobs:
 
       - name: Run application for a short period and capture logs
         run: |
+          # Собираем JAR-файл, если 'test' его не создал (зависит от вашей gradle-конфигурации)
           ./gradlew assemble
 
           echo "Attempting to run application for a short period to capture startup logs..."
+          # Запускаем JAR-файл вашего Spring Boot приложения.
+          # -Dserver.port=0: Рандомный порт, чтобы избежать конфликтов.
+          # > startup.log 2>&1: Перенаправляем весь вывод (STDOUT и STDERR) в файл startup.log.
+          # &: Запускаем процесс в фоновом режиме.
+          # spring.profiles.active=ci: Опционально, если хотите запускать в CI-профиле.
           java -Dserver.port=0 -jar build/libs/*.jar > startup.log 2>&1 &
           APP_PID=$!
 

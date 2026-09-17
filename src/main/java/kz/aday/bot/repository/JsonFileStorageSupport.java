@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
@@ -32,6 +33,8 @@ public class JsonFileStorageSupport {
     SimpleModule module = new SimpleModule();
     module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
     module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer());
+    module.addSerializer(LocalDate.class, new LocalDateSerializer());
+    module.addDeserializer(LocalDate.class, new LocalDateDeserializer());
     objectMapper.registerModule(module);
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     return objectMapper;
@@ -72,6 +75,21 @@ public class JsonFileStorageSupport {
     @Override
     public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       return LocalDateTime.parse(p.getText(), DATE_TIME_FORMATTER);
+    }
+  }
+
+  public static class LocalDateSerializer extends JsonSerializer<LocalDate> {
+    @Override
+    public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers)
+        throws IOException {
+      gen.writeString(value.toString());
+    }
+  }
+
+  public static class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
+    @Override
+    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      return LocalDate.parse(p.getText());
     }
   }
 }

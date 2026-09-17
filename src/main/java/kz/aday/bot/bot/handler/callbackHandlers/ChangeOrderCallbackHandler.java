@@ -19,7 +19,7 @@ public class ChangeOrderCallbackHandler extends AbstractHandler implements Callb
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       Menu menu = menuService.findById(user.getCity().toString());
-      Order order = orderService.findById(user.getId());
+      Order order = orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
       if (menu.isDeadlinePassed()) {
         sendMessage(
             user, Messages.MENU_DEADLINE_IS_PASSED.getText(), getMessageId(callback), sender);

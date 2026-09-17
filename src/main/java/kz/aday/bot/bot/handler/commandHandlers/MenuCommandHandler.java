@@ -23,6 +23,7 @@ public class MenuCommandHandler extends AbstractHandler implements CommandHandle
         Messages.NAVIGATION_MENU.getText(),
         getUserMenuKeyboard(user),
         getMessageId(update),
-        sender);
+        sender,
+        true);
   }
 }

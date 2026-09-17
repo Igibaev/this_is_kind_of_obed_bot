@@ -5,16 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -25,6 +29,7 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -33,7 +38,9 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
+import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,10 +72,11 @@ class AbstractHandlerTest {
   private static final Integer PREVIOUS_SENT_MESSAGE_ID = 5;
   private static final Integer PREVIOUS_USER_MESSAGE_ID = 6;
 
-  private static final List<String> BASE_ITEMS =
+  private static final List<String> USER_BASE_ITEMS =
       List.of(
-          State.PROFILE.getDisplayName(),
-          State.EDIT_USERNAME.getDisplayName(),
+          State.PROFILE_MENU.getDisplayName(),
+          State.MENU_CATEGORY_ORDER.getDisplayName(),
+          State.STATISTICS_MENU.getDisplayName(),
           State.WHO_WILL_COME_TO_OFFICE.getDisplayName(),
           State.SET_OFFICE_ATTENDANCE.getDisplayName());
 
@@ -76,6 +84,7 @@ class AbstractHandlerTest {
   private MenuService menuService;
   private OrderService orderService;
   private MessageSender messageSender;
+  private SharedOrderItemPoolService sharedOrderItemPoolService;
   private AbstractHandler handler;
   private MockedStatic<ServiceContainer> serviceContainer;
 
@@ -85,12 +94,14 @@ class AbstractHandlerTest {
     messageSender = mock(MessageSender.class);
     menuService = mock(MenuService.class);
     orderService = mock(OrderService.class);
+    sharedOrderItemPoolService = mock(SharedOrderItemPoolService.class);
     OfficeAttendanceService officeAttendanceService = mock(OfficeAttendanceService.class);
     serviceContainer = mockStatic(ServiceContainer.class);
     serviceContainer.when(ServiceContainer::getUserService).thenReturn(userService);
     serviceContainer.when(ServiceContainer::getMessageService).thenReturn(messageSender);
     serviceContainer.when(ServiceContainer::getMenuService).thenReturn(menuService);
     serviceContainer.when(ServiceContainer::getOrderService).thenReturn(orderService);
+    serviceContainer.when(ServiceContainer::getPoolService).thenReturn(sharedOrderItemPoolService);
     serviceContainer
         .when(ServiceContainer::getOfficeAttendanceService)
         .thenReturn(officeAttendanceService);
@@ -316,112 +327,257 @@ class AbstractHandlerTest {
       boolean orderPresent) {
     // given
     User user = userWithStatus(Status.READY);
-    when(orderService.existsById(CHAT_ID_STRING)).thenReturn(orderPresent);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(orderPresent);
     // when
     boolean actual = handler.isOrderExist(user);
     // then
     assertEquals(orderPresent, actual);
   }
 
+  @Test
+  void releaseOrderToPool_returnsEmptyList_whenNoOrderSharedOrderItem() {
+    // given
+    User user = userWithStatus(Status.READY);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(false);
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService, never()).deleteByChatId(any(), any());
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_returnsEmptyListAndDeletesOrder_whenOrderHasNoItemsSharedOrderItem() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_movesItemsToPoolAndDeletesOrder_whenOrderHasItemsAndDeadlinePassed() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(item), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService)
+        .addItems(
+            user.getCity(), order.getDate(), user.getId(), user.getPreferedName(), Set.of(item));
+  }
+
+  @Test
+  void releaseOrderToPool_deletesWithoutSharing_whenDeadlineNotPassed() {
+    // given
+    User user = userWithStatus(Status.READY);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(orderDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    // submittedAt stays null: order not yet submitted to vendor
+    // when
+    List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    assertEquals(List.of(), actual);
+    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(sharedOrderItemPoolService, never())
+        .addItems(any(), any(), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_usesOrdersOwnStoredDate_regardlessOfCurrentCityCycle() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    LocalDate storedDate = LocalDate.now().plusDays(5);
+    order.setDate(storedDate);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(eq(City.ALMATA), eq(storedDate), any(), any(), anyCollection());
+  }
+
+  @Test
+  void releaseOrderToPool_fallsBackToCityCurrentOrderDate_whenOrderHasNoStoredDate() {
+    // given
+    User user = userWithCity(City.ALMATA);
+    LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
+    Item item = new Item(1, "Плов", null);
+    Order order = orderWithStatus(Status.READY);
+    order.setDate(null);
+    order.getOrderItemList().add(item);
+    when(orderService.existsByChatId(CHAT_ID_STRING, orderDate)).thenReturn(true);
+    when(orderService.findByChatId(CHAT_ID_STRING, orderDate)).thenReturn(order);
+    order.setSubmittedAt(LocalDateTime.now().minusMinutes(1));
+    // when
+    handler.releaseOrderToSharedOrderItemPool(user);
+    // then
+    verify(sharedOrderItemPoolService)
+        .addItems(
+            eq(City.ALMATA), eq(City.ALMATA.getCurrentOrderDate()), any(), any(), anyCollection());
+  }
+
+  @Test
+  void joinItemNames_returnsCommaSeparatedNames_whenCalled() {
+    // given
+    Item first = new Item(1, "Плов", null);
+    Item second = new Item(2, "Лагман", null);
+    // when
+    String actual = handler.joinItemNames(List.of(first, second));
+    // then
+    assertEquals("Плов, Лагман", actual);
+  }
+
   @ParameterizedTest(name = "{0}")
-  @MethodSource("menuKeyboardCases")
-  void getUserMenuKeyboard_givenRoleAndMenuAndOrderState_whenCalled_thenBuildsExpectedButtons(
+  @MethodSource("orderMenuItemsCases")
+  void getOrderMenuItems_givenMenuAndOrderState_whenCalled_thenBuildsExpectedItems(
       MenuKeyboardCase testCase) {
     // given
-    User user = userWithRole(testCase.role());
+    User user = userWithRole(User.Role.USER);
     stubMenu(testCase.menuStatus());
     if (testCase.menuStatus() == Status.READY) {
-      when(orderService.findByIdOptional(CHAT_ID_STRING))
+      when(orderService.findByChatIdOptional(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
           .thenReturn(
               testCase.orderStatus() == null
                   ? Optional.empty()
                   : Optional.of(orderWithStatus(testCase.orderStatus())));
     }
+    if (testCase.menuStatus() == Status.DEADLINE) {
+      when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+          .thenReturn(testCase.orderStatus() != null);
+    }
+    // when
+    List<String> actual = handler.getOrderMenuItems(user);
+    // then
+    List<String> expected =
+        concat(List.of(State.VIEW_POOL.getDisplayName()), testCase.extraItems());
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  void getUserMenuKeyboard_givenUser_whenCalled_thenAlwaysShowsOrderMenuCategoryButton() {
+    // given
+    User user = userWithRole(User.Role.USER);
+    stubMenu(null);
     // when
     ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
     // then
-    List<String> expected = concat(baseItems(testCase.role()), testCase.extraItems());
-    assertEquals(expected, buttonTexts(actual));
+    assertEquals(USER_BASE_ITEMS, buttonTexts(actual));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("adminMenuCrudCases")
+  void getUserMenuKeyboard_givenAdmin_whenCalled_thenShowsMenuCrudItemsForMenuState(
+      MenuKeyboardCase testCase) {
+    // given
+    User user = userWithRole(User.Role.ADMIN);
+    stubMenu(testCase.menuStatus());
+    // when
+    ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
+    // then
+    assertEquals(adminBaseItems(testCase.extraItems()), buttonTexts(actual));
   }
 
   record MenuKeyboardCase(
-      String name, User.Role role, Status menuStatus, Status orderStatus, List<String> extraItems) {
+      String name, Status menuStatus, Status orderStatus, List<String> extraItems) {
     @Override
     public String toString() {
       return name;
     }
   }
 
-  static Stream<MenuKeyboardCase> menuKeyboardCases() {
+  static Stream<MenuKeyboardCase> adminMenuCrudCases() {
     return Stream.of(
+        new MenuKeyboardCase("no menu", null, null, List.of(State.CREATE_MENU.getDisplayName())),
         new MenuKeyboardCase(
-            "no menu, user",
-            User.Role.USER,
-            null,
-            null,
-            List.of(State.CREATE_ORDER.getDisplayName())),
-        new MenuKeyboardCase(
-            "no menu, admin",
-            User.Role.ADMIN,
-            null,
-            null,
-            List.of(State.CREATE_ORDER.getDisplayName(), State.CREATE_MENU.getDisplayName())),
-        new MenuKeyboardCase(
-            "ready menu, user, no order",
-            User.Role.USER,
+            "ready menu",
             Status.READY,
             null,
-            List.of(State.CREATE_ORDER.getDisplayName(), State.RANDOM_ORDER.getDisplayName())),
+            List.of(State.CLEAR_MENU.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, admin, no order",
-            User.Role.ADMIN,
+            "deadline menu", Status.DEADLINE, null, List.of(State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase(
+            "pending menu",
+            Status.PENDING,
+            null,
+            List.of(State.PUBLISH_MENU.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
+        new MenuKeyboardCase("deleted menu", Status.DELETED, null, List.of()),
+        new MenuKeyboardCase("over-changing menu", Status.OVER_CHANGING, null, List.of()));
+  }
+
+  static Stream<MenuKeyboardCase> orderMenuItemsCases() {
+    return Stream.of(
+        new MenuKeyboardCase("no menu", null, null, List.of(State.CREATE_ORDER.getDisplayName())),
+        new MenuKeyboardCase(
+            "ready menu, no order",
             Status.READY,
             null,
             List.of(
-                State.CLEAR_MENU.getDisplayName(),
-                State.CHANGE_MENU.getDisplayName(),
+                State.VIEW_MENU_TODAY.getDisplayName(),
                 State.CREATE_ORDER.getDisplayName(),
                 State.RANDOM_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, user, pending order",
-            User.Role.USER,
+            "ready menu, pending order",
             Status.READY,
             Status.PENDING,
             List.of(
+                State.VIEW_MENU_TODAY.getDisplayName(),
                 State.SUBMIT_ORDER.getDisplayName(),
                 State.CHANGE_ORDER.getDisplayName(),
                 State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "ready menu, user, ready order",
-            User.Role.USER,
+            "ready menu, ready order",
             Status.READY,
             Status.READY,
             List.of(
+                State.VIEW_MENU_TODAY.getDisplayName(),
                 State.DELETE_ORDER.getDisplayName(),
                 State.CHANGE_ORDER.getDisplayName(),
                 State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase(
-            "deadline menu, user",
-            User.Role.USER,
+            "deadline menu", Status.DEADLINE, null, List.of(State.GET_ORDER.getDisplayName())),
+        new MenuKeyboardCase(
+            "deadline menu, with order",
             Status.DEADLINE,
-            null,
-            List.of(State.GET_ORDER.getDisplayName())),
-        new MenuKeyboardCase(
-            "deadline menu, admin",
-            User.Role.ADMIN,
-            Status.DEADLINE,
-            null,
-            List.of(State.GET_ORDER.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
-        new MenuKeyboardCase("pending menu, user", User.Role.USER, Status.PENDING, null, List.of()),
-        new MenuKeyboardCase(
-            "pending menu, admin",
-            User.Role.ADMIN,
-            Status.PENDING,
-            null,
-            List.of(State.PUBLISH_MENU.getDisplayName(), State.CHANGE_MENU.getDisplayName())),
-        new MenuKeyboardCase("deleted menu, user", User.Role.USER, Status.DELETED, null, List.of()),
-        new MenuKeyboardCase(
-            "over-changing menu, user", User.Role.USER, Status.OVER_CHANGING, null, List.of()));
+            Status.READY,
+            List.of(State.GET_ORDER.getDisplayName(), State.SHARE_LUNCH.getDisplayName())),
+        new MenuKeyboardCase("pending menu", Status.PENDING, null, List.of()),
+        new MenuKeyboardCase("deleted menu", Status.DELETED, null, List.of()),
+        new MenuKeyboardCase("over-changing menu", Status.OVER_CHANGING, null, List.of()));
   }
 
   @ParameterizedTest(name = "lastSentId={0}, userLastMessageId={1} -> deletes={2}")
@@ -492,6 +648,107 @@ class AbstractHandlerTest {
     assertEquals(expectedToDelete, actualMessagesToDelete);
     assertEquals(SENT_MESSAGE_ID, user.getLastMessageId());
     verify(userService).save(user);
+  }
+
+  @Test
+  void sendProfileCard_givenUser_whenCalled_thenSendsProfileInfoAndEditButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithStatus(Status.READY);
+    user.setChatId(OTHER_CHAT_ID);
+    user.setPreferedName("Alice");
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendProfileCard(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    SendMessage actualMessage = messageCaptor.getValue();
+    assertEquals(
+        Messages.PROFILE_INFO.getText("Alice", City.ALMATA.getValue()), actualMessage.getText());
+    assertEquals(
+        List.of(
+            State.CHANGE_NAME_ONLY.getDisplayName(),
+            State.CHANGE_CITY_ONLY.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(actualMessage.getReplyMarkup()));
+  }
+
+  @Test
+  void sendStatisticsCard_givenAdmin_whenCalled_thenSendsAdminAndPersonalStatsButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithRole(User.Role.ADMIN);
+    user.setChatId(OTHER_CHAT_ID);
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendStatisticsCard(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    assertEquals(
+        List.of(
+            State.GET_MY_ATTENDANCE_STATS.getDisplayName(),
+            State.GET_MY_ATTENDANCE_STATS_MONTH.getDisplayName(),
+            State.GET_ATTENDANCE_STATS.getDisplayName(),
+            State.GET_ATTENDANCE_STATS_MONTH.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(messageCaptor.getValue().getReplyMarkup()));
+  }
+
+  @Test
+  void sendStatisticsCard_givenUser_whenCalled_thenSendsOnlyPersonalStatsButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithRole(User.Role.USER);
+    user.setChatId(OTHER_CHAT_ID);
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendStatisticsCard(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    assertEquals(
+        List.of(
+            State.GET_MY_ATTENDANCE_STATS.getDisplayName(),
+            State.GET_MY_ATTENDANCE_STATS_MONTH.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(messageCaptor.getValue().getReplyMarkup()));
+  }
+
+  @Test
+  void sendOrderMenuCategory_givenUser_whenCalled_thenSendsCategoryPromptAndActionButtons()
+      throws TelegramApiException {
+    // given
+    User user = userWithStatus(Status.READY);
+    user.setChatId(OTHER_CHAT_ID);
+    stubMenu(null);
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    // when
+    handler.sendOrderMenuCategory(user, null, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    SendMessage actualMessage = messageCaptor.getValue();
+    assertEquals(Messages.CATEGORY_PROMPT.getText(), actualMessage.getText());
+    assertEquals(
+        List.of(
+            State.VIEW_POOL.getDisplayName(),
+            State.CREATE_ORDER.getDisplayName(),
+            State.BACK_TO_MENU.getDisplayName()),
+        buttonTexts(actualMessage.getReplyMarkup()));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -604,6 +861,15 @@ class AbstractHandlerTest {
         .build();
   }
 
+  private static User userWithCity(City city) {
+    return User.builder()
+        .chatId(CHAT_ID)
+        .city(city)
+        .role(User.Role.USER)
+        .status(Status.READY)
+        .build();
+  }
+
   private static User userWithRole(User.Role role) {
     return User.builder().chatId(CHAT_ID).city(City.ALMATA).role(role).status(Status.READY).build();
   }
@@ -612,6 +878,11 @@ class AbstractHandlerTest {
     Menu menu = new Menu();
     menu.setCity(City.ALMATA);
     menu.setStatus(status);
+    if (status == Status.READY) {
+      menu.setDeadline(LocalDateTime.now().plusHours(1));
+    } else if (status == Status.DEADLINE) {
+      menu.setDeadline(LocalDateTime.now().minusHours(1));
+    }
     return menu;
   }
 
@@ -638,17 +909,14 @@ class AbstractHandlerTest {
     return callbackQuery;
   }
 
-  private static List<String> baseItems(User.Role role) {
-    if (role != User.Role.ADMIN) {
-      return BASE_ITEMS;
-    }
+  private static List<String> adminBaseItems(List<String> crudItems) {
     return concat(
-        BASE_ITEMS,
-        List.of(
-            State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName(),
-            State.GET_TODAY_ORDERS.getDisplayName(),
-            State.GET_ATTENDANCE_STATS.getDisplayName(),
-            State.GET_ATTENDANCE_STATS_MONTH.getDisplayName()));
+        concat(
+            USER_BASE_ITEMS,
+            List.of(
+                State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName(),
+                State.GET_TODAY_ORDERS.getDisplayName())),
+        crudItems);
   }
 
   private static List<String> concat(List<String> first, List<String> second) {

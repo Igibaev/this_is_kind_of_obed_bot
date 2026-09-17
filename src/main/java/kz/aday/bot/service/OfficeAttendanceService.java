@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.util.StringUtils;
 
 public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
 
@@ -56,6 +57,31 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     return formatStats(attendances);
   }
 
+  public String getOverallAttendanceStatsForUser(City city, String userId) {
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
+            .filter(a -> userId.equals(a.getChatId()))
+            .filter(a -> !isAfter(a, LocalDate.now()))
+            .toList();
+    return formatStats(attendances);
+  }
+
+  public String getCurrentMonthAttendanceStatsForUser(City city, String userId) {
+    YearMonth currentMonth = YearMonth.now();
+    LocalDate today = LocalDate.now();
+    List<OfficeAttendance> attendances =
+        repository.getAll().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
+            .filter(a -> city.equals(a.getCity()))
+            .filter(a -> userId.equals(a.getChatId()))
+            .filter(a -> isInMonth(a, currentMonth))
+            .filter(a -> !isAfter(a, today))
+            .toList();
+    return formatStats(attendances);
+  }
+
   private boolean isInMonth(OfficeAttendance attendance, YearMonth month) {
     if (attendance.getDate() == null) {
       return false;
@@ -86,7 +112,7 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
         attendances.stream().collect(Collectors.groupingBy(OfficeAttendance::getChatId));
     return byChatId.values().stream()
         .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
-        .map(list -> String.format("%s: %d", list.get(0).getUsername(), list.size()))
+        .map(list -> String.format("%s: %d", StringUtils.escapeMarkdown(list.get(0).getUsername()), list.size()))
         .collect(Collectors.joining("\n"));
   }
 }

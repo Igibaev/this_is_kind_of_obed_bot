@@ -47,12 +47,14 @@ public enum Messages {
   NAVIGATION_MENU("Меню навигации по боту."),
   RETURNING_NAVIGATION_MENU("Возвращаемся. Меню навигации по боту."),
   OK_RETURN_TO_MENU("Окей. Вернитесь в меню тогда /return"),
+  CATEGORY_PROMPT("Выберите действие:"),
 
   // Начало оформления заказа: меню недоступно / выбор блюда / сбор заказа
   MENU_DEADLINE_IS_PASSED("Дедлайн уже прошел."),
   MENU_IS_NOT_READY_TODAY("Меню на сегодня еще не готово. /return"),
   CHOOSE_ITEM("Выберите что хотите заказать:"),
   CREATING_ORDER("Собираем ваш заказ."),
+  VIEW_MENU_TODAY_HEADER("Меню на сегодня:\n"),
 
   // Просмотр, подтверждение и удаление конкретного заказа
   YOUR_ORDER_IS("Твой заказ %s."),
@@ -69,6 +71,8 @@ public enum Messages {
   SUBMIT_ORDER_MENU_DEADLINE_PASSED("Дедлайн меню уже прошел."),
   YOUR_ORDER_IS_DELETE_CONFIRM("Твой заказ %s. Чтобы удалить отправьте 'Да'."),
   MENU_DEADLINE_IS_PASSED_ORDER_SENT("Дедлайн уже прошел, заказ отправлен."),
+  SHARE_LUNCH_CONFIRM("Поделиться заказом %s? Чтобы поделиться отправьте 'Да'."),
+  SHARE_LUNCH_NOT_POSSIBLE("Делиться пока нечем."),
 
   // Списки заказов и отчёты по посещаемости за период
   CHOOSE_DATE_ORDER("Выберите за какой день посмотреть заказ:"),
@@ -82,13 +86,15 @@ public enum Messages {
   REPORT_ORDERS_TOMORROW("Заказы на завтра.\n"),
   REPORT_OVERALL_ATTENDANCE("Общая статистика посещений:\n"),
   REPORT_MONTH_ATTENDANCE("Статистика посещений за текущий месяц:\n"),
+  REPORT_MY_OVERALL_ATTENDANCE("Моя общая статистика посещений:\n"),
+  REPORT_MY_MONTH_ATTENDANCE("Моя статистика посещений за текущий месяц:\n"),
 
   // Кто придёт в офис сегодня/завтра
   NOBODY_COMES_TODAY("Сегодня никто в офис не придет( хнык хнык"),
   NOBODY_COMES_TOMORROW("Завтра никто в офис не придет( хнык хнык"),
-  WHO_COMES_TODAY("Сегодня в офис придет [%s]:\n%s"),
-  WHO_COMES_TOMORROW("Завтра в офис придет [%s]:\n%s"),
-  WHO_COMES_OFFICE("Список людей кто придет в офис: [%s]\n%s"),
+  WHO_COMES_TODAY("Сегодня в офис придет: (%s)\n%s"),
+  WHO_COMES_TOMORROW("Завтра в офис придет: (%s)\n%s"),
+  WHO_COMES_OFFICE("Список людей кто придет в офис: (%s)\n%s"),
 
   // Случайный заказ
   CANCEL_RANDOM("Ну ладно, выбери сам. /return"),
@@ -96,7 +102,8 @@ public enum Messages {
   RANDOM_ORDER_CREATED("Ваш заказ улетел. Пусть содержимое заказа останется тайной. пока."),
 
   // Профиль пользователя
-  PROFILE("Ваше имя: %s \nГород: %s \nВернуться в меню /return"),
+  PROFILE_INFO("Ваше имя: %s \nГород: %s"),
+  CHOOSE_CITY_PROMPT("Выберите город:"),
 
   // Администрирование меню: дедлайн, создание, публикация, удаление
   DEADLINE_IS_SET_AND_MENU_IS_PUBLISHED(
@@ -163,8 +170,15 @@ public enum Messages {
   BROADCAST_INPUT(
       "Введите сообщение для рассылки, для города %s. \n" + "Чтобы отменить нажмите /cancel"),
 
+  POOL_ORDER_SHARED("Твой заказ расшарен: %s."),
+  POOL_EMPTY("Пока никто не поделился обедом. Загляните позже."),
+  POOL_HEADER("Доступные позиции из общего пула:"),
+  POOL_ITEM_CLAIMED("Вы забрали: %s. Добавлено к вашему заказу, отметили что вы сегодня в офисе."),
+  POOL_ITEM_ALREADY_TAKEN("Эту позицию уже забрали. Вот что осталось:"),
+
   // Ошибки
-  ERROR("Произошла ошибка: %s."),
+  ERROR("Произошла ошибка:\n```\n%s\n```"),
+  ERROR_WITH_DETAILS("Произошла ошибка:\n```\n%s\n\n%s\n```"),
   GO_TO_START_COMMAND("Чтобы начать взаимодейcтвовать с ботом, завершите команду /start.");
 
   private final String text;

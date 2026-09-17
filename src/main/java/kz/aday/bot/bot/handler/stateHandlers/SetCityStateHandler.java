@@ -48,9 +48,14 @@ public class SetCityStateHandler extends AbstractHandler implements StateHandler
       return;
     }
 
+    boolean wasReady = user.getStatus() == Status.READY;
     user.setCity(city);
     user.setState(State.NONE);
     user.setStatus(Status.READY);
-    sendMessage(user, Messages.SET_CITY.getText(), getMessageId(update), sender);
+    if (wasReady) {
+      sendProfileCard(user, getMessageId(update), sender);
+    } else {
+      sendMessage(user, Messages.SET_CITY.getText(), getMessageId(update), sender);
+    }
   }
 }

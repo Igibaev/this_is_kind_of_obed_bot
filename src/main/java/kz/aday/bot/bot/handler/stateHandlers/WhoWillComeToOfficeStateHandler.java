@@ -3,7 +3,6 @@ package kz.aday.bot.bot.handler.stateHandlers;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.model.Order;
@@ -48,8 +47,8 @@ public class WhoWillComeToOfficeStateHandler extends AbstractHandler implements 
             orderService.findAll().stream()
                 .filter(o -> o.getCity() == user.getCity())
                 .filter(o -> o.getStatus() == Status.READY)
-                .collect(Collectors.toList());
-        String names = orders.stream().map(Order::getUsername).collect(Collectors.joining(", "));
+                .toList();
+        String names = formatNameList(orders.stream().map(Order::getUsername).toList());
         if (names.isBlank()) {
           sendMessage(user, Messages.NOBODY_COMES_TODAY.getText(), getMessageId(update), sender);
         } else {

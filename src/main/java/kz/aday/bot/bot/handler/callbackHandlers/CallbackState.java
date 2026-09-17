@@ -8,6 +8,7 @@ public enum CallbackState {
   ADD_ITEM_TO_ORDER("Добавить пункт в заказ"),
 
   CANCEL("Отменить/Вернуться"),
+  BACK_TO_ORDER_MENU("Назад к заказу и меню"),
 
   SUBMIT_MENU("Опубликовать меню"),
   CHANGE_MENU("Изменить меню"),
@@ -28,7 +29,9 @@ public enum CallbackState {
   ATTENDANCE_DAY_TODAY("Сегодня"),
   ATTENDANCE_DAY_TOMORROW("Завтра"),
   ATTENDANCE_YES("Да, приду"),
-  ATTENDANCE_NO("Нет, не приду");
+  ATTENDANCE_NO("Нет, не приду"),
+
+  POOL_CLAIM("Забрать");
 
   @Getter private String displayName;
 

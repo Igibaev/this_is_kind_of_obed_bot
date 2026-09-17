@@ -29,12 +29,12 @@ public class UserRepository implements Repository<User> {
   }
 
   @Override
-  public User getById(String id) {
+  public User getById(String id, LocalDate date) {
     return database.get(id);
   }
 
   @Override
-  public boolean existById(String id) {
+  public boolean existById(String id, LocalDate date) {
     return database.containsKey(id);
   }
 
@@ -60,7 +60,7 @@ public class UserRepository implements Repository<User> {
   }
 
   @Override
-  public void deleteById(String id) {
+  public void deleteById(String id, LocalDate date) {
     deleteFromStorage(id);
     database.remove(id);
   }

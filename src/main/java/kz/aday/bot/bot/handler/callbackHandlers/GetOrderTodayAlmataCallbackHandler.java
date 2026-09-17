@@ -22,9 +22,8 @@ public class GetOrderTodayAlmataCallbackHandler extends AbstractHandler implemen
     Optional<User> optionalUser = findReadyUserByChatId(callback);
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
-      // "Заказ на сегодня" = что едим сегодня = заказ сделанный вчера
-      LocalDate yesterday = LocalDate.now().minusDays(1);
-      Optional<Order> orderOpt = orderService.findByIdOnDate(user.getId(), yesterday);
+      // "Заказ на сегодня" = что едим сегодня = заказ с датой "сегодня"
+      Optional<Order> orderOpt = orderService.findByChatIdOptional(user.getId(), LocalDate.now());
       if (orderOpt.isPresent() && !orderOpt.get().getOrderItemList().isEmpty()) {
         sendMessage(
             user,

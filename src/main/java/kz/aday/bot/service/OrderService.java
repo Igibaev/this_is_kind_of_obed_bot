@@ -2,6 +2,7 @@
 package kz.aday.bot.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -15,14 +16,41 @@ public class OrderService extends BaseService<Order> {
     super(new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, "order"));
   }
 
-  public Optional<Order> findByIdOnDate(String userId, LocalDate date) {
-    log.debug("Finding order by id {} on date {}", userId, date);
-    return repository.getAll(date).stream().filter(o -> o.getId().equals(userId)).findFirst();
+  public Optional<Order> findByChatIdOptional(String chatId, LocalDate date) {
+    log.debug("Finding order by chatId {} on date {}", chatId, date);
+    return Optional.ofNullable(repository.getById(chatId + "_" + date, date));
+  }
+
+  public Order findByChatId(String chatId, LocalDate date) {
+    return repository.getById(chatId + "_" + date, date);
+  }
+
+  public boolean existsByChatId(String chatId, LocalDate date) {
+    return repository.existById(chatId + "_" + date, date);
+  }
+
+  public void deleteByChatId(String chatId, LocalDate date) {
+    repository.deleteById(chatId + "_" + date, date);
   }
 
   public Collection<Order> findAllOnDate(LocalDate date) {
     log.debug("Finding all orders on date {}", date);
     return repository.getAll(date);
+  }
+
+  public Order saveDraft(Order order) {
+    order.setStatus(Status.PENDING);
+    return save(order);
+  }
+
+  public void markOrdersAsSubmitted(City city, LocalDate date) {
+    LocalDateTime now = LocalDateTime.now();
+    for (Order order : findAllOnDate(date)) {
+      if (order.getCity() == city && order.getDate() != null) {
+        order.setSubmittedAt(now);
+        save(order);
+      }
+    }
   }
 
   public String getAllOrdersGropedByDate(City city) {

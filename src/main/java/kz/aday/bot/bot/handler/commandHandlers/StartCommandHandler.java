@@ -39,7 +39,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
       Menu menu = menuService.findById(user.getCity().toString());
       if (menu != null && menu.getStatus() == Status.READY && !menu.isDeadlinePassed()) {
         if (isOrderExist(user)) {
-          Order order = orderService.findById(user.getId());
+          Order order =
+              orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
           if (order.getStatus() == Status.READY) {
             sendMessageWithKeyboard(
                 user,
@@ -89,7 +90,8 @@ public class StartCommandHandler extends AbstractHandler implements CommandHandl
             Messages.NAVIGATION_MENU.getText(),
             getUserMenuKeyboard(user),
             getMessageId(update),
-            sender);
+            sender,
+            true);
       }
     } else {
       User createdUser =

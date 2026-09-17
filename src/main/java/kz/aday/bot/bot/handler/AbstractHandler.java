@@ -3,9 +3,12 @@ package kz.aday.bot.bot.handler;
 
 import static kz.aday.bot.model.User.Role.ADMIN;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
@@ -16,6 +19,7 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
@@ -24,9 +28,11 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
+import kz.aday.bot.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -45,6 +51,8 @@ public abstract class AbstractHandler {
   protected final OrderService orderService = ServiceContainer.getOrderService();
   protected final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
+  protected final SharedOrderItemPoolService sharedOrderItemPoolService =
+      ServiceContainer.getPoolService();
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
     String[] data = callback.getData().split(":");
@@ -130,62 +138,120 @@ public abstract class AbstractHandler {
   }
 
   public boolean isOrderExist(User user) {
-    return orderService.existsById(user.getId());
+    return orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate());
+  }
+
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user) {
+    return releaseOrderToSharedOrderItemPool(user, user.getCity().getCurrentOrderDate());
+  }
+
+  protected List<Item> releaseOrderToSharedOrderItemPool(User user, LocalDate orderDate) {
+    if (!orderService.existsByChatId(user.getId(), orderDate)) {
+      return List.of();
+    }
+    Order order = orderService.findByChatId(user.getId(), orderDate);
+    orderService.deleteByChatId(user.getId(), orderDate);
+    if (order.getOrderItemList().isEmpty() || order.getSubmittedAt() == null) {
+      return List.of();
+    }
+    LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;
+    sharedOrderItemPoolService.addItems(
+        user.getCity(), shareDate, user.getId(), user.getPreferedName(), order.getOrderItemList());
+    return List.copyOf(order.getOrderItemList());
+  }
+
+  protected String joinItemNames(Collection<Item> items) {
+    return items.stream().map(Item::getName).collect(Collectors.joining(", "));
+  }
+
+  protected String formatNameList(Collection<String> names) {
+    return names.stream().map(StringUtils::escapeMarkdown).collect(Collectors.joining("\n"));
   }
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {
     List<String> items = new ArrayList<>();
-    boolean isAdmin = user.getRole() == ADMIN;
-    addBaseMenuItems(isAdmin, items);
-
-    Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
-    if (menu.isEmpty()) {
-      items.add(State.CREATE_ORDER.getDisplayName());
-      if (isAdmin) {
-        items.add(State.CREATE_MENU.getDisplayName());
-      }
-      return KeyboardUtil.createReplyKeyboard(items);
-    }
-
-    switch (menu.get().getStatus()) {
-      case READY -> addReadyMenuItems(user.getId(), isAdmin, items);
-      case DEADLINE -> {
-        items.add(State.GET_ORDER.getDisplayName());
-        if (isAdmin) {
-          items.add(State.CHANGE_MENU.getDisplayName());
-        }
-      }
-      case PENDING -> {
-        if (isAdmin) {
-          items.add(State.PUBLISH_MENU.getDisplayName());
-          items.add(State.CHANGE_MENU.getDisplayName());
-        }
-      }
-      default -> {}
-    }
+    addBaseMenuItems(user, items);
     return KeyboardUtil.createReplyKeyboard(items);
   }
 
-  private void addBaseMenuItems(boolean isAdmin, List<String> items) {
-    items.add(State.PROFILE.getDisplayName());
-    items.add(State.EDIT_USERNAME.getDisplayName());
+  private void addBaseMenuItems(User user, List<String> items) {
+    boolean isAdmin = user.getRole() == ADMIN;
+    items.add(State.PROFILE_MENU.getDisplayName());
+    items.add(State.MENU_CATEGORY_ORDER.getDisplayName());
+    items.add(State.STATISTICS_MENU.getDisplayName());
     items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
     items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
 
     if (isAdmin) {
       items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
       items.add(State.GET_TODAY_ORDERS.getDisplayName());
-      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
-      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
+      addMenuCrudItems(user, items);
     }
   }
 
-  private void addReadyMenuItems(String userId, boolean isAdmin, List<String> items) {
-    if (isAdmin) {
-      items.add(State.CLEAR_MENU.getDisplayName());
-      items.add(State.CHANGE_MENU.getDisplayName());
+  private void addMenuCrudItems(User user, List<String> items) {
+    Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
+    if (menu.isEmpty()) {
+      items.add(State.CREATE_MENU.getDisplayName());
+      return;
     }
-    Optional<Order> order = orderService.findByIdOptional(userId);
+
+    switch (menu.get().getStatus()) {
+      case READY -> {
+        items.add(State.CLEAR_MENU.getDisplayName());
+        items.add(State.CHANGE_MENU.getDisplayName());
+      }
+      case DEADLINE -> items.add(State.CHANGE_MENU.getDisplayName());
+      case PENDING -> {
+        items.add(State.PUBLISH_MENU.getDisplayName());
+        items.add(State.CHANGE_MENU.getDisplayName());
+      }
+      default -> {}
+    }
+  }
+
+  public List<String> getOrderMenuItems(User user) {
+    List<String> items = new ArrayList<>();
+    items.add(State.VIEW_POOL.getDisplayName());
+
+    Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
+    if (menu.isEmpty()) {
+      items.add(State.CREATE_ORDER.getDisplayName());
+      return items;
+    }
+
+    switch (menu.get().getStatus()) {
+      case READY -> {
+        items.add(State.VIEW_MENU_TODAY.getDisplayName());
+        addReadyMenuItems(user, items);
+      }
+      case DEADLINE -> {
+        items.add(State.GET_ORDER.getDisplayName());
+        if (isOrderExist(user)) {
+          items.add(State.SHARE_LUNCH.getDisplayName());
+        }
+      }
+      default -> {}
+    }
+    return items;
+  }
+
+  public void sendOrderMenuCategory(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    List<String> items = new ArrayList<>(getOrderMenuItems(user));
+    items.add(State.BACK_TO_MENU.getDisplayName());
+    sendMessageWithKeyboard(
+        user,
+        Messages.CATEGORY_PROMPT.getText(),
+        KeyboardUtil.createReplyKeyboard(items),
+        messageId,
+        sender,
+        true);
+  }
+
+  private void addReadyMenuItems(User user, List<String> items) {
+    Optional<Order> order =
+        orderService.findByChatIdOptional(user.getId(), user.getCity().getCurrentOrderDate());
     if (order.isEmpty()) {
       items.add(State.CREATE_ORDER.getDisplayName());
       items.add(State.RANDOM_ORDER.getDisplayName());
@@ -199,12 +265,61 @@ public abstract class AbstractHandler {
     items.add(State.GET_ORDER.getDisplayName());
   }
 
+  public void sendProfileCard(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    ReplyKeyboard keyboard =
+        KeyboardUtil.createReplyKeyboard(
+            List.of(
+                State.CHANGE_NAME_ONLY.getDisplayName(),
+                State.CHANGE_CITY_ONLY.getDisplayName(),
+                State.BACK_TO_MENU.getDisplayName()));
+    sendMessageWithKeyboard(
+        user,
+        Messages.PROFILE_INFO.getText(
+            StringUtils.escapeMarkdown(user.getPreferedName()), user.getCity().getValue()),
+        keyboard,
+        messageId,
+        sender,
+        true);
+  }
+
+  public void sendStatisticsCard(User user, Integer messageId, AbsSender sender)
+      throws TelegramApiException {
+    boolean isAdmin = user.getRole() == ADMIN;
+    List<String> items = new ArrayList<>();
+    items.add(State.GET_MY_ATTENDANCE_STATS.getDisplayName());
+    items.add(State.GET_MY_ATTENDANCE_STATS_MONTH.getDisplayName());
+    if (isAdmin) {
+      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
+      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
+    }
+    items.add(State.BACK_TO_MENU.getDisplayName());
+    sendMessageWithKeyboard(
+        user,
+        Messages.CATEGORY_PROMPT.getText(),
+        KeyboardUtil.createReplyKeyboard(items),
+        messageId,
+        sender,
+        true);
+  }
+
   public void sendMessageWithKeyboard(
       User user,
       String text,
       ReplyKeyboard keyboard,
       Integer lastUserSentMessageId,
       AbsSender sender)
+      throws TelegramApiException {
+    sendMessageWithKeyboard(user, text, keyboard, lastUserSentMessageId, sender, false);
+  }
+
+  public void sendMessageWithKeyboard(
+      User user,
+      String text,
+      ReplyKeyboard keyboard,
+      Integer lastUserSentMessageId,
+      AbsSender sender,
+      boolean suppressNavigationHint)
       throws TelegramApiException {
     List<Integer> messagesToDelete = new ArrayList<>();
     if (lastUserSentMessageId != null) messagesToDelete.add(lastUserSentMessageId);
@@ -214,7 +329,10 @@ public abstract class AbstractHandler {
     message.setText(text);
     message.setReplyMarkup(keyboard);
     message.enableMarkdown(true);
-    Message sendedMessage = messageService.sendMessage(message, sender);
+    Message sendedMessage =
+        suppressNavigationHint
+            ? messageService.sendMessage(message, sender, true)
+            : messageService.sendMessage(message, sender);
     messageService.deleteMessage(user.getChatId(), messagesToDelete, sender);
 
     user.setLastMessageId(sendedMessage.getMessageId());

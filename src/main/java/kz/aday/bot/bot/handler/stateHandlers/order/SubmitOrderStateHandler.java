@@ -28,7 +28,7 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
     if (optionalUser.isPresent()) {
       User user = optionalUser.get();
       if (isMenuExist(user.getCity()) && isMenuReady(user.getCity())) {
-        Order order = orderService.findById(user.getId());
+        Order order = orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
         Menu menu = menuService.findById(user.getCity().toString());
         if (menu.isDeadlinePassed()) {
           sendMessage(

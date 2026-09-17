@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,5 +37,17 @@ public class OfficeAttendance implements Id {
   @Override
   public String getId() {
     return chatId + "_" + date;
+  }
+
+  @Override
+  public LocalDate getStorageDate() {
+    return LocalDate.parse(date);
+  }
+
+  @Override
+  public void backfillDateIfMissing(LocalDate folderDate) {
+    if (date == null) {
+      date = folderDate.toString();
+    }
   }
 }

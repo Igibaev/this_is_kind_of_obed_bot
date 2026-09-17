@@ -27,7 +27,8 @@ public class CancelCommandHandler extends AbstractHandler implements CommandHand
           Messages.NAVIGATION_MENU.getText(),
           getUserMenuKeyboard(user),
           getMessageId(update),
-          sender);
+          sender,
+          true);
     }
   }
 }

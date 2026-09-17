@@ -8,7 +8,6 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
@@ -37,8 +36,8 @@ public class CreateOrderStateHandler extends AbstractHandler implements StateHan
         order.setCity(user.getCity());
         order.setUsername(user.getPreferedName());
         order.setChatId(user.getChatId().toString());
-        order.setStatus(Status.PENDING);
-        orderService.save(order);
+        order.setDate(user.getCity().getCurrentOrderDate());
+        orderService.saveDraft(order);
         sendMessageWithKeyboard(
             user,
             Messages.CHOOSE_ITEM + "\n\n" + menu.getMenuAsFormattedText(),

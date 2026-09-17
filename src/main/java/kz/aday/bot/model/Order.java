@@ -1,6 +1,10 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.model;
 
+import static kz.aday.bot.util.StringUtils.escapeMarkdown;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
@@ -14,16 +18,23 @@ public class Order implements Id {
   private String username;
   private City city;
   private Status status;
+  private LocalDate date;
+  private LocalDateTime submittedAt;
   private Set<Item> orderItemList = new HashSet<>(5);
   private Set<Category> categoryItemList = new HashSet<>(5);
 
   @Override
   public String toString() {
-    return String.format("*%s*: [%s]", username, StringUtils.join(orderItemList, ","));
+    return String.format("*%s*: [%s]", escapeMarkdown(username), StringUtils.join(orderItemList, ","));
   }
 
   @Override
   public String getId() {
-    return chatId;
+    return chatId + "_" + date;
+  }
+
+  @Override
+  public LocalDate getStorageDate() {
+    return date;
   }
 }

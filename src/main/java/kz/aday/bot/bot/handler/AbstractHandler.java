@@ -150,10 +150,10 @@ public abstract class AbstractHandler {
       return List.of();
     }
     Order order = orderService.findByChatId(user.getId(), orderDate);
-    orderService.deleteByChatId(user.getId(), orderDate);
     if (order.getOrderItemList().isEmpty() || order.getSubmittedAt() == null) {
       return List.of();
     }
+    orderService.deleteByChatId(user.getId(), orderDate);
     LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;
     sharedOrderItemPoolService.addItems(
         user.getCity(), shareDate, user.getId(), user.getPreferedName(), order.getOrderItemList());

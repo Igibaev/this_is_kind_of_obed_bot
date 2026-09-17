@@ -147,6 +147,12 @@ public final class TestFixtures {
     return update;
   }
 
+  public static Update updateWithChatId(Long chatId, String text) {
+    Update update = updateWithChatId(chatId);
+    when(update.getMessage().getText()).thenReturn(text);
+    return update;
+  }
+
   public static CallbackQuery callbackQuery(String data) {
     CallbackQuery callback = mock(CallbackQuery.class);
     Message message = mock(Message.class);
@@ -162,6 +168,12 @@ public final class TestFixtures {
     Message message = mock(Message.class);
     when(callback.getMessage()).thenReturn(message);
     when(message.getChatId()).thenReturn(chatId);
+    return callback;
+  }
+
+  public static CallbackQuery callbackQueryWithChatId(Long chatId, String data) {
+    CallbackQuery callback = callbackQueryWithChatId(chatId);
+    when(callback.getData()).thenReturn(data);
     return callback;
   }
 }

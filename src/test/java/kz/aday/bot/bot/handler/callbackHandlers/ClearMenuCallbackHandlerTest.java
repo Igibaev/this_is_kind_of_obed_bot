@@ -76,7 +76,8 @@ class ClearMenuCallbackHandlerTest {
     Order otherCityOrder = readyOrderWithItem(City.KARAGANDA, "Bob");
     otherCityOrder.setChatId("3");
     otherCityOrder.setDate(City.KARAGANDA.getCurrentOrderDate());
-    when(orderService.findAll()).thenReturn(List.of(almataOrder, otherCityOrder));
+    when(orderService.findAllOnDate(City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(List.of(almataOrder, otherCityOrder));
     CallbackQuery callback = callbackQuery(CallbackState.CLEAR_MENU.name());
 
     handler.handle(callback, sender);

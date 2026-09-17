@@ -341,7 +341,7 @@ class AbstractHandlerTest {
   }
 
   @Test
-  void releaseOrderToPool_returnsEmptyListAndDeletesOrder_whenOrderHasNoItemsSharedOrderItem() {
+  void releaseOrderToPool_returnsEmptyListAndKeepsOrder_whenOrderHasNoItems() {
     // given
     User user = userWithStatus(Status.READY);
     LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
@@ -353,7 +353,7 @@ class AbstractHandlerTest {
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
     assertEquals(List.of(), actual);
-    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, orderDate);
     verify(sharedOrderItemPoolService, never())
         .addItems(any(), any(), any(), any(), anyCollection());
   }
@@ -381,7 +381,7 @@ class AbstractHandlerTest {
   }
 
   @Test
-  void releaseOrderToPool_deletesWithoutSharing_whenDeadlineNotPassed() {
+  void releaseOrderToPool_keepsOrderWithoutSharing_whenNotYetSubmittedToVendor() {
     // given
     User user = userWithStatus(Status.READY);
     LocalDate orderDate = City.ALMATA.getCurrentOrderDate();
@@ -396,7 +396,7 @@ class AbstractHandlerTest {
     List<Item> actual = handler.releaseOrderToSharedOrderItemPool(user);
     // then
     assertEquals(List.of(), actual);
-    verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
+    verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, orderDate);
     verify(sharedOrderItemPoolService, never())
         .addItems(any(), any(), any(), any(), anyCollection());
   }

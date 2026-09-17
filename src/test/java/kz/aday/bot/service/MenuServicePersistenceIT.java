@@ -14,9 +14,19 @@ import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class MenuServicePersistenceIT extends AbstractPersistenceTest {
+
+  private final MenuService cleanupService = new MenuService();
+
+  @AfterEach
+  void tearDown() {
+    for (City city : City.values()) {
+      cleanupService.deleteById(city.toString());
+    }
+  }
 
   @Test
   void save_thenFindById_returnsPersistedMenu() {

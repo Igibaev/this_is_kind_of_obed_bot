@@ -1,6 +1,16 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler;
 
+import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID;
+import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
+import static kz.aday.bot.testsupport.TestFixtures.MESSAGE_ID;
+import static kz.aday.bot.testsupport.TestFixtures.callbackQueryWithChatId;
+import static kz.aday.bot.testsupport.TestFixtures.menuWithStatus;
+import static kz.aday.bot.testsupport.TestFixtures.orderWithStatus;
+import static kz.aday.bot.testsupport.TestFixtures.updateWithChatId;
+import static kz.aday.bot.testsupport.TestFixtures.userWithCity;
+import static kz.aday.bot.testsupport.TestFixtures.userWithRole;
+import static kz.aday.bot.testsupport.TestFixtures.userWithStatus;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,7 +18,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -27,7 +36,6 @@ import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
@@ -36,19 +44,18 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
-import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
+import kz.aday.bot.testsupport.ServiceContainerMockExtension;
 import kz.aday.bot.util.Messages;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -61,10 +68,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 class AbstractHandlerTest {
 
-  private static final Long CHAT_ID = 1L;
-  private static final String CHAT_ID_STRING = CHAT_ID.toString();
   private static final String CITY_KEY = City.ALMATA.toString();
-  private static final Integer MESSAGE_ID = 42;
   private static final String MESSAGE_TEXT = "text";
   private static final Long OTHER_CHAT_ID = 10L;
   private static final String OTHER_CHAT_ID_STRING = OTHER_CHAT_ID.toString();
@@ -80,37 +84,23 @@ class AbstractHandlerTest {
           State.WHO_WILL_COME_TO_OFFICE.getDisplayName(),
           State.SET_OFFICE_ATTENDANCE.getDisplayName());
 
+  @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
+
   private UserService userService;
   private MenuService menuService;
   private OrderService orderService;
   private MessageSender messageSender;
   private SharedOrderItemPoolService sharedOrderItemPoolService;
   private AbstractHandler handler;
-  private MockedStatic<ServiceContainer> serviceContainer;
 
   @BeforeEach
   void setUp() {
-    userService = mock(UserService.class);
-    messageSender = mock(MessageSender.class);
-    menuService = mock(MenuService.class);
-    orderService = mock(OrderService.class);
-    sharedOrderItemPoolService = mock(SharedOrderItemPoolService.class);
-    OfficeAttendanceService officeAttendanceService = mock(OfficeAttendanceService.class);
-    serviceContainer = mockStatic(ServiceContainer.class);
-    serviceContainer.when(ServiceContainer::getUserService).thenReturn(userService);
-    serviceContainer.when(ServiceContainer::getMessageService).thenReturn(messageSender);
-    serviceContainer.when(ServiceContainer::getMenuService).thenReturn(menuService);
-    serviceContainer.when(ServiceContainer::getOrderService).thenReturn(orderService);
-    serviceContainer.when(ServiceContainer::getPoolService).thenReturn(sharedOrderItemPoolService);
-    serviceContainer
-        .when(ServiceContainer::getOfficeAttendanceService)
-        .thenReturn(officeAttendanceService);
+    userService = services.getUserService();
+    messageSender = services.getMessageService();
+    menuService = services.getMenuService();
+    orderService = services.getOrderService();
+    sharedOrderItemPoolService = services.getPoolService();
     handler = new AbstractHandler() {};
-  }
-
-  @AfterEach
-  void tearDown() {
-    serviceContainer.close();
   }
 
   @Test
@@ -850,63 +840,6 @@ class AbstractHandlerTest {
     menu.setDeadline(deadline);
     when(menuService.existsById(CITY_KEY)).thenReturn(true);
     when(menuService.findById(CITY_KEY)).thenReturn(menu);
-  }
-
-  private static User userWithStatus(Status status) {
-    return User.builder()
-        .chatId(CHAT_ID)
-        .city(City.ALMATA)
-        .role(User.Role.USER)
-        .status(status)
-        .build();
-  }
-
-  private static User userWithCity(City city) {
-    return User.builder()
-        .chatId(CHAT_ID)
-        .city(city)
-        .role(User.Role.USER)
-        .status(Status.READY)
-        .build();
-  }
-
-  private static User userWithRole(User.Role role) {
-    return User.builder().chatId(CHAT_ID).city(City.ALMATA).role(role).status(Status.READY).build();
-  }
-
-  private static Menu menuWithStatus(Status status) {
-    Menu menu = new Menu();
-    menu.setCity(City.ALMATA);
-    menu.setStatus(status);
-    if (status == Status.READY) {
-      menu.setDeadline(LocalDateTime.now().plusHours(1));
-    } else if (status == Status.DEADLINE) {
-      menu.setDeadline(LocalDateTime.now().minusHours(1));
-    }
-    return menu;
-  }
-
-  private static Order orderWithStatus(Status status) {
-    Order order = new Order();
-    order.setChatId(CHAT_ID_STRING);
-    order.setStatus(status);
-    return order;
-  }
-
-  private static Update updateWithChatId(Long chatId) {
-    Update update = mock(Update.class);
-    Message message = mock(Message.class);
-    when(update.getMessage()).thenReturn(message);
-    when(message.getChatId()).thenReturn(chatId);
-    return update;
-  }
-
-  private static CallbackQuery callbackQueryWithChatId(Long chatId) {
-    CallbackQuery callbackQuery = mock(CallbackQuery.class);
-    Message message = mock(Message.class);
-    when(callbackQuery.getMessage()).thenReturn(message);
-    when(message.getChatId()).thenReturn(chatId);
-    return callbackQuery;
   }
 
   private static List<String> adminBaseItems(List<String> crudItems) {

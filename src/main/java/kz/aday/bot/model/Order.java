@@ -25,7 +25,8 @@ public class Order implements Id {
 
   @Override
   public String toString() {
-    return String.format("*%s*: [%s]", escapeMarkdown(username), StringUtils.join(orderItemList, ","));
+    return String.format(
+        "*%s*: [%s]", escapeMarkdown(username), StringUtils.join(orderItemList, ","));
   }
 
   @Override

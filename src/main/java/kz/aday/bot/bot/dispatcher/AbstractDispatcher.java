@@ -15,12 +15,4 @@ public abstract class AbstractDispatcher<T> {
   public void addHandler(T handler) {
     handlers.add(handler);
   }
-
-  public void removeHandler(T handler) {
-    handlers.remove(handler);
-  }
-
-  public Set<T> getHandlers() {
-    return handlers;
-  }
 }

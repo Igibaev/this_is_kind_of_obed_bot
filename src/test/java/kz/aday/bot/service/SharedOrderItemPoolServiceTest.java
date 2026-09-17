@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-class SharedOrderItemSharedOrderItemPoolServiceTest {
+class SharedOrderItemPoolServiceTest {
 
   private static final LocalDate DATE = LocalDate.of(2026, 9, 17);
   private static final LocalDate OTHER_DATE = LocalDate.of(2026, 9, 18);

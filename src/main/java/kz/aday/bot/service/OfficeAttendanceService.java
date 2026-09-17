@@ -112,7 +112,10 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
         attendances.stream().collect(Collectors.groupingBy(OfficeAttendance::getChatId));
     return byChatId.values().stream()
         .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
-        .map(list -> String.format("%s: %d", StringUtils.escapeMarkdown(list.get(0).getUsername()), list.size()))
+        .map(
+            list ->
+                String.format(
+                    "%s: %d", StringUtils.escapeMarkdown(list.get(0).getUsername()), list.size()))
         .collect(Collectors.joining("\n"));
   }
 }

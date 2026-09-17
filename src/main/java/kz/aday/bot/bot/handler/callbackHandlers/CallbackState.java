@@ -19,12 +19,12 @@ public enum CallbackState {
   CHANGE_ORDER("Изменить заказ"),
   DELETE_ORDER("Удалить заказ"),
 
-  GET_ORDER_TODAY_ALMATA("Заказ на сегодня"),
-  GET_ORDER_TOMORROW_ALMATA("Заказ на завтра"),
-  GET_ORDERS_TODAY_ALMATA("Заказы на сегодня"),
-  GET_ORDERS_TOMORROW_ALMATA("Заказы на завтра"),
-  WHO_COMES_TODAY_ALMATA("Кто приходит сегодня"),
-  WHO_COMES_TOMORROW_ALMATA("Кто придет завтра"),
+  GET_ORDER_TODAY("Заказ на сегодня"),
+  GET_ORDER_TOMORROW("Заказ на завтра"),
+  GET_ORDERS_TODAY("Заказы на сегодня"),
+  GET_ORDERS_TOMORROW("Заказы на завтра"),
+  WHO_COMES_TODAY("Кто приходит сегодня"),
+  WHO_COMES_TOMORROW("Кто придет завтра"),
 
   ATTENDANCE_DAY_TODAY("Сегодня"),
   ATTENDANCE_DAY_TOMORROW("Завтра"),

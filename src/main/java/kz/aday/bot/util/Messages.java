@@ -60,7 +60,6 @@ public enum Messages {
   YOUR_ORDER_IS("Твой заказ %s."),
   YOUR_ORDER_IS_TODAY("Твой заказ на сегодня %s."),
   YOUR_ORDER_IS_TOMORROW("Твой заказ на завтра %s."),
-  ORDER_IS_EMPTY("Твой заказ пуст."),
   ORDER_IS_EMPTY_TODAY("Заказ на сегодня не найден."),
   ORDER_IS_EMPTY_TOMORROW("Заказ на завтра не найден."),
   ORDER_DELETED_RETURN("Ваш заказ удален./return"),
@@ -78,10 +77,8 @@ public enum Messages {
   CHOOSE_DATE_ORDER("Выберите за какой день посмотреть заказ:"),
   CHOOSE_DATE_TODAY_ORDERS("Выберите за какой день выгрузить заказы:"),
   CHOOSE_DATE_WHO_COMES("Выберите за какой день посмотреть:"),
-  EMPTY_ORDERS("Список заказов пуст."),
   EMPTY_ORDERS_TODAY("Список заказов на сегодня пуст."),
   EMPTY_ORDERS_TOMORROW("Список заказов на завтра пуст."),
-  REPORT_ORDERS_LIST("Список заказов.\n"),
   REPORT_ORDERS_TODAY("Заказы на сегодня.\n"),
   REPORT_ORDERS_TOMORROW("Заказы на завтра.\n"),
   REPORT_OVERALL_ATTENDANCE("Общая статистика посещений:\n"),
@@ -94,7 +91,6 @@ public enum Messages {
   NOBODY_COMES_TOMORROW("Завтра никто в офис не придет( хнык хнык"),
   WHO_COMES_TODAY("Сегодня в офис придет: (%s)\n%s"),
   WHO_COMES_TOMORROW("Завтра в офис придет: (%s)\n%s"),
-  WHO_COMES_OFFICE("Список людей кто придет в офис: (%s)\n%s"),
 
   // Случайный заказ
   CANCEL_RANDOM("Ну ладно, выбери сам. /return"),

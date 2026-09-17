@@ -1,16 +1,13 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.bot.handler.stateHandlers.order;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
-import kz.aday.bot.model.Order;
-import kz.aday.bot.model.Report;
-import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.model.UserButton;
 import kz.aday.bot.util.KeyboardUtil;
@@ -36,11 +33,11 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
         List<UserButton> buttons =
             List.of(
                 new UserButton(
-                    CallbackState.GET_ORDERS_TODAY_ALMATA.getDisplayName(),
-                    CallbackState.GET_ORDERS_TODAY_ALMATA.name()),
+                    CallbackState.GET_ORDERS_TODAY.getDisplayName(),
+                    CallbackState.GET_ORDERS_TODAY.name()),
                 new UserButton(
-                    CallbackState.GET_ORDERS_TOMORROW_ALMATA.getDisplayName(),
-                    CallbackState.GET_ORDERS_TOMORROW_ALMATA.name()));
+                    CallbackState.GET_ORDERS_TOMORROW.getDisplayName(),
+                    CallbackState.GET_ORDERS_TOMORROW.name()));
         sendMessageWithKeyboard(
             user,
             Messages.CHOOSE_DATE_TODAY_ORDERS.getText(),
@@ -48,23 +45,13 @@ public class GetTodayOrdersStateHandler extends AbstractHandler implements State
             getMessageId(update),
             sender);
       } else {
-        List<Order> orders =
-            orderService.findAll().stream()
-                .filter(o -> o.getCity() == user.getCity())
-                .filter(o -> !o.getOrderItemList().isEmpty())
-                .filter(o -> o.getStatus() == Status.READY)
-                .collect(Collectors.toList());
-
-        if (orders.isEmpty()) {
-          sendMessage(user, Messages.EMPTY_ORDERS.getText(), getMessageId(update), sender);
-        } else {
-          Report report = new Report(user.getCity(), orders);
-          sendMessage(
-              user,
-              Messages.REPORT_ORDERS_LIST + report.printOrderReport(),
-              getMessageId(update),
-              sender);
-        }
+        sendOrdersReport(
+            user,
+            LocalDate.now(),
+            Messages.EMPTY_ORDERS_TODAY,
+            Messages.REPORT_ORDERS_TODAY,
+            getMessageId(update),
+            sender);
       }
     }
   }

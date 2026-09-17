@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Order;
+import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OrderService;
@@ -25,6 +26,7 @@ import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.ServiceContainerMockExtension;
 import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -34,7 +36,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-class GetOrdersTodayAlmataCallbackHandlerTest {
+class GetOrdersTodayCallbackHandlerTest {
 
   @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
 
@@ -42,7 +44,7 @@ class GetOrdersTodayAlmataCallbackHandlerTest {
   private OrderService orderService;
   private MessageSender messageSender;
   private AbsSender sender;
-  private GetOrdersTodayAlmataCallbackHandler handler;
+  private GetOrdersTodayCallbackHandler handler;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -55,7 +57,7 @@ class GetOrdersTodayAlmataCallbackHandlerTest {
     when(sentMessage.getMessageId()).thenReturn(999);
     when(messageSender.sendMessage(any(), eq(sender))).thenReturn(sentMessage);
 
-    handler = new GetOrdersTodayAlmataCallbackHandler();
+    handler = new GetOrdersTodayCallbackHandler();
   }
 
   @ParameterizedTest
@@ -73,7 +75,7 @@ class GetOrdersTodayAlmataCallbackHandlerTest {
     when(orderService.findAllOnDate(LocalDate.now().minusDays(1)))
         .thenReturn(List.of(yesterdayOrder));
 
-    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY_ALMATA.name());
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
     // when
     handler.handle(callback, sender);
     // then
@@ -82,6 +84,74 @@ class GetOrdersTodayAlmataCallbackHandlerTest {
     String text = messageCaptor.getValue().getText();
     assertTrue(text.contains("TodayUser"));
     assertFalse(text.contains("YesterdayUser"));
+  }
+
+  @Test
+  void handle_excludesOrdersFromOtherCity_whenPresent() throws Exception {
+    // given
+    User admin = adminUser(City.ALMATA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(admin));
+
+    Order sameCityOrder = readyOrderWithItem(City.ALMATA, "AlmataUser");
+    Order otherCityOrder = readyOrderWithItem(City.KARAGANDA, "KaragandaUser");
+    when(orderService.findAllOnDate(LocalDate.now()))
+        .thenReturn(List.of(sameCityOrder, otherCityOrder));
+
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
+    // when
+    handler.handle(callback, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    String text = messageCaptor.getValue().getText();
+    assertTrue(text.contains("AlmataUser"));
+    assertFalse(text.contains("KaragandaUser"));
+  }
+
+  @Test
+  void handle_excludesNonReadyOrders_whenPresent() throws Exception {
+    // given
+    User admin = adminUser(City.ALMATA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(admin));
+
+    Order readyOrder = readyOrderWithItem(City.ALMATA, "ReadyUser");
+    Order pendingOrder = readyOrderWithItem(City.ALMATA, "PendingUser");
+    pendingOrder.setStatus(Status.PENDING);
+    when(orderService.findAllOnDate(LocalDate.now()))
+        .thenReturn(List.of(readyOrder, pendingOrder));
+
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
+    // when
+    handler.handle(callback, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    String text = messageCaptor.getValue().getText();
+    assertTrue(text.contains("ReadyUser"));
+    assertFalse(text.contains("PendingUser"));
+  }
+
+  @Test
+  void handle_excludesOrdersWithNoItems_whenPresent() throws Exception {
+    // given
+    User admin = adminUser(City.ALMATA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(admin));
+
+    Order orderWithItems = readyOrderWithItem(City.ALMATA, "WithItemsUser");
+    Order emptyOrder = readyOrderWithItem(City.ALMATA, "EmptyUser");
+    emptyOrder.getOrderItemList().clear();
+    when(orderService.findAllOnDate(LocalDate.now()))
+        .thenReturn(List.of(orderWithItems, emptyOrder));
+
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
+    // when
+    handler.handle(callback, sender);
+    // then
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    String text = messageCaptor.getValue().getText();
+    assertTrue(text.contains("WithItemsUser"));
+    assertFalse(text.contains("EmptyUser"));
   }
 
   @ParameterizedTest
@@ -98,7 +168,7 @@ class GetOrdersTodayAlmataCallbackHandlerTest {
     when(orderService.findAllOnDate(LocalDate.now().minusDays(1)))
         .thenReturn(List.of(yesterdayOrder));
 
-    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY_ALMATA.name());
+    CallbackQuery callback = callbackQuery(CallbackState.GET_ORDERS_TODAY.name());
     // when
     handler.handle(callback, sender);
     // then

@@ -12,9 +12,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MessageSender;
@@ -77,11 +79,10 @@ class GetOrderStateHandlerTest {
   void handle_sendsCurrentOrder_whenCityHasSameDayOrderCycleAndOrderExists() throws Exception {
     User user = readyUser(City.ASTANA);
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(orderService.existsByChatId(CHAT_ID_STRING, City.ASTANA.getCurrentOrderDate()))
-        .thenReturn(true);
     Order order = new Order();
-    when(orderService.findByChatId(CHAT_ID_STRING, City.ASTANA.getCurrentOrderDate()))
-        .thenReturn(order);
+    order.getOrderItemList().add(new Item(1, "Плов", null));
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, LocalDate.now()))
+        .thenReturn(Optional.of(order));
     Update update = update();
 
     handler.handle(update, sender);
@@ -89,7 +90,38 @@ class GetOrderStateHandlerTest {
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(
-        Messages.YOUR_ORDER_IS.getText(order.getOrderItemList()),
+        Messages.YOUR_ORDER_IS_TODAY.getText(order.getOrderItemList()),
         messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_sendsEmptyMessage_whenCityHasSameDayOrderCycleAndOrderHasNoItems() throws Exception {
+    User user = readyUser(City.ASTANA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    Order order = new Order();
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, LocalDate.now()))
+        .thenReturn(Optional.of(order));
+    Update update = update();
+
+    handler.handle(update, sender);
+
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(Messages.ORDER_IS_EMPTY_TODAY.getText(), messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_sendsEmptyMessage_whenCityHasSameDayOrderCycleAndNoOrderExists() throws Exception {
+    User user = readyUser(City.ASTANA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    when(orderService.findByChatIdOptional(CHAT_ID_STRING, LocalDate.now()))
+        .thenReturn(Optional.empty());
+    Update update = update();
+
+    handler.handle(update, sender);
+
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(Messages.ORDER_IS_EMPTY_TODAY.getText(), messageCaptor.getValue().getText());
   }
 }

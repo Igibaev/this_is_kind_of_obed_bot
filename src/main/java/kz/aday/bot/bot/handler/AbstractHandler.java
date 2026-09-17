@@ -22,6 +22,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
+import kz.aday.bot.model.Report;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
@@ -166,6 +167,65 @@ public abstract class AbstractHandler {
 
   protected String formatNameList(Collection<String> names) {
     return names.stream().map(StringUtils::escapeMarkdown).collect(Collectors.joining("\n"));
+  }
+
+  protected void sendWhoComes(
+      User user,
+      LocalDate date,
+      Messages foundMessage,
+      Messages emptyMessage,
+      Integer messageId,
+      AbsSender sender)
+      throws TelegramApiException {
+    List<Order> orders =
+        orderService.findAllOnDate(date).stream()
+            .filter(o -> o.getCity() == user.getCity())
+            .filter(o -> o.getStatus() == Status.READY)
+            .toList();
+    String names = formatNameList(orders.stream().map(Order::getUsername).toList());
+    if (names.isBlank()) {
+      sendMessage(user, emptyMessage.getText(), messageId, sender);
+    } else {
+      sendMessage(user, foundMessage.getText(orders.size(), names), messageId, sender);
+    }
+  }
+
+  protected void sendYourOrder(
+      User user,
+      LocalDate date,
+      Messages foundMessage,
+      Messages emptyMessage,
+      Integer messageId,
+      AbsSender sender)
+      throws TelegramApiException {
+    Optional<Order> orderOpt = orderService.findByChatIdOptional(user.getId(), date);
+    if (orderOpt.isPresent() && !orderOpt.get().getOrderItemList().isEmpty()) {
+      sendMessage(user, foundMessage.getText(orderOpt.get().getOrderItemList()), messageId, sender);
+    } else {
+      sendMessage(user, emptyMessage.getText(), messageId, sender);
+    }
+  }
+
+  protected void sendOrdersReport(
+      User user,
+      LocalDate date,
+      Messages emptyMessage,
+      Messages reportHeader,
+      Integer messageId,
+      AbsSender sender)
+      throws TelegramApiException {
+    List<Order> orders =
+        orderService.findAllOnDate(date).stream()
+            .filter(o -> o.getCity() == user.getCity())
+            .filter(o -> !o.getOrderItemList().isEmpty())
+            .filter(o -> o.getStatus() == Status.READY)
+            .collect(Collectors.toList());
+    if (orders.isEmpty()) {
+      sendMessage(user, emptyMessage.getText(), messageId, sender);
+    } else {
+      Report report = new Report(user.getCity(), orders);
+      sendMessage(user, reportHeader + report.printOrderReport(), messageId, sender);
+    }
   }
 
   public ReplyKeyboard getUserMenuKeyboard(User user) {

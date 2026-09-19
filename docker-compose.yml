@@ -1,0 +1,16 @@
+services:
+  bot:
+    image: ${IMAGE_NAME}
+    container_name: ${CONTAINER_NAME:-obed-bot}
+    restart: always
+    env_file: .env
+    volumes:
+      - ${DATA_PATH:-./data}:/app/data
+      - ${LOGS_PATH:-./logs}:/app/logs
+    networks:
+      - ktstore_shared
+
+networks:
+  ktstore_shared:
+    external: true
+    name: ktstore_default

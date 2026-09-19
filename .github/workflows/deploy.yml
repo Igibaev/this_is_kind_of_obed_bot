@@ -30,7 +30,7 @@ jobs:
       - name: Apply code formatting with Spotless
         run: ./gradlew spotlessApply
 
-      - name: Run Spring Boot Tests
+      - name: Run tests
         run: ./gradlew test
 
       - name: Run application for a short period and capture logs
@@ -45,18 +45,16 @@ jobs:
           # &: Запускаем процесс в фоновом режиме.
           # spring.profiles.active=ci: Опционально, если хотите запускать в CI-профиле.
           java -Dserver.port=0 -jar build/libs/*.jar > startup.log 2>&1 &
-          APP_PID=$! # Запоминаем PID фонового процесса
+          APP_PID=$!
 
           echo "Waiting for application to start (max 30 seconds)..."
-          # Ждем некоторое время, чтобы приложение успело запуститься и сгенерировать логи
-          # Это можно улучшить, проверяя, слушает ли порт, или ища конкретную строку в логах
           sleep 30
 
           echo "Killing application process..."
-          kill $APP_PID || true # Убиваем процесс, если он ещё жив. '|| true' предотвращает ошибку, если процесс уже завершился.
+          kill $APP_PID || true
 
           echo "Printing captured startup logs:"
-          cat startup.log # Выводим содержимое файла логов в консоль сборки GitHub Actions
+          cat startup.log
           echo "End of application startup logs."
 
       - name: Convert repository name to lowercase
@@ -77,11 +75,15 @@ jobs:
           push: true
           tags: ${{ steps.string.outputs.DOCKER_IMAGE_NAME_LC }}:latest
 
+  # --- ЗАДАЧА №2: ДЕПЛОЙ НА СЕРВЕР (PROD) ---
   deploy:
     needs: build
     runs-on: self-hosted
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -89,38 +91,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Debug secrets
+      - name: Deploy new version with Docker Compose
+        env:
+          IMAGE_NAME: ${{ needs.build.outputs.image_name }}:latest
+          CONTAINER_NAME: obed-bot
+          DATA_PATH: /opt/obed-bot/data
+          LOGS_PATH: /opt/obed-bot/logs
         run: |
-          echo "Available secrets:"
-          echo "BOT_TOKEN: ${{ secrets.BOT_TOKEN != null }}"
-          echo "BOT_NAME: ${{ secrets.BOT_NAME != null }}"
-          echo "EXTERNAL_VOLUME_PATH: ${{ secrets.EXTERNAL_VOLUME_PATH != null }}"
-
-      - name: Deploy new version to Docker
-        run: |
-          IMAGE_NAME="${{ needs.build.outputs.image_name }}:latest"
-          CONTAINER_NAME="obed-bot"
+          cp /opt/obed-bot/.env .env
 
           echo "Pulling latest Docker image: $IMAGE_NAME"
-          docker pull $IMAGE_NAME
+          docker compose -p obed-bot pull
 
-          echo "Stopping and removing old container if it exists..."
-          docker stop $CONTAINER_NAME || true
-          docker rm $CONTAINER_NAME || true
+          echo "Starting/updating obed-bot stack..."
+          docker compose -p obed-bot up -d
 
-          echo "Starting new container with environment variables and volume..."
-          # Запускаем новый контейнер, передавая секреты как переменные окружения и прокидывая волюм
-          docker run \
-            -d \
-            --restart always \
-            -e BOT_TOKEN=${{ secrets.BOT_TOKEN }} \
-            -e BOT_NAME=${{ secrets.BOT_NAME }} \
-            -e BOT_MAIN_USER_CHAT_ID=${{ secrets.BOT_MAIN_USER_CHAT_ID }} \
-            -e BOT_TIME_ZONE="Asia/Yekaterinburg" \
-            -v ${{ secrets.EXTERNAL_VOLUME_PATH }}:/app/data \
-            --name $CONTAINER_NAME \
-            $IMAGE_NAME
-          
           echo "Cleaning up old images..."
           docker image prune -f
 

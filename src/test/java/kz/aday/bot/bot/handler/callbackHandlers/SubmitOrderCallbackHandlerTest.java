@@ -87,8 +87,7 @@ class SubmitOrderCallbackHandlerTest {
 
     assertEquals(Status.READY, order.getStatus());
     verify(orderService).save(order);
-    verify(officeAttendanceService)
-        .save(user.getId(), user.getPreferedName(), user.getCity(), true);
+    verify(officeAttendanceService).save(user.getId(), user.getCity(), true);
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -25,12 +24,9 @@ class OfficeAttendanceServiceTest {
 
   @BeforeEach
   @SuppressWarnings("unchecked")
-  void setUp() throws Exception {
-    service = new OfficeAttendanceService();
+  void setUp() {
     repository = mock(Repository.class);
-    Field repositoryField = BaseService.class.getDeclaredField("repository");
-    repositoryField.setAccessible(true);
-    repositoryField.set(service, repository);
+    service = new OfficeAttendanceService(repository);
   }
 
   @Test

@@ -107,7 +107,6 @@ class SubmitOrderStateHandlerTest {
     assertEquals(State.NONE, user.getState());
     assertEquals(Status.READY, order.getStatus());
     verify(orderService).save(order);
-    verify(officeAttendanceService)
-        .save(user.getId(), user.getPreferedName(), user.getCity(), true);
+    verify(officeAttendanceService).save(user.getId(), user.getCity(), true);
   }
 }

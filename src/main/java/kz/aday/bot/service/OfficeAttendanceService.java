@@ -7,27 +7,31 @@ import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
-import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.repository.JdbcOfficeAttendanceRepository;
+import kz.aday.bot.repository.Repository;
 import kz.aday.bot.util.StringUtils;
 
 public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
 
   public OfficeAttendanceService() {
-    super(new BaseRepository<>(new ConcurrentHashMap<>(), OfficeAttendance.class, "attendance"));
+    super(new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource()));
   }
 
-  public void save(String userId, String username, City city, boolean willCome) {
-    save(userId, username, city, willCome, LocalDate.now().plusDays(1));
+  OfficeAttendanceService(Repository<OfficeAttendance> repository) {
+    super(repository);
   }
 
-  public void save(String userId, String username, City city, boolean willCome, LocalDate date) {
+  public void save(String userId, City city, boolean willCome) {
+    save(userId, city, willCome, LocalDate.now().plusDays(1));
+  }
+
+  public void save(String userId, City city, boolean willCome, LocalDate date) {
     OfficeAttendance officeAttendance = new OfficeAttendance();
     officeAttendance.setChatId(userId);
-    officeAttendance.setUsername(username);
     officeAttendance.setCity(city);
     officeAttendance.setWillCome(willCome);
     officeAttendance.setDate(date.toString());

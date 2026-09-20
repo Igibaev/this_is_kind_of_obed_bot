@@ -99,7 +99,6 @@ class RandomOrderStateHandlerTest {
     ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
     verify(orderService).save(orderCaptor.capture());
     assertEquals(Status.READY, orderCaptor.getValue().getStatus());
-    verify(officeAttendanceService)
-        .save(user.getId(), user.getPreferedName(), user.getCity(), true);
+    verify(officeAttendanceService).save(user.getId(), user.getCity(), true);
   }
 }

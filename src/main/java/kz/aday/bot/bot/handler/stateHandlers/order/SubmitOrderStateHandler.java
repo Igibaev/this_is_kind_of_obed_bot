@@ -43,8 +43,7 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
             if (message.equals("Да")) {
               order.setStatus(Status.READY);
               orderService.save(order);
-              officeAttendanceService.save(
-                  user.getId(), user.getPreferedName(), user.getCity(), true);
+              officeAttendanceService.save(user.getId(), user.getCity(), true);
               sendMessage(
                   user, Messages.ORDER_WAS_SUBMITED.getText(), getMessageId(update), sender);
             } else {

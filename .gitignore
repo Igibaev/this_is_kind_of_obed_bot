@@ -48,3 +48,5 @@ local.properties
 ### Runtime data ###
 data/
 logs/
+/data_backup_*/
+.env

@@ -12,6 +12,7 @@ import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
+import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.Test;
 
 class JdbcOfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
@@ -88,6 +89,7 @@ class JdbcOfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city, LocalDate date) {
+    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId));
     OfficeAttendance attendance = new OfficeAttendance();
     attendance.setChatId(chatId);
     attendance.setUsername("Repo Test");

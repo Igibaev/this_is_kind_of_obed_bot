@@ -20,18 +20,17 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
 
   private static final String SELECT_ALL =
       "SELECT chat_id, username, city, will_come, date FROM office_attendance";
-  private static final String SELECT_BY_ID = SELECT_ALL + " WHERE id = ?";
+  private static final String SELECT_BY_ID = SELECT_ALL + " WHERE chat_id = ? AND date = ?";
   private static final String SELECT_BY_DATE = SELECT_ALL + " WHERE date = ?";
   private static final String UPSERT =
-      "INSERT INTO office_attendance (id, chat_id, username, city, will_come, date) "
-          + "VALUES (?, ?, ?, ?, ?, ?) "
-          + "ON CONFLICT (id) DO UPDATE SET "
-          + "chat_id = EXCLUDED.chat_id, "
+      "INSERT INTO office_attendance (chat_id, username, city, will_come, date) "
+          + "VALUES (?, ?, ?, ?, ?) "
+          + "ON CONFLICT (chat_id, date) DO UPDATE SET "
           + "username = EXCLUDED.username, "
           + "city = EXCLUDED.city, "
-          + "will_come = EXCLUDED.will_come, "
-          + "date = EXCLUDED.date";
-  private static final String DELETE_BY_ID = "DELETE FROM office_attendance WHERE id = ?";
+          + "will_come = EXCLUDED.will_come";
+  private static final String DELETE_BY_ID =
+      "DELETE FROM office_attendance WHERE chat_id = ? AND date = ?";
 
   private final DataSource dataSource;
 
@@ -43,7 +42,8 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
   public OfficeAttendance getById(String id, LocalDate date) {
     try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID)) {
-      statement.setString(1, id);
+      statement.setLong(1, extractChatId(id));
+      statement.setObject(2, date);
       try (ResultSet resultSet = statement.executeQuery()) {
         return resultSet.next() ? mapRow(resultSet) : null;
       }
@@ -96,16 +96,15 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
   public void save(OfficeAttendance attendance) {
     try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement(UPSERT)) {
-      statement.setString(1, attendance.getId());
-      statement.setString(2, attendance.getChatId());
-      statement.setString(3, attendance.getUsername());
-      statement.setString(4, attendance.getCity() != null ? attendance.getCity().name() : null);
+      statement.setLong(1, Long.parseLong(attendance.getChatId()));
+      statement.setString(2, attendance.getUsername());
+      statement.setString(3, attendance.getCity() != null ? attendance.getCity().name() : null);
       if (attendance.getWillCome() != null) {
-        statement.setBoolean(5, attendance.getWillCome());
+        statement.setBoolean(4, attendance.getWillCome());
       } else {
-        statement.setNull(5, Types.BOOLEAN);
+        statement.setNull(4, Types.BOOLEAN);
       }
-      statement.setObject(6, attendance.getStorageDate());
+      statement.setObject(5, attendance.getStorageDate());
       statement.executeUpdate();
       log.info("Saved office attendance [{}]", attendance.getId());
     } catch (SQLException e) {
@@ -123,7 +122,8 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
   public void deleteById(String id, LocalDate date) {
     try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID)) {
-      statement.setString(1, id);
+      statement.setLong(1, extractChatId(id));
+      statement.setObject(2, date);
       int deleted = statement.executeUpdate();
       log.info("Deleted [{}] office attendance record(s) with id [{}]", deleted, id);
     } catch (SQLException e) {
@@ -137,9 +137,13 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
     log.info("Clearing office attendance storage is skiped");
   }
 
+  private static long extractChatId(String id) {
+    return Long.parseLong(id.substring(0, id.indexOf('_')));
+  }
+
   private OfficeAttendance mapRow(ResultSet resultSet) throws SQLException {
     OfficeAttendance attendance = new OfficeAttendance();
-    attendance.setChatId(resultSet.getString("chat_id"));
+    attendance.setChatId(String.valueOf(resultSet.getLong("chat_id")));
     attendance.setUsername(resultSet.getString("username"));
     attendance.setCity(JdbcMappingSupport.mapEnum(resultSet.getString("city"), City::valueOf));
     boolean willCome = resultSet.getBoolean("will_come");

@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
+import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.Test;
 
 class OfficeAttendanceServicePersistenceIT extends AbstractDbPersistenceTest {
@@ -53,6 +55,7 @@ class OfficeAttendanceServicePersistenceIT extends AbstractDbPersistenceTest {
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city) {
+    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId));
     OfficeAttendance attendance = new OfficeAttendance();
     attendance.setChatId(chatId);
     attendance.setUsername("Persist User");

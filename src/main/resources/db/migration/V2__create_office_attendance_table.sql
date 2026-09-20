@@ -1,8 +1,9 @@
 CREATE TABLE office_attendance (
-    id TEXT PRIMARY KEY,
-    chat_id TEXT NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    chat_id BIGINT NOT NULL REFERENCES users (chat_id),
     username TEXT,
     city TEXT,
     will_come BOOLEAN,
-    date DATE NOT NULL
+    date DATE NOT NULL,
+    UNIQUE (chat_id, date)
 );

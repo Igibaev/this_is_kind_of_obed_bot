@@ -14,8 +14,6 @@ public class ServiceContainer {
   private static final MessageSender messageService = new MessageSender();
   private static final OrderService orderService = new OrderService();
   private static final MenuService menuService = new MenuService();
-  private static final OfficeAttendanceService officeAttendanceService =
-      new OfficeAttendanceService();
   private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE =
       new SharedOrderItemPoolService();
 
@@ -38,7 +36,7 @@ public class ServiceContainer {
   }
 
   public static OfficeAttendanceService getOfficeAttendanceService() {
-    return officeAttendanceService;
+    return OfficeAttendanceServiceHolder.INSTANCE;
   }
 
   public static SharedOrderItemPoolService getPoolService() {
@@ -47,5 +45,9 @@ public class ServiceContainer {
 
   private static final class UserServiceHolder {
     private static final UserService INSTANCE = new UserService();
+  }
+
+  private static final class OfficeAttendanceServiceHolder {
+    private static final OfficeAttendanceService INSTANCE = new OfficeAttendanceService();
   }
 }

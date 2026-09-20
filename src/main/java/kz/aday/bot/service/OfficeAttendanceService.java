@@ -7,17 +7,22 @@ import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
-import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.repository.JdbcOfficeAttendanceRepository;
+import kz.aday.bot.repository.Repository;
 import kz.aday.bot.util.StringUtils;
 
 public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
 
   public OfficeAttendanceService() {
-    super(new BaseRepository<>(new ConcurrentHashMap<>(), OfficeAttendance.class, "attendance"));
+    super(new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource()));
+  }
+
+  OfficeAttendanceService(Repository<OfficeAttendance> repository) {
+    super(repository);
   }
 
   public void save(String userId, String username, City city, boolean willCome) {

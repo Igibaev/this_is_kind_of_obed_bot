@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import javax.sql.DataSource;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.City;
@@ -134,14 +133,10 @@ public class JdbcUserRepository implements Repository<User> {
     user.setPreferedName(resultSet.getString("prefered_name"));
     int lastMessageId = resultSet.getInt("last_message_id");
     user.setLastMessageId(resultSet.wasNull() ? null : lastMessageId);
-    user.setCity(mapEnum(resultSet.getString("city"), City::valueOf));
-    user.setRole(mapEnum(resultSet.getString("role"), User.Role::valueOf));
-    user.setState(mapEnum(resultSet.getString("state"), State::valueOf));
-    user.setStatus(mapEnum(resultSet.getString("status"), Status::valueOf));
+    user.setCity(JdbcMappingSupport.mapEnum(resultSet.getString("city"), City::valueOf));
+    user.setRole(JdbcMappingSupport.mapEnum(resultSet.getString("role"), User.Role::valueOf));
+    user.setState(JdbcMappingSupport.mapEnum(resultSet.getString("state"), State::valueOf));
+    user.setStatus(JdbcMappingSupport.mapEnum(resultSet.getString("status"), Status::valueOf));
     return user;
-  }
-
-  private <T> T mapEnum(String value, Function<String, T> parser) {
-    return value == null ? null : parser.apply(value);
   }
 }

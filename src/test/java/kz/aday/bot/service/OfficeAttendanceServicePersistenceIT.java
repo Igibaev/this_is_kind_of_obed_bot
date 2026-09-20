@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
-import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.Test;
 
-class OfficeAttendanceServicePersistenceIT extends AbstractPersistenceTest {
+class OfficeAttendanceServicePersistenceIT extends AbstractDbPersistenceTest {
 
   private static final LocalDate TODAY = LocalDate.now();
 

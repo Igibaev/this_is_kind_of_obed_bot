@@ -54,13 +54,13 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
     answer(dispatchers, sender, userChatId, CallbackState.ATTENDANCE_YES, "TODAY");
 
     LocalDate today = LocalDate.now();
-    OfficeAttendance saved =
-        ATTENDANCE_REPOSITORY.getById(userChatId + "_" + today, today);
+    OfficeAttendance saved = ATTENDANCE_REPOSITORY.getById(userChatId + "_" + today, today);
     assertEquals(City.ALMATA, saved.getCity());
     assertEquals(true, saved.getWillCome());
     assertEquals(today.toString(), saved.getDate());
 
-    Update overallStats = updateWithChatId(adminChatId, State.GET_ATTENDANCE_STATS.getDisplayName());
+    Update overallStats =
+        updateWithChatId(adminChatId, State.GET_ATTENDANCE_STATS.getDisplayName());
     dispatchers.stateDispatcher.dispatch(overallStats, sender);
     assertTrue(
         messageSentTo(sender, adminChatId).contains("Аружан: 1"),
@@ -87,12 +87,12 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
     answer(dispatchers, sender, userChatId, CallbackState.ATTENDANCE_YES, "TOMORROW");
 
     LocalDate tomorrow = LocalDate.now().plusDays(1);
-    OfficeAttendance saved =
-        ATTENDANCE_REPOSITORY.getById(userChatId + "_" + tomorrow, tomorrow);
+    OfficeAttendance saved = ATTENDANCE_REPOSITORY.getById(userChatId + "_" + tomorrow, tomorrow);
     assertEquals(true, saved.getWillCome());
     assertEquals(tomorrow.toString(), saved.getDate());
 
-    Update overallStats = updateWithChatId(adminChatId, State.GET_ATTENDANCE_STATS.getDisplayName());
+    Update overallStats =
+        updateWithChatId(adminChatId, State.GET_ATTENDANCE_STATS.getDisplayName());
     dispatchers.stateDispatcher.dispatch(overallStats, sender);
     assertTrue(
         messageSentTo(sender, adminChatId)
@@ -154,8 +154,7 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
     RealDispatchers dispatchers = new RealDispatchers();
 
     CallbackQuery answer =
-        callbackQueryWithChatId(
-            unregisteredChatId, CallbackState.ATTENDANCE_YES.name() + ":TODAY");
+        callbackQueryWithChatId(unregisteredChatId, CallbackState.ATTENDANCE_YES.name() + ":TODAY");
     assertDoesNotThrow(() -> dispatchers.callbackDispatcher.dispatch(answer, sender));
 
     LocalDate today = LocalDate.now();

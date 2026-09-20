@@ -22,7 +22,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
-import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.RealDispatchers;
 import kz.aday.bot.util.Messages;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,7 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-class MenuLifecycleFlowTest extends AbstractPersistenceTest {
+class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
 
   private static final long BASE_CHAT_ID = 952000000L;
 

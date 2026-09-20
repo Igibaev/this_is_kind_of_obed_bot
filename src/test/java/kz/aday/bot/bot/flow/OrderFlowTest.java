@@ -24,7 +24,7 @@ import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
-import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.RealDispatchers;
 import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-class OrderFlowTest extends AbstractPersistenceTest {
+class OrderFlowTest extends AbstractDbPersistenceTest {
 
   private static final Long ADMIN_CHAT_ID = 951000001L;
   private static final Long USER_CHAT_ID = 951000002L;

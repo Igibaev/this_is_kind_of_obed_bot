@@ -10,10 +10,10 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
-import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.Test;
 
-class UserServicePersistenceIT extends AbstractPersistenceTest {
+class UserServicePersistenceIT extends AbstractDbPersistenceTest {
 
   @Test
   void save_thenFindById_returnsPersistedUser() {

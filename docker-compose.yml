@@ -8,6 +8,9 @@ services:
       - BOT_NAME
       - BOT_TIME_ZONE
       - BOT_MAIN_USER_CHAT_ID
+      - DB_URL
+      - DB_USERNAME
+      - DB_PASSWORD
     volumes:
       - ${DATA_PATH:-./data}:/app/data
       - ${LOGS_PATH:-./logs}:/app/logs

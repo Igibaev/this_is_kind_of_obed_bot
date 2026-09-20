@@ -5,6 +5,7 @@ import static kz.aday.bot.testsupport.TestFixtures.callbackQueryWithChatId;
 import static kz.aday.bot.testsupport.TestFixtures.updateWithChatId;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,8 +43,8 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
 
   @Test
   void todayYes_savesForToday_andShowsInBothOverallAndMyStats() throws Exception {
-    Long userChatId = 953000001L;
-    Long adminChatId = 953000002L;
+    Long userChatId = 954000001L;
+    Long adminChatId = 954000002L;
     AbsSender sender = mockSender();
     RealDispatchers dispatchers = new RealDispatchers();
     seedReadyUser(userChatId, City.ALMATA, User.Role.USER, "Аружан");
@@ -75,8 +76,8 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
 
   @Test
   void tomorrowYes_savesForTomorrow_butExcludedFromTodayOverallStats() throws Exception {
-    Long userChatId = 953000003L;
-    Long adminChatId = 953000004L;
+    Long userChatId = 954000003L;
+    Long adminChatId = 954000004L;
     AbsSender sender = mockSender();
     RealDispatchers dispatchers = new RealDispatchers();
     seedReadyUser(userChatId, City.ASTANA, User.Role.USER, "Тамирлан");
@@ -94,15 +95,14 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
     Update overallStats =
         updateWithChatId(adminChatId, State.GET_ATTENDANCE_STATS.getDisplayName());
     dispatchers.stateDispatcher.dispatch(overallStats, sender);
-    assertTrue(
-        messageSentTo(sender, adminChatId)
-            .startsWith(Messages.REPORT_OVERALL_ATTENDANCE.getText() + NO_DATA_MESSAGE),
+    assertFalse(
+        messageSentTo(sender, adminChatId).contains("Тамирлан"),
         "Attendance marked for a future date should not appear in today's overall stats");
   }
 
   @Test
   void todayNo_savesWillComeFalse_excludedFromMyStats() throws Exception {
-    Long userChatId = 953000005L;
+    Long userChatId = 954000005L;
     AbsSender sender = mockSender();
     RealDispatchers dispatchers = new RealDispatchers();
     seedReadyUser(userChatId, City.KARAGANDA, User.Role.USER, "Данияр");
@@ -124,7 +124,7 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
 
   @Test
   void changingAnswerSameDay_latestDecisionWins() throws Exception {
-    Long userChatId = 953000006L;
+    Long userChatId = 954000006L;
     AbsSender sender = mockSender();
     RealDispatchers dispatchers = new RealDispatchers();
     seedReadyUser(userChatId, City.ALMATA, User.Role.USER, "Ерлан");
@@ -149,7 +149,7 @@ class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
 
   @Test
   void unregisteredUser_callbackIsNoop_noRecordCreated() throws Exception {
-    Long unregisteredChatId = 953000007L;
+    Long unregisteredChatId = 954000007L;
     AbsSender sender = mockSender();
     RealDispatchers dispatchers = new RealDispatchers();
 

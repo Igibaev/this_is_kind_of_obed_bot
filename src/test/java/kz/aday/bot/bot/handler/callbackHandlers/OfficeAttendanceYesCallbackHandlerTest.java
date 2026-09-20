@@ -67,8 +67,7 @@ class OfficeAttendanceYesCallbackHandlerTest {
 
     handler.handle(callback, sender);
 
-    verify(officeAttendanceService)
-        .save(user.getId(), user.getPreferedName(), user.getCity(), true, LocalDate.now());
+    verify(officeAttendanceService).save(user.getId(), user.getCity(), true, LocalDate.now());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(Messages.THANKS_WILL_COME_TODAY.getText(), messageCaptor.getValue().getText());
@@ -83,12 +82,7 @@ class OfficeAttendanceYesCallbackHandlerTest {
     handler.handle(callback, sender);
 
     verify(officeAttendanceService)
-        .save(
-            user.getId(),
-            user.getPreferedName(),
-            user.getCity(),
-            true,
-            LocalDate.now().plusDays(1));
+        .save(user.getId(), user.getCity(), true, LocalDate.now().plusDays(1));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(Messages.THANKS_WILL_COME_TOMORROW.getText(), messageCaptor.getValue().getText());

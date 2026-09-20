@@ -103,7 +103,7 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     assertEquals(Status.READY, savedOrder.getStatus());
     assertEquals(TARGET_DATE, savedOrder.getDate());
     assertTrue(savedOrder.getOrderItemList().contains(item));
-    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, true, TARGET_DATE);
+    verify(officeAttendanceService).save(CHAT_ID_STRING, City.ALMATA, true, TARGET_DATE);
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("Плов"));
@@ -153,7 +153,7 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService, never()).save(any());
-    verify(officeAttendanceService, never()).save(any(), any(), any(), anyBoolean(), any());
+    verify(officeAttendanceService, never()).save(any(), any(), anyBoolean(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("уже забрали"));

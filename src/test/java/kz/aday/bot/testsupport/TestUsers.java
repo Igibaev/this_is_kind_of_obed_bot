@@ -9,7 +9,8 @@ public final class TestUsers {
 
   private TestUsers() {}
 
-  public static void ensureExists(DataSource dataSource, long chatId) {
-    new JdbcUserRepository(dataSource).save(User.builder().chatId(chatId).build());
+  public static void ensureExists(DataSource dataSource, long chatId, String preferedName) {
+    new JdbcUserRepository(dataSource)
+        .save(User.builder().chatId(chatId).preferedName(preferedName).build());
   }
 }

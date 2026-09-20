@@ -38,8 +38,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
       String message;
       if (claimed.isPresent()) {
         addItemToUserOrder(user, claimed.get().getItem(), targetDate);
-        officeAttendanceService.save(
-            user.getId(), user.getPreferedName(), user.getCity(), true, targetDate);
+        officeAttendanceService.save(user.getId(), user.getCity(), true, targetDate);
         message = Messages.POOL_ITEM_CLAIMED.getText(claimed.get().getItem().getName());
       } else {
         message = Messages.POOL_ITEM_ALREADY_TAKEN.getText();

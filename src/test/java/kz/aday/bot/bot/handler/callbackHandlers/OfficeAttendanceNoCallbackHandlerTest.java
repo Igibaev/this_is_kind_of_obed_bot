@@ -77,7 +77,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // when
     handler.handle(callback, sender);
     // then
-    verify(officeAttendanceService).save(CHAT_ID_STRING, "me", City.ALMATA, false, LocalDate.now());
+    verify(officeAttendanceService).save(CHAT_ID_STRING, City.ALMATA, false, LocalDate.now());
   }
 
   @Test
@@ -90,7 +90,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(officeAttendanceService)
-        .save(CHAT_ID_STRING, "me", City.ALMATA, false, LocalDate.now().plusDays(1));
+        .save(CHAT_ID_STRING, City.ALMATA, false, LocalDate.now().plusDays(1));
   }
 
   @Test

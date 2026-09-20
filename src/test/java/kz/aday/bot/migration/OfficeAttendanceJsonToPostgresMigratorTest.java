@@ -75,10 +75,9 @@ class OfficeAttendanceJsonToPostgresMigratorTest extends AbstractDbPersistenceTe
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city, LocalDate date) {
-    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId));
+    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId), null);
     OfficeAttendance attendance = new OfficeAttendance();
     attendance.setChatId(chatId);
-    attendance.setUsername("Migrator Test");
     attendance.setCity(city);
     attendance.setWillCome(true);
     attendance.setDate(date.toString());

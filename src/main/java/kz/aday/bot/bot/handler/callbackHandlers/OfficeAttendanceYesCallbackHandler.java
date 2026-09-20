@@ -25,8 +25,7 @@ public class OfficeAttendanceYesCallbackHandler extends AbstractHandler implemen
       String[] data = callback.getData().split(":");
       boolean isToday = data.length > 1 && "TODAY".equals(data[1]);
       LocalDate date = isToday ? LocalDate.now() : LocalDate.now().plusDays(1);
-      officeAttendanceService.save(
-          user.getId(), user.getPreferedName(), user.getCity(), true, date);
+      officeAttendanceService.save(user.getId(), user.getCity(), true, date);
       sendMessage(
           user,
           isToday

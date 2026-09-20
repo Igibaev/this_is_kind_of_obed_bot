@@ -25,14 +25,13 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     super(repository);
   }
 
-  public void save(String userId, String username, City city, boolean willCome) {
-    save(userId, username, city, willCome, LocalDate.now().plusDays(1));
+  public void save(String userId, City city, boolean willCome) {
+    save(userId, city, willCome, LocalDate.now().plusDays(1));
   }
 
-  public void save(String userId, String username, City city, boolean willCome, LocalDate date) {
+  public void save(String userId, City city, boolean willCome, LocalDate date) {
     OfficeAttendance officeAttendance = new OfficeAttendance();
     officeAttendance.setChatId(userId);
-    officeAttendance.setUsername(username);
     officeAttendance.setCity(city);
     officeAttendance.setWillCome(willCome);
     officeAttendance.setDate(date.toString());

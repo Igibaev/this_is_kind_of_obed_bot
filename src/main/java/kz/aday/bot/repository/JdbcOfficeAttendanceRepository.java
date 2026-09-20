@@ -19,14 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendance> {
 
   private static final String SELECT_ALL =
-      "SELECT chat_id, username, city, will_come, date FROM office_attendance";
-  private static final String SELECT_BY_ID = SELECT_ALL + " WHERE chat_id = ? AND date = ?";
-  private static final String SELECT_BY_DATE = SELECT_ALL + " WHERE date = ?";
+      "SELECT oa.chat_id, u.prefered_name AS username, oa.city, oa.will_come, oa.date "
+          + "FROM office_attendance oa "
+          + "JOIN users u ON u.chat_id = oa.chat_id";
+  private static final String SELECT_BY_ID = SELECT_ALL + " WHERE oa.chat_id = ? AND oa.date = ?";
+  private static final String SELECT_BY_DATE = SELECT_ALL + " WHERE oa.date = ?";
   private static final String UPSERT =
-      "INSERT INTO office_attendance (chat_id, username, city, will_come, date) "
-          + "VALUES (?, ?, ?, ?, ?) "
+      "INSERT INTO office_attendance (chat_id, city, will_come, date) "
+          + "VALUES (?, ?, ?, ?) "
           + "ON CONFLICT (chat_id, date) DO UPDATE SET "
-          + "username = EXCLUDED.username, "
           + "city = EXCLUDED.city, "
           + "will_come = EXCLUDED.will_come";
   private static final String DELETE_BY_ID =
@@ -97,14 +98,13 @@ public class JdbcOfficeAttendanceRepository implements Repository<OfficeAttendan
     try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement(UPSERT)) {
       statement.setLong(1, Long.parseLong(attendance.getChatId()));
-      statement.setString(2, attendance.getUsername());
-      statement.setString(3, attendance.getCity() != null ? attendance.getCity().name() : null);
+      statement.setString(2, attendance.getCity() != null ? attendance.getCity().name() : null);
       if (attendance.getWillCome() != null) {
-        statement.setBoolean(4, attendance.getWillCome());
+        statement.setBoolean(3, attendance.getWillCome());
       } else {
-        statement.setNull(4, Types.BOOLEAN);
+        statement.setNull(3, Types.BOOLEAN);
       }
-      statement.setObject(5, attendance.getStorageDate());
+      statement.setObject(4, attendance.getStorageDate());
       statement.executeUpdate();
       log.info("Saved office attendance [{}]", attendance.getId());
     } catch (SQLException e) {

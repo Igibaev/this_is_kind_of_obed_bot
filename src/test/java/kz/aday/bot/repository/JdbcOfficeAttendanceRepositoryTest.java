@@ -66,13 +66,12 @@ class JdbcOfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
     OfficeAttendance original = buildAttendance("940000006", City.ALMATA, TODAY);
     repository.save(original);
 
-    OfficeAttendance updated = buildAttendance("940000006", City.ALMATA, TODAY);
-    updated.setUsername("Updated Name");
+    OfficeAttendance updated = buildAttendance("940000006", City.ASTANA, TODAY);
     updated.setWillCome(false);
     repository.save(updated);
 
     OfficeAttendance found = repository.getById(original.getId(), TODAY);
-    assertEquals("Updated Name", found.getUsername());
+    assertEquals(City.ASTANA, found.getCity());
     assertEquals(false, found.getWillCome());
     assertEquals(
         1, repository.getAll().stream().filter(a -> a.getId().equals(original.getId())).count());
@@ -89,7 +88,7 @@ class JdbcOfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city, LocalDate date) {
-    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId));
+    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId), "Repo Test");
     OfficeAttendance attendance = new OfficeAttendance();
     attendance.setChatId(chatId);
     attendance.setUsername("Repo Test");

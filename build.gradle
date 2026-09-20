@@ -21,6 +21,11 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
+    implementation 'org.postgresql:postgresql:42.7.13'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.flywaydb:flyway-core:10.20.1'
+    implementation 'org.flywaydb:flyway-database-postgresql:10.20.1'
+
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
     testImplementation platform('org.junit:junit-bom:5.11.0')
@@ -28,6 +33,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.14.2'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.3')
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 test {

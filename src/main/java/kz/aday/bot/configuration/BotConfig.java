@@ -11,6 +11,9 @@ public class BotConfig {
   private static String getProperty(String envVarName) {
     String value = System.getenv(envVarName);
     if (value == null || value.isBlank()) {
+      value = System.getProperty(envVarName);
+    }
+    if (value == null || value.isBlank()) {
       throw new IllegalStateException(
           "Required environment variable '" + envVarName + "' is not set or is empty.");
     }
@@ -39,5 +42,17 @@ public class BotConfig {
 
   public static String getMainUserChatId() {
     return getProperty("BOT_MAIN_USER_CHAT_ID");
+  }
+
+  public static String getDatabaseUrl() {
+    return getProperty("DB_URL");
+  }
+
+  public static String getDatabaseUsername() {
+    return getProperty("DB_USERNAME");
+  }
+
+  public static String getDatabasePassword() {
+    return getProperty("DB_PASSWORD");
   }
 }

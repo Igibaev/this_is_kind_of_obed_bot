@@ -101,6 +101,9 @@ jobs:
           BOT_NAME: ${{ secrets.BOT_NAME }}
           BOT_TIME_ZONE: ${{ secrets.BOT_TIME_ZONE }}
           BOT_MAIN_USER_CHAT_ID: ${{ secrets.BOT_MAIN_USER_CHAT_ID }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           echo "Pulling latest Docker image: $IMAGE_NAME"
           docker compose -p obed-bot pull

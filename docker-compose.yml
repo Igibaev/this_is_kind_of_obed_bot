@@ -3,7 +3,11 @@ services:
     image: ${IMAGE_NAME}
     container_name: ${CONTAINER_NAME:-obed-bot}
     restart: always
-    env_file: .env
+    environment:
+      - BOT_TOKEN
+      - BOT_NAME
+      - BOT_TIME_ZONE
+      - BOT_MAIN_USER_CHAT_ID
     volumes:
       - ${DATA_PATH:-./data}:/app/data
       - ${LOGS_PATH:-./logs}:/app/logs

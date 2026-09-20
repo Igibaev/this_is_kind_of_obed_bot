@@ -91,27 +91,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Write .env from secrets
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          BOT_NAME: ${{ secrets.BOT_NAME }}
-          BOT_TIME_ZONE: ${{ secrets.BOT_TIME_ZONE }}
-          BOT_MAIN_USER_CHAT_ID: ${{ secrets.BOT_MAIN_USER_CHAT_ID }}
-        run: |
-          {
-            echo "BOT_TOKEN=$BOT_TOKEN"
-            echo "BOT_NAME=$BOT_NAME"
-            echo "BOT_TIME_ZONE=$BOT_TIME_ZONE"
-            echo "BOT_MAIN_USER_CHAT_ID=$BOT_MAIN_USER_CHAT_ID"
-          } > .env
-          chmod 600 .env
-
       - name: Deploy new version with Docker Compose
         env:
           IMAGE_NAME: ${{ needs.build.outputs.image_name }}:latest
           CONTAINER_NAME: obed-bot
           DATA_PATH: /opt/obed-bot/data
           LOGS_PATH: /opt/obed-bot/logs
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BOT_NAME: ${{ secrets.BOT_NAME }}
+          BOT_TIME_ZONE: ${{ secrets.BOT_TIME_ZONE }}
+          BOT_MAIN_USER_CHAT_ID: ${{ secrets.BOT_MAIN_USER_CHAT_ID }}
         run: |
           echo "Pulling latest Docker image: $IMAGE_NAME"
           docker compose -p obed-bot pull

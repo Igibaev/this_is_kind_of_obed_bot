@@ -86,8 +86,7 @@ class MenuServicePersistenceIT extends AbstractPersistenceTest {
   }
 
   @Test
-  void findById_ignoresStaleTodayDatedCopy_andStaysAnchoredToFixedStorageDate()
-      throws IOException {
+  void findById_ignoresStaleTodayDatedCopy_andStaysAnchoredToFixedStorageDate() throws IOException {
     Menu realMenu = buildMenu(City.KARAGANDA);
     realMenu.setMessage("real menu");
     MenuService service = new MenuService();

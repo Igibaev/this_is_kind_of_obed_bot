@@ -2,6 +2,7 @@
 package kz.aday.bot.migration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,20 +22,18 @@ import org.junit.jupiter.api.Test;
 
 class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
 
-  private static final LocalDate JSON_FOLDER_DATE_ALMATA = LocalDate.of(2099, 1, 11);
-  private static final LocalDate JSON_FOLDER_DATE_ASTANA = LocalDate.of(2099, 1, 12);
-  private static final LocalDate JSON_FOLDER_DATE_KARAGANDA = LocalDate.of(2099, 1, 13);
+  private static final LocalDate LEGACY_STORAGE_DATE = LocalDate.of(2099, 1, 1);
 
   private final BaseRepository<Menu> jsonRepository =
-      new BaseRepository<>(new ConcurrentHashMap<>(), Menu.class, "menu");
+      new BaseRepository<>(new ConcurrentHashMap<>(), Menu.class, "menu", LEGACY_STORAGE_DATE);
   private final JdbcMenuRepository postgresRepository =
       new JdbcMenuRepository(PersistenceConfig.getDataSource());
 
   @AfterEach
   void cleanUpMigratedMenus() {
-    jsonRepository.deleteById(City.ALMATA.toString(), JSON_FOLDER_DATE_ALMATA);
-    jsonRepository.deleteById(City.ASTANA.toString(), JSON_FOLDER_DATE_ASTANA);
-    jsonRepository.deleteById(City.KARAGANDA.toString(), JSON_FOLDER_DATE_KARAGANDA);
+    jsonRepository.deleteById(City.ALMATA.toString(), LEGACY_STORAGE_DATE);
+    jsonRepository.deleteById(City.ASTANA.toString(), LEGACY_STORAGE_DATE);
+    jsonRepository.deleteById(City.KARAGANDA.toString(), LEGACY_STORAGE_DATE);
     postgresRepository.deleteById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate());
     postgresRepository.deleteById(City.ASTANA.toString(), City.ASTANA.getCurrentOrderDate());
     postgresRepository.deleteById(City.KARAGANDA.toString(), City.KARAGANDA.getCurrentOrderDate());
@@ -42,8 +41,8 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
 
   @Test
   void main_migratesEveryMenuFromJsonStorageIntoPostgres_settingCurrentOrderDate() {
-    Menu almaty = buildJsonMenu(City.ALMATA, JSON_FOLDER_DATE_ALMATA, "Плов", Category.SECOND);
-    Menu astana = buildJsonMenu(City.ASTANA, JSON_FOLDER_DATE_ASTANA, "Борщ", Category.FIRST);
+    Menu almaty = buildJsonMenu(City.ALMATA, "Плов", Category.SECOND);
+    Menu astana = buildJsonMenu(City.ASTANA, "Борщ", Category.FIRST);
     jsonRepository.save(almaty);
     jsonRepository.save(astana);
 
@@ -60,6 +59,25 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
   }
 
   @Test
+  void main_ignoresJsonFiles_underAnyFolderOtherThanTheLegacyStorageDate() {
+    Menu staleTodayDatedCopy = buildJsonMenu(City.ASTANA, "Устаревшая копия", Category.SECOND);
+    staleTodayDatedCopy.setDate(LocalDate.now().toString());
+    BaseRepository<Menu> todayDatedJsonRepository =
+        new BaseRepository<>(new ConcurrentHashMap<>(), Menu.class, "menu");
+    todayDatedJsonRepository.save(staleTodayDatedCopy);
+
+    try {
+      MenuJsonToPostgresMigrator.main(new String[0]);
+
+      Menu migrated =
+          postgresRepository.getById(City.ASTANA.toString(), City.ASTANA.getCurrentOrderDate());
+      assertNull(migrated, "Stale copies outside the legacy storage date must be ignored");
+    } finally {
+      todayDatedJsonRepository.deleteById(City.ASTANA.toString(), LocalDate.now());
+    }
+  }
+
+  @Test
   void main_overwritesExistingRow_whenMenuWasAlreadyMigratedBefore() {
     Menu stale = new Menu();
     stale.setCity(City.KARAGANDA);
@@ -68,8 +86,7 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
     stale.setItemList(List.of(new Item(0, "Старое блюдо", Category.SECOND)));
     postgresRepository.save(stale);
 
-    Menu fresh =
-        buildJsonMenu(City.KARAGANDA, JSON_FOLDER_DATE_KARAGANDA, "Новое блюдо", Category.SECOND);
+    Menu fresh = buildJsonMenu(City.KARAGANDA, "Новое блюдо", Category.SECOND);
     jsonRepository.save(fresh);
 
     MenuJsonToPostgresMigrator.main(new String[0]);
@@ -92,11 +109,10 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
     assertEquals(before, after);
   }
 
-  private static Menu buildJsonMenu(
-      City city, LocalDate jsonFolderDate, String itemName, Category category) {
+  private static Menu buildJsonMenu(City city, String itemName, Category category) {
     Menu menu = new Menu();
     menu.setCity(city);
-    menu.setDate(jsonFolderDate.toString());
+    menu.setDate(LEGACY_STORAGE_DATE.toString());
     menu.setStatus(Status.READY);
     menu.setItemList(List.of(new Item(0, itemName, category)));
     menu.setDeadline(LocalDateTime.now().plusHours(2));

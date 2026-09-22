@@ -17,14 +17,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Menu implements Id {
-  /**
-   * Menu has one row per city and no real date axis, but the file-based repository always
-   * partitions storage by "storage date". Anchoring it to a fixed, far-future date (instead of the
-   * default LocalDate.now()) keeps every menu in the same folder forever, so it survives midnight
-   * day rollover and is never swept by the 30-day-old cleanup job.
-   */
-  public static final LocalDate STORAGE_DATE = LocalDate.of(2099, 1, 1);
-
   private City city;
   private Status status;
   private List<Item> itemList = new ArrayList<>();
@@ -32,6 +24,7 @@ public class Menu implements Id {
   private Boolean available;
   private Boolean notificated;
   private String message;
+  private String date;
 
   @Override
   public String getId() {
@@ -40,7 +33,7 @@ public class Menu implements Id {
 
   @Override
   public LocalDate getStorageDate() {
-    return STORAGE_DATE;
+    return LocalDate.parse(date);
   }
 
   public Optional<Item> getItemById(Integer itemId) {

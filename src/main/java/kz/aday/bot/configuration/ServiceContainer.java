@@ -13,7 +13,6 @@ import lombok.Getter;
 public class ServiceContainer {
   private static final MessageSender messageService = new MessageSender();
   private static final OrderService orderService = new OrderService();
-  private static final MenuService menuService = new MenuService();
   private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE =
       new SharedOrderItemPoolService();
 
@@ -32,7 +31,7 @@ public class ServiceContainer {
   }
 
   public static MenuService getMenuService() {
-    return menuService;
+    return MenuServiceHolder.INSTANCE;
   }
 
   public static OfficeAttendanceService getOfficeAttendanceService() {
@@ -45,6 +44,10 @@ public class ServiceContainer {
 
   private static final class UserServiceHolder {
     private static final UserService INSTANCE = new UserService();
+  }
+
+  private static final class MenuServiceHolder {
+    private static final MenuService INSTANCE = new MenuService();
   }
 
   private static final class OfficeAttendanceServiceHolder {

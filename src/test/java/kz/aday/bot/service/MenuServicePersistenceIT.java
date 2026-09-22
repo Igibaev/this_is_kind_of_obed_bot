@@ -5,34 +5,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import kz.aday.bot.configuration.BotConfig;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.JsonFileStorageSupport;
-import kz.aday.bot.testsupport.AbstractPersistenceTest;
+import kz.aday.bot.repository.JdbcMenuRepository;
+import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-class MenuServicePersistenceIT extends AbstractPersistenceTest {
+class MenuServicePersistenceIT extends AbstractDbPersistenceTest {
+
+  private static final LocalDate HISTORICAL_DATE_1 = LocalDate.of(2020, 1, 1);
+  private static final LocalDate HISTORICAL_DATE_2 = LocalDate.of(2020, 1, 2);
+  private static final LocalDate HISTORICAL_DATE_3 = LocalDate.of(2020, 1, 3);
 
   private final MenuService cleanupService = new MenuService();
+  private final JdbcMenuRepository rawRepository =
+      new JdbcMenuRepository(PersistenceConfig.getDataSource());
 
   @AfterEach
   void tearDown() {
     for (City city : City.values()) {
       cleanupService.deleteById(city.toString());
     }
+    rawRepository.deleteById(City.ALMATA.toString(), HISTORICAL_DATE_1);
+    rawRepository.deleteById(City.ASTANA.toString(), HISTORICAL_DATE_2);
+    rawRepository.deleteById(City.KARAGANDA.toString(), HISTORICAL_DATE_3);
   }
 
   @Test
@@ -67,45 +72,6 @@ class MenuServicePersistenceIT extends AbstractPersistenceTest {
   }
 
   @Test
-  void save_writesMenuUnderFixedStorageDate_soItSurvivesMidnightRollover() {
-    Menu menu = buildMenu(City.ALMATA);
-    MenuService service = new MenuService();
-
-    service.save(menu);
-
-    Path expectedFile =
-        Path.of(
-            BotConfig.getBotStorePath(),
-            "menu",
-            Menu.STORAGE_DATE.toString(),
-            City.ALMATA + JsonFileStorageSupport.JSON);
-    assertTrue(
-        Files.exists(expectedFile),
-        "Menu must be written under its fixed storage date, not under today's date, "
-            + "otherwise it becomes unreachable the moment the calendar day changes.");
-  }
-
-  @Test
-  void findById_ignoresStaleTodayDatedCopy_andStaysAnchoredToFixedStorageDate() throws IOException {
-    Menu realMenu = buildMenu(City.KARAGANDA);
-    realMenu.setMessage("real menu");
-    MenuService service = new MenuService();
-    service.save(realMenu);
-
-    Menu staleDecoy = buildMenu(City.KARAGANDA);
-    staleDecoy.setMessage("stale decoy written under today's date");
-    Path todayFolder = Path.of(BotConfig.getBotStorePath(), "menu", LocalDate.now().toString());
-    Files.createDirectories(todayFolder);
-    ObjectMapper objectMapper = JsonFileStorageSupport.createObjectMapper();
-    objectMapper.writeValue(
-        todayFolder.resolve(City.KARAGANDA + JsonFileStorageSupport.JSON).toFile(), staleDecoy);
-
-    Menu found = new MenuService().findById(City.KARAGANDA.toString());
-
-    assertEquals("real menu", found.getMessage());
-  }
-
-  @Test
   void deleteById_removesMenuFromStorage() {
     Menu menu = buildMenu(City.ALMATA);
     MenuService service = new MenuService();
@@ -117,11 +83,65 @@ class MenuServicePersistenceIT extends AbstractPersistenceTest {
     assertFalse(service.existsById(menu.getId()));
   }
 
+  @Test
+  void save_deletesExistingDeadlineMenu_beforeSavingReplacement() {
+    MenuService service = new MenuService();
+    Menu deadlineMenu = buildMenu(City.ASTANA);
+    deadlineMenu.setStatus(Status.DEADLINE);
+    deadlineMenu.setItemList(List.of(new Item(0, "Старое блюдо", Category.SECOND)));
+    service.save(deadlineMenu);
+
+    Menu replacement = buildMenu(City.ASTANA);
+    replacement.setItemList(List.of(new Item(0, "Новое блюдо", Category.FIRST)));
+    service.save(replacement);
+
+    Menu found = service.findById(City.ASTANA.toString());
+    assertEquals(1, found.getItemList().size());
+    assertEquals("Новое блюдо", found.getItemList().get(0).getName());
+    assertEquals(Category.FIRST, found.getItemList().get(0).getCategory());
+    assertEquals(Status.READY, found.getStatus());
+  }
+
+  @Test
+  void save_onNewOrderCycle_doesNotOverwritePreviousDatesMenu() {
+    Menu historical = buildMenu(City.ALMATA);
+    historical.setDate(HISTORICAL_DATE_1.toString());
+    historical.setMessage("historical menu, must survive");
+    rawRepository.save(historical);
+
+    Menu current = buildMenu(City.ALMATA);
+    current.setMessage("current menu");
+    new MenuService().save(current);
+
+    Menu stillThere = rawRepository.getById(City.ALMATA.toString(), HISTORICAL_DATE_1);
+    assertEquals("historical menu, must survive", stillThere.getMessage());
+    assertEquals("current menu", new MenuService().findById(City.ALMATA.toString()).getMessage());
+  }
+
+  @Test
+  void findAll_returnsOnlyCurrentMenuPerCity_evenWhenHistoricalRowsExist() {
+    Menu historicalAstana = buildMenu(City.ASTANA);
+    historicalAstana.setDate(HISTORICAL_DATE_2.toString());
+    rawRepository.save(historicalAstana);
+    Menu historicalKaraganda = buildMenu(City.KARAGANDA);
+    historicalKaraganda.setDate(HISTORICAL_DATE_3.toString());
+    rawRepository.save(historicalKaraganda);
+
+    Menu currentAlmata = buildMenu(City.ALMATA);
+    MenuService service = new MenuService();
+    service.save(currentAlmata);
+
+    List<Menu> all = List.copyOf(service.findAll());
+
+    assertEquals(1, all.size());
+    assertEquals(City.ALMATA, all.get(0).getCity());
+  }
+
   private static Menu buildMenu(City city) {
     Menu menu = new Menu();
     menu.setCity(city);
     menu.setStatus(Status.READY);
-    menu.setItemList(List.of(new Item(1, "Плов", Category.SECOND)));
+    menu.setItemList(List.of(new Item(0, "Плов", Category.SECOND)));
     menu.setDeadline(LocalDateTime.now().plusHours(2).truncatedTo(ChronoUnit.SECONDS));
     menu.setAvailable(true);
     menu.setNotificated(false);

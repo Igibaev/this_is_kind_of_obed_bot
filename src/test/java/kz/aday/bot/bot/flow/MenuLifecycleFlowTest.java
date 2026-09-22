@@ -19,6 +19,7 @@ import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
@@ -135,11 +136,9 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     Update setMenuText = updateWithChatId(adminChatId, validMenuText());
     dispatchers.stateDispatcher.dispatch(setMenuText, sender);
 
-    ServiceContainer.getMenuService()
-        .findById(city.toString())
-        .setDeadline(LocalDateTime.now().minusMinutes(1));
-    ServiceContainer.getMenuService()
-        .save(ServiceContainer.getMenuService().findById(city.toString()));
+    Menu menuWithExpiredDeadline = ServiceContainer.getMenuService().findById(city.toString());
+    menuWithExpiredDeadline.setDeadline(LocalDateTime.now().minusMinutes(1));
+    ServiceContainer.getMenuService().save(menuWithExpiredDeadline);
 
     CallbackQuery publishMenu =
         callbackQueryWithChatId(adminChatId, CallbackState.SUBMIT_MENU.name());

@@ -278,21 +278,20 @@ public abstract class AbstractHandler {
     Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
     if (menu.isEmpty()) {
       items.add(State.CREATE_ORDER.getDisplayName());
-      return items;
-    }
-
-    switch (menu.get().getStatus()) {
-      case READY -> {
-        items.add(State.VIEW_MENU_TODAY.getDisplayName());
-        addReadyMenuItems(user, items);
-      }
-      case DEADLINE -> {
-        items.add(State.GET_ORDER.getDisplayName());
-        if (isOrderExist(user)) {
-          items.add(State.SHARE_LUNCH.getDisplayName());
+    } else {
+      switch (menu.get().getStatus()) {
+        case READY -> {
+          items.add(State.VIEW_MENU_TODAY.getDisplayName());
+          addReadyMenuItems(user, items);
         }
+        case DEADLINE -> {
+          items.add(State.GET_ORDER.getDisplayName());
+          if (isOrderExist(user)) {
+            items.add(State.SHARE_LUNCH.getDisplayName());
+          }
+        }
+        default -> {}
       }
-      default -> {}
     }
     if (!items.contains(State.GET_ORDER.getDisplayName()) && hasViewableOrder(user)) {
       items.add(State.GET_ORDER.getDisplayName());

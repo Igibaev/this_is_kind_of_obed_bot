@@ -24,12 +24,19 @@ public class BaseRepository<T extends Id> implements Repository<T> {
   private final ObjectMapper objectMapper;
   private final Class<T> type;
   private final Map<BaseRepoKey, T> database;
+  private final LocalDate preloadDate;
 
   public BaseRepository(Map<BaseRepoKey, T> database, Class<T> type, String storagePath) {
+    this(database, type, storagePath, LocalDate.now());
+  }
+
+  public BaseRepository(
+      Map<BaseRepoKey, T> database, Class<T> type, String storagePath, LocalDate preloadDate) {
     this.BASE_PATH = Path.of(BotConfig.getBotStorePath()).resolve(storagePath);
     this.objectMapper = JsonFileStorageSupport.createObjectMapper();
     this.database = database;
     this.type = type;
+    this.preloadDate = preloadDate;
     loadFromStorage();
   }
 
@@ -170,7 +177,7 @@ public class BaseRepository<T extends Id> implements Repository<T> {
             && dateFolder
                 .getFileName()
                 .toString()
-                .equals(LocalDate.now().format(DATE_FOLDER_FORMATTER))) {
+                .equals(preloadDate.format(DATE_FOLDER_FORMATTER))) {
           try (Stream<Path> files = Files.list(dateFolder)) {
             files.forEach(
                 path -> {

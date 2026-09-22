@@ -515,6 +515,24 @@ class AbstractHandlerTest {
   }
 
   @Test
+  void
+      getOrderMenuItems_givenNoMenuButLeftoverOrderFromClearedCycle_whenCalled_thenStillShowsGetOrder() {
+    // given
+    User user = userWithRole(User.Role.USER);
+    stubMenu(null);
+    when(orderService.existsByChatId(CHAT_ID_STRING, LocalDate.now())).thenReturn(true);
+    // when
+    List<String> actual = handler.getOrderMenuItems(user);
+    // then
+    assertEquals(
+        List.of(
+            State.VIEW_POOL.getDisplayName(),
+            State.CREATE_ORDER.getDisplayName(),
+            State.GET_ORDER.getDisplayName()),
+        actual);
+  }
+
+  @Test
   void getUserMenuKeyboard_givenUser_whenCalled_thenAlwaysShowsOrderMenuCategoryButton() {
     // given
     User user = userWithRole(User.Role.USER);

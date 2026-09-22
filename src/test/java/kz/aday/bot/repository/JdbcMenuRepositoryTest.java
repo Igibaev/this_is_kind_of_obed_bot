@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,6 +38,7 @@ class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
   private static final LocalDate DATE_9 = LocalDate.of(2031, 3, 9);
   private static final LocalDate DATE_10 = LocalDate.of(2031, 3, 10);
   private static final LocalDate DATE_11 = LocalDate.of(2031, 3, 11);
+  private static final LocalDate DATE_12 = LocalDate.of(2031, 3, 12);
 
   private final JdbcMenuRepository repository =
       new JdbcMenuRepository(PersistenceConfig.getDataSource());
@@ -80,6 +85,28 @@ class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
     assertEquals(1, found.getItemList().size());
     assertEquals("Салат", found.getItemList().get(0).getName());
     assertEquals(Category.SALAD, found.getItemList().get(0).getCategory());
+  }
+
+  @Test
+  void save_calledTwiceForSameDate_reusesItemId_forItemThatStillExistsByName() throws SQLException {
+    Menu menu = buildMenu(City.KARAGANDA, DATE_12);
+    menu.setItemList(
+        List.of(new Item(0, "Плов", Category.SECOND), new Item(1, "Салат", Category.SALAD)));
+    repository.save(menu);
+    long plovIdBeforeEdit = findItemId(City.KARAGANDA, DATE_12, "Плов");
+
+    Menu edited = buildMenu(City.KARAGANDA, DATE_12);
+    edited.setItemList(
+        List.of(new Item(0, "Плов", Category.SECOND), new Item(1, "Компот", Category.BEVERAGE)));
+    repository.save(edited);
+    long plovIdAfterEdit = findItemId(City.KARAGANDA, DATE_12, "Плов");
+
+    assertEquals(
+        plovIdBeforeEdit,
+        plovIdAfterEdit,
+        "item_id блюда, которое не изменилось по имени между двумя save() в тот же день, "
+            + "должен оставаться прежним - иначе будущий FK из order_items сломается "
+            + "при повторном редактировании меню в течение дня");
   }
 
   @Test
@@ -146,6 +173,23 @@ class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
     repository.clearStorage();
 
     assertTrue(repository.existById(City.ASTANA.toString(), DATE_11));
+  }
+
+  private static long findItemId(City city, LocalDate date, String name) throws SQLException {
+    String sql =
+        "SELECT mi.item_id FROM menu_items mi "
+            + "JOIN menus m ON m.id = mi.menu_id "
+            + "WHERE m.city = ? AND m.date = ? AND mi.name = ?";
+    try (Connection connection = PersistenceConfig.getDataSource().getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setString(1, city.toString());
+      statement.setObject(2, date);
+      statement.setString(3, name);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getLong("item_id");
+      }
+    }
   }
 
   private static void assertItemFieldsMatchInOrder(List<Item> expected, List<Item> actual) {

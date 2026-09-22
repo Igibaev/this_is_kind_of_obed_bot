@@ -138,6 +138,11 @@ public abstract class AbstractHandler {
     return orderService.existsByChatId(user.getId(), user.getCity().getCurrentOrderDate());
   }
 
+  private boolean hasViewableOrder(User user) {
+    return orderService.existsByChatId(user.getId(), LocalDate.now())
+        || orderService.existsByChatId(user.getId(), LocalDate.now().plusDays(1));
+  }
+
   protected List<Item> releaseOrderToSharedOrderItemPool(User user) {
     return releaseOrderToSharedOrderItemPool(user, user.getCity().getCurrentOrderDate());
   }
@@ -288,6 +293,9 @@ public abstract class AbstractHandler {
         }
       }
       default -> {}
+    }
+    if (!items.contains(State.GET_ORDER.getDisplayName()) && hasViewableOrder(user)) {
+      items.add(State.GET_ORDER.getDisplayName());
     }
     return items;
   }

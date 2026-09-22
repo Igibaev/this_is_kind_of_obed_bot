@@ -2,9 +2,9 @@
 package kz.aday.bot.migration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import kz.aday.bot.configuration.PersistenceConfig;
@@ -82,10 +82,14 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
 
   @Test
   void main_doesNothing_whenNoJsonMenusExist() {
+    Menu before =
+        postgresRepository.getById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate());
+
     MenuJsonToPostgresMigrator.main(new String[0]);
 
-    assertNull(
-        postgresRepository.getById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate()));
+    Menu after =
+        postgresRepository.getById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate());
+    assertEquals(before, after);
   }
 
   private static Menu buildJsonMenu(
@@ -95,6 +99,7 @@ class MenuJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
     menu.setDate(jsonFolderDate.toString());
     menu.setStatus(Status.READY);
     menu.setItemList(List.of(new Item(0, itemName, category)));
+    menu.setDeadline(LocalDateTime.now().plusHours(2));
     return menu;
   }
 }

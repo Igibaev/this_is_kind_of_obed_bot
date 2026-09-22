@@ -2,6 +2,7 @@
 package kz.aday.bot.scheduler;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -68,25 +69,26 @@ public class SchedulerService {
   }
 
   /** Закрыть меню, закрыть все заказы */
-  private void closeMenu() {
+  void closeMenu() {
     log.debug("Closing Menu");
     for (Menu menu : menuService.findAll()) {
       if (menu.isDeadlinePassed() && menu.getStatus() != Status.DEADLINE) {
         menu.setStatus(Status.DEADLINE);
         menuService.save(menu);
-        orderService.markOrdersAsSubmitted(menu.getCity(), menu.getCity().getCurrentOrderDate());
+        LocalDate orderDate = menu.getCity().getCurrentOrderDate();
+        orderService.markOrdersAsSubmitted(menu.getCity(), orderDate);
         sendMenuIsClosedNotification(menu.getCity());
-        sendReportToUsers(menu.getCity());
+        sendReportToUsers(menu.getCity(), orderDate);
         handledNotifications.clear();
       }
     }
   }
 
-  private void sendReportToUsers(City city) {
+  private void sendReportToUsers(City city, LocalDate orderDate) {
     for (User user : userService.findAll()) {
       if (user.getCity() == city) {
         List<Order> orders =
-            orderService.findAll().stream()
+            orderService.findAllOnDate(orderDate).stream()
                 .filter(o -> o.getCity() == user.getCity())
                 .filter(o -> o.getStatus() == Status.READY)
                 .filter(o -> !o.getOrderItemList().isEmpty())

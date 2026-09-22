@@ -10,7 +10,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.sql.DataSource;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
@@ -41,7 +45,13 @@ public class JdbcMenuRepository implements Repository<Menu> {
           + "notificated = EXCLUDED.notificated, "
           + "message = EXCLUDED.message "
           + "RETURNING id";
-  private static final String DELETE_ITEMS_BY_MENU_ID = "DELETE FROM menu_items WHERE menu_id = ?";
+  private static final String SELECT_EXISTING_ITEM_IDS_BY_MENU_ID =
+      "SELECT item_id, name FROM menu_items WHERE menu_id = ?";
+  private static final String DELETE_ITEM_BY_ID = "DELETE FROM menu_items WHERE item_id = ?";
+  private static final String SHIFT_DISPLAY_ORDER_TO_TEMP =
+      "UPDATE menu_items SET display_order = -item_id WHERE item_id = ?";
+  private static final String UPDATE_ITEM =
+      "UPDATE menu_items SET display_order = ?, category = ? WHERE item_id = ?";
   private static final String INSERT_ITEM =
       "INSERT INTO menu_items (menu_id, display_order, name, category) VALUES (?, ?, ?, ?)";
   private static final String DELETE_MENU_BY_CITY_AND_DATE =
@@ -220,18 +230,61 @@ public class JdbcMenuRepository implements Repository<Menu> {
 
   private void replaceItems(Connection connection, long menuId, List<Item> items)
       throws SQLException {
-    try (PreparedStatement deleteStatement = connection.prepareStatement(DELETE_ITEMS_BY_MENU_ID)) {
-      deleteStatement.setLong(1, menuId);
-      deleteStatement.executeUpdate();
-    }
-    try (PreparedStatement insertStatement = connection.prepareStatement(INSERT_ITEM)) {
-      for (Item item : items) {
-        insertStatement.setLong(1, menuId);
-        insertStatement.setInt(2, item.getId());
-        insertStatement.setString(3, item.getName());
-        insertStatement.setString(4, item.getCategory().name());
-        insertStatement.addBatch();
+    Map<String, Long> existingIdByName = new HashMap<>();
+    try (PreparedStatement statement =
+        connection.prepareStatement(SELECT_EXISTING_ITEM_IDS_BY_MENU_ID)) {
+      statement.setLong(1, menuId);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          existingIdByName.put(resultSet.getString("name"), resultSet.getLong("item_id"));
+        }
       }
+    }
+
+    Set<String> newNames = new HashSet<>();
+    for (Item item : items) {
+      newNames.add(item.getName());
+    }
+
+    try (PreparedStatement statement = connection.prepareStatement(DELETE_ITEM_BY_ID)) {
+      for (Map.Entry<String, Long> existing : existingIdByName.entrySet()) {
+        if (!newNames.contains(existing.getKey())) {
+          statement.setLong(1, existing.getValue());
+          statement.addBatch();
+        }
+      }
+      statement.executeBatch();
+    }
+
+    try (PreparedStatement statement = connection.prepareStatement(SHIFT_DISPLAY_ORDER_TO_TEMP)) {
+      for (Item item : items) {
+        Long existingId = existingIdByName.get(item.getName());
+        if (existingId != null) {
+          statement.setLong(1, existingId);
+          statement.addBatch();
+        }
+      }
+      statement.executeBatch();
+    }
+
+    try (PreparedStatement updateStatement = connection.prepareStatement(UPDATE_ITEM);
+        PreparedStatement insertStatement = connection.prepareStatement(INSERT_ITEM)) {
+      for (Item item : items) {
+        Long existingId = existingIdByName.get(item.getName());
+        if (existingId != null) {
+          updateStatement.setInt(1, item.getId());
+          updateStatement.setString(2, item.getCategory().name());
+          updateStatement.setLong(3, existingId);
+          updateStatement.addBatch();
+        } else {
+          insertStatement.setLong(1, menuId);
+          insertStatement.setInt(2, item.getId());
+          insertStatement.setString(3, item.getName());
+          insertStatement.setString(4, item.getCategory().name());
+          insertStatement.addBatch();
+        }
+      }
+      updateStatement.executeBatch();
       insertStatement.executeBatch();
     }
   }

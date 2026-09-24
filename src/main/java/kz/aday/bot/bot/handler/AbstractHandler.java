@@ -158,7 +158,7 @@ public abstract class AbstractHandler {
     orderService.deleteByChatId(user.getId(), orderDate);
     LocalDate shareDate = order.getDate() != null ? order.getDate() : orderDate;
     sharedOrderItemPoolService.addItems(
-        user.getCity(), shareDate, user.getId(), user.getPreferedName(), order.getOrderItemList());
+        user.getCity(), shareDate, user.getId(), order.getOrderItemList());
     return List.copyOf(order.getOrderItemList());
   }
 

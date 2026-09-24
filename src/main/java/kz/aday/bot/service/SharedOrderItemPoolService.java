@@ -6,16 +6,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.SharedOrderItemPool;
-import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.repository.JdbcSharedOrderItemPoolRepository;
+import kz.aday.bot.repository.Repository;
 
 public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool> {
   public SharedOrderItemPoolService() {
-    super(new BaseRepository<>(new ConcurrentHashMap<>(), SharedOrderItemPool.class, "pool"));
+    super(new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
+  }
+
+  SharedOrderItemPoolService(Repository<SharedOrderItemPool> repository) {
+    super(repository);
   }
 
   private SharedOrderItemPool getOrCreate(City city, LocalDate date) {
@@ -29,19 +34,12 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
     return sharedOrderItemPool;
   }
 
-  public void addItems(
-      City city,
-      LocalDate date,
-      String sourceChatId,
-      String sourceUsername,
-      Collection<Item> items) {
+  public void addItems(City city, LocalDate date, String sourceChatId, Collection<Item> items) {
     SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     for (Item item : items) {
       sharedOrderItemPool
           .getItems()
-          .add(
-              new SharedOrderItem(
-                  UUID.randomUUID().toString(), item, sourceChatId, sourceUsername, null, null));
+          .add(new SharedOrderItem(UUID.randomUUID().toString(), item, sourceChatId, null));
     }
     save(sharedOrderItemPool);
   }
@@ -53,7 +51,7 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
   }
 
   public Optional<SharedOrderItem> claim(
-      City city, LocalDate date, String entryId, String claimerChatId, String claimerUsername) {
+      City city, LocalDate date, String entryId, String claimerChatId) {
     SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     Optional<SharedOrderItem> entry =
         sharedOrderItemPool.getItems().stream()
@@ -62,7 +60,6 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
     entry.ifPresent(
         e -> {
           e.setClaimedByChatId(claimerChatId);
-          e.setClaimedByUsername(claimerUsername);
           save(sharedOrderItemPool);
         });
     return entry;

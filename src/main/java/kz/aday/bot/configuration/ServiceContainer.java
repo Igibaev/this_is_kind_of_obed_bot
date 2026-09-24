@@ -12,8 +12,6 @@ import lombok.Getter;
 @Getter
 public class ServiceContainer {
   private static final MessageSender messageService = new MessageSender();
-  private static final SharedOrderItemPoolService SHARED_ORDER_ITEM_POOL_SERVICE =
-      new SharedOrderItemPoolService();
 
   private ServiceContainer() {}
 
@@ -38,7 +36,7 @@ public class ServiceContainer {
   }
 
   public static SharedOrderItemPoolService getPoolService() {
-    return SHARED_ORDER_ITEM_POOL_SERVICE;
+    return SharedOrderItemPoolServiceHolder.INSTANCE;
   }
 
   private static final class UserServiceHolder {
@@ -55,5 +53,9 @@ public class ServiceContainer {
 
   private static final class OfficeAttendanceServiceHolder {
     private static final OfficeAttendanceService INSTANCE = new OfficeAttendanceService();
+  }
+
+  private static final class SharedOrderItemPoolServiceHolder {
+    private static final SharedOrderItemPoolService INSTANCE = new SharedOrderItemPoolService();
   }
 }

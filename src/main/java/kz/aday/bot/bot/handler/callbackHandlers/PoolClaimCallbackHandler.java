@@ -32,8 +32,7 @@ public class PoolClaimCallbackHandler extends AbstractHandler implements Callbac
       String entryId = getEntryId(callback);
       LocalDate targetDate = user.getCity().getCurrentOrderDate();
       Optional<SharedOrderItem> claimed =
-          sharedOrderItemPoolService.claim(
-              user.getCity(), targetDate, entryId, user.getId(), user.getPreferedName());
+          sharedOrderItemPoolService.claim(user.getCity(), targetDate, entryId, user.getId());
 
       String message;
       if (claimed.isPresent()) {

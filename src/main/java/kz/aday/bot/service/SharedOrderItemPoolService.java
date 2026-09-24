@@ -11,18 +11,21 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.SharedOrderItemPool;
-import kz.aday.bot.repository.Repository;
 import kz.aday.bot.repository.SharedOrderItemPoolRepository;
 
 public class SharedOrderItemPoolService {
-  private final Repository<SharedOrderItemPool> repository;
+  private final SharedOrderItemPoolRepository repository;
 
   public SharedOrderItemPoolService() {
     this(new SharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
   }
 
-  SharedOrderItemPoolService(Repository<SharedOrderItemPool> repository) {
+  SharedOrderItemPoolService(SharedOrderItemPoolRepository repository) {
     this.repository = repository;
+  }
+
+  public void deleteOutdated() {
+    repository.deleteBefore(LocalDate.now());
   }
 
   public void addItems(City city, LocalDate date, String sourceChatId, Collection<Item> items) {

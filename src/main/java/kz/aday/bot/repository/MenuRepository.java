@@ -56,6 +56,7 @@ public class MenuRepository extends AbstractRepository<Menu> {
           + "VALUES (?, ?, ?, ?) RETURNING item_id";
   private static final String DELETE_MENU_BY_CITY_AND_DATE =
       "DELETE FROM menus WHERE city = ? AND date = ?";
+  private static final String DELETE_MENUS_BEFORE = "DELETE FROM menus WHERE date < ?";
 
   public MenuRepository(DataSource dataSource) {
     super(dataSource);
@@ -88,6 +89,11 @@ public class MenuRepository extends AbstractRepository<Menu> {
   public void deleteById(String id, LocalDate date) {
     int deleted = jdbcTemplate.update(DELETE_MENU_BY_CITY_AND_DATE, id, date);
     log.info("Deleted [{}] menu(s) with id [{}] for date [{}]", deleted, id, date);
+  }
+
+  public void deleteBefore(LocalDate cutoff) {
+    int deleted = jdbcTemplate.update(DELETE_MENUS_BEFORE, cutoff);
+    log.info("Deleted [{}] menu(s) before [{}]", deleted, cutoff);
   }
 
   private List<Menu> loadMenus(String sql, Object... args) {

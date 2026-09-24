@@ -91,8 +91,7 @@ class SubmitOrderCallbackHandlerTest {
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(
-        Messages.ORDER_SENDED.getText(order.getOrderItemList()),
-        messageCaptor.getValue().getText());
+        Messages.ORDER_SEND.getText(order.getOrderItemList()), messageCaptor.getValue().getText());
   }
 
   @Test

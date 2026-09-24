@@ -25,7 +25,7 @@ import kz.aday.bot.model.Item;
 import kz.aday.bot.model.MenuRules;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.Repository;
+import kz.aday.bot.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,14 +40,20 @@ class OrderServiceTest {
   private static final Item CAESAR = new Item(4, "Цезарь", Category.SALAD);
   private static final MenuRules NO_RULES = new MenuRules(City.ALMATA, Map.of());
 
-  private Repository<Order> repository;
+  private OrderRepository repository;
   private OrderService service;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
-    repository = mock(Repository.class);
+    repository = mock(OrderRepository.class);
     service = new OrderService(repository);
+  }
+
+  @Test
+  void deleteOutdated_deletesOrdersOlderThanOrderHistory() {
+    service.deleteOutdated();
+
+    verify(repository).deleteBefore(LocalDate.now().minusDays(OrderService.ORDER_HISTORY_DAYS));
   }
 
   @Test

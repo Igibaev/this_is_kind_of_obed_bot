@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import javax.sql.DataSource;
+import kz.aday.bot.model.AttendanceStat;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Id;
 import kz.aday.bot.model.OfficeAttendance;
@@ -32,6 +33,21 @@ public class OfficeAttendanceRepository extends AbstractRepository<OfficeAttenda
           + "will_come = EXCLUDED.will_come";
   private static final String DELETE_BY_ID =
       "DELETE FROM office_attendance WHERE chat_id = ? AND date = ?";
+  private static final String SELECT_LEADERBOARD =
+      "SELECT l.chat_id, u.prefered_name AS username, l.visits "
+          + "FROM attendance_leaderboard l "
+          + "JOIN users u ON u.chat_id = l.chat_id "
+          + "WHERE l.city = ?";
+  private static final String SELECT_LEADERBOARD_BY_CHAT_ID =
+      SELECT_LEADERBOARD + " AND l.chat_id = ?";
+  private static final String CONSOLIDATE_ATTENDED_BEFORE =
+      "INSERT INTO attendance_leaderboard (chat_id, city, visits) "
+          + "SELECT chat_id, city, COUNT(*) FROM office_attendance "
+          + "WHERE will_come = TRUE AND city IS NOT NULL AND date < ? "
+          + "GROUP BY chat_id, city "
+          + "ON CONFLICT (chat_id, city) DO UPDATE SET "
+          + "visits = attendance_leaderboard.visits + EXCLUDED.visits";
+  private static final String DELETE_BEFORE = "DELETE FROM office_attendance WHERE date < ?";
 
   public OfficeAttendanceRepository(DataSource dataSource) {
     super(dataSource);
@@ -70,6 +86,29 @@ public class OfficeAttendanceRepository extends AbstractRepository<OfficeAttenda
         toChatId(chatId));
   }
 
+  public Collection<AttendanceStat> findLeaderboard(City city) {
+    return jdbcTemplate.query(
+        SELECT_LEADERBOARD, OfficeAttendanceRepository::mapStatRow, enumName(city));
+  }
+
+  public Collection<AttendanceStat> findLeaderboardByChatId(City city, String chatId) {
+    return jdbcTemplate.query(
+        SELECT_LEADERBOARD_BY_CHAT_ID,
+        OfficeAttendanceRepository::mapStatRow,
+        enumName(city),
+        toChatId(chatId));
+  }
+
+  public void consolidateAttendedBefore(LocalDate cutoff) {
+    int deleted =
+        transactionTemplate.execute(
+            status -> {
+              jdbcTemplate.update(CONSOLIDATE_ATTENDED_BEFORE, cutoff);
+              return jdbcTemplate.update(DELETE_BEFORE, cutoff);
+            });
+    log.info("Consolidated [{}] office attendance record(s) before [{}]", deleted, cutoff);
+  }
+
   @Override
   public void save(OfficeAttendance attendance) {
     jdbcTemplate.update(
@@ -95,5 +134,12 @@ public class OfficeAttendanceRepository extends AbstractRepository<OfficeAttenda
     attendance.setWillCome(resultSet.getObject(Columns.WILL_COME, Boolean.class));
     attendance.setDate(resultSet.getObject(Columns.DATE, LocalDate.class).toString());
     return attendance;
+  }
+
+  private static AttendanceStat mapStatRow(ResultSet resultSet, int rowNum) throws SQLException {
+    return new AttendanceStat(
+        chatIdValue(resultSet, Columns.CHAT_ID),
+        resultSet.getString(Columns.USERNAME),
+        resultSet.getInt(Columns.VISITS));
   }
 }

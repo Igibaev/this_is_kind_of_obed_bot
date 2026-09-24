@@ -14,7 +14,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.SharedOrderItemPool;
-import kz.aday.bot.repository.Repository;
+import kz.aday.bot.repository.SharedOrderItemPoolRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,14 +25,20 @@ class SharedOrderItemPoolServiceTest {
   private static final LocalDate OTHER_DATE = LocalDate.of(2026, 9, 18);
   private static final String POOL_ID = City.ALMATA + "_" + DATE;
 
-  private Repository<SharedOrderItemPool> repository;
+  private SharedOrderItemPoolRepository repository;
   private SharedOrderItemPoolService service;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
-    repository = mock(Repository.class);
+    repository = mock(SharedOrderItemPoolRepository.class);
     service = new SharedOrderItemPoolService(repository);
+  }
+
+  @Test
+  void deleteOutdated_deletesPoolsBeforeToday() {
+    service.deleteOutdated();
+
+    verify(repository).deleteBefore(LocalDate.now());
   }
 
   @Test

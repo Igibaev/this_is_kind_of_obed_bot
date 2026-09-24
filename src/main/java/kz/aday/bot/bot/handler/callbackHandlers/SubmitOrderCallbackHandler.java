@@ -28,7 +28,7 @@ public class SubmitOrderCallbackHandler extends AbstractHandler implements Callb
         officeAttendanceService.save(user.getId(), user.getCity(), true);
         sendMessage(
             user,
-            Messages.ORDER_SENDED.getText(order.getOrderItemList()),
+            Messages.ORDER_SEND.getText(order.getOrderItemList()),
             getMessageId(callback),
             sender);
       }

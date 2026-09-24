@@ -10,12 +10,15 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import kz.aday.bot.configuration.PersistenceConfig;
+import kz.aday.bot.model.AttendanceStat;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.support.DataAccessUtils;
 
 class OfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
 
@@ -23,6 +26,9 @@ class OfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
   private static final LocalDate YESTERDAY = TODAY.minusDays(1);
   private static final LocalDate PERIOD_START = LocalDate.of(2001, 2, 1);
   private static final LocalDate PERIOD_END = LocalDate.of(2001, 2, 28);
+  private static final LocalDate CONSOLIDATION_CUTOFF = LocalDate.of(1985, 6, 1);
+  private static final LocalDate BEFORE_CUTOFF = CONSOLIDATION_CUTOFF.minusDays(1);
+  private static final String USERNAME = "Repo Test";
 
   private final OfficeAttendanceRepository repository =
       new OfficeAttendanceRepository(PersistenceConfig.getDataSource());
@@ -153,6 +159,113 @@ class OfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
     assertTrue(found.isEmpty());
   }
 
+  @Test
+  void consolidateAttendedBefore_countsComingAttendancesBeforeCutoffPerUserAndCity() {
+    String chatId = "940000101";
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF);
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF.minusDays(1));
+    saveAttendance(chatId, City.ASTANA, BEFORE_CUTOFF.minusDays(2));
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertEquals(2, leaderboardVisits(City.ALMATA, chatId));
+    assertEquals(1, leaderboardVisits(City.ASTANA, chatId));
+  }
+
+  @Test
+  void consolidateAttendedBefore_ignoresNotComingAttendances() {
+    String chatId = "940000102";
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF);
+    saveNotComingAttendance(chatId, City.ALMATA, BEFORE_CUTOFF.minusDays(1));
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertEquals(1, leaderboardVisits(City.ALMATA, chatId));
+  }
+
+  @Test
+  void consolidateAttendedBefore_addsToExistingLeaderboardVisits() {
+    String chatId = "940000103";
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF);
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF.minusDays(1));
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertEquals(2, leaderboardVisits(City.ALMATA, chatId));
+  }
+
+  @Test
+  void consolidateAttendedBefore_deletesComingAndNotComingAttendancesBeforeCutoff() {
+    String chatId = "940000104";
+    OfficeAttendance coming = saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF);
+    OfficeAttendance notComing =
+        saveNotComingAttendance(chatId, City.ALMATA, BEFORE_CUTOFF.minusDays(1));
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertNull(repository.getById(coming.getId(), BEFORE_CUTOFF));
+    assertNull(repository.getById(notComing.getId(), BEFORE_CUTOFF.minusDays(1)));
+  }
+
+  @Test
+  void consolidateAttendedBefore_keepsAndDoesNotCountAttendancesOnOrAfterCutoff() {
+    String chatId = "940000105";
+    OfficeAttendance onCutoff = saveAttendance(chatId, City.ALMATA, CONSOLIDATION_CUTOFF);
+    OfficeAttendance afterCutoff =
+        saveAttendance(chatId, City.ALMATA, CONSOLIDATION_CUTOFF.plusDays(1));
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertEquals(onCutoff, repository.getById(onCutoff.getId(), CONSOLIDATION_CUTOFF));
+    assertEquals(
+        afterCutoff, repository.getById(afterCutoff.getId(), CONSOLIDATION_CUTOFF.plusDays(1)));
+    assertTrue(repository.findLeaderboardByChatId(City.ALMATA, chatId).isEmpty());
+  }
+
+  @Test
+  void findLeaderboard_returnsOnlyStatsOfRequestedCity() {
+    String almataChatId = "940000106";
+    String astanaChatId = "940000107";
+    saveAttendance(almataChatId, City.ALMATA, BEFORE_CUTOFF);
+    saveAttendance(astanaChatId, City.ASTANA, BEFORE_CUTOFF);
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    Set<String> chatIds =
+        repository.findLeaderboard(City.ALMATA).stream()
+            .map(AttendanceStat::getChatId)
+            .collect(Collectors.toSet());
+    assertTrue(chatIds.contains(almataChatId));
+    assertFalse(chatIds.contains(astanaChatId));
+  }
+
+  @Test
+  void findLeaderboardByChatId_returnsOnlyStatOfRequestedUserWithUsername() {
+    String chatId = "940000108";
+    String otherChatId = "940000109";
+    saveAttendance(chatId, City.ALMATA, BEFORE_CUTOFF);
+    saveAttendance(otherChatId, City.ALMATA, BEFORE_CUTOFF);
+
+    repository.consolidateAttendedBefore(CONSOLIDATION_CUTOFF);
+
+    assertEquals(
+        List.of(new AttendanceStat(chatId, USERNAME, 1)),
+        List.copyOf(repository.findLeaderboardByChatId(City.ALMATA, chatId)));
+  }
+
+  private int leaderboardVisits(City city, String chatId) {
+    return DataAccessUtils.requiredSingleResult(repository.findLeaderboardByChatId(city, chatId))
+        .getVisits();
+  }
+
+  private OfficeAttendance saveNotComingAttendance(String chatId, City city, LocalDate date) {
+    OfficeAttendance attendance = buildAttendance(chatId, city, date);
+    attendance.setWillCome(false);
+    repository.save(attendance);
+    return attendance;
+  }
+
   private OfficeAttendance saveAttendance(String chatId, City city, LocalDate date) {
     OfficeAttendance attendance = buildAttendance(chatId, city, date);
     repository.save(attendance);
@@ -166,10 +279,10 @@ class OfficeAttendanceRepositoryTest extends AbstractDbPersistenceTest {
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city, LocalDate date) {
-    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId), "Repo Test");
+    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId), USERNAME);
     OfficeAttendance attendance = new OfficeAttendance();
     attendance.setChatId(chatId);
-    attendance.setUsername("Repo Test");
+    attendance.setUsername(USERNAME);
     attendance.setCity(city);
     attendance.setWillCome(true);
     attendance.setDate(date.toString());

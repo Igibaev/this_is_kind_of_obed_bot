@@ -69,6 +69,8 @@ public class OrderRepository extends AbstractRepository<Order> {
   private static final String DELETE_ORDER_BY_CHAT_ID_AND_DATE =
       "DELETE FROM orders WHERE chat_id = ? AND date = ?";
 
+  private static final String DELETE_ORDERS_BEFORE = "DELETE FROM orders WHERE date < ?";
+
   public OrderRepository(DataSource dataSource) {
     super(dataSource);
   }
@@ -115,6 +117,11 @@ public class OrderRepository extends AbstractRepository<Order> {
     int deleted =
         jdbcTemplate.update(DELETE_ORDER_BY_CHAT_ID_AND_DATE, toChatId(Id.ownerOf(id)), date);
     log.info("Deleted [{}] order(s) with id [{}] for date [{}]", deleted, id, date);
+  }
+
+  public void deleteBefore(LocalDate cutoff) {
+    int deleted = jdbcTemplate.update(DELETE_ORDERS_BEFORE, cutoff);
+    log.info("Deleted [{}] order(s) before [{}]", deleted, cutoff);
   }
 
   private List<Order> loadOrders(String sql, Object... args) {

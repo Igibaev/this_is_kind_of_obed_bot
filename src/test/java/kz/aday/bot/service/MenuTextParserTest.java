@@ -33,6 +33,31 @@ class MenuTextParserTest {
   }
 
   @Test
+  void parseMenu_stripsNumberingDigitsAndDots_fromItemNames() throws Exception {
+    String text = menuTextWithDeadline("Первое:\n  1. Суп\n2.Борщ");
+
+    Menu menu = MenuTextParser.parseMenu(text);
+
+    assertEquals(List.of("Суп", "Борщ"), menu.getItemList().stream().map(Item::getName).toList());
+  }
+
+  @Test
+  void parseMenu_ignoresItemsBeforeFirstCategory() throws Exception {
+    String text = menuTextWithDeadline("Без категории\nВторое:\nПлов");
+
+    Menu menu = MenuTextParser.parseMenu(text);
+
+    assertEquals(List.of("Плов"), menu.getItemList().stream().map(Item::getName).toList());
+  }
+
+  @Test
+  void parseMenu_throwsEmptyMenu_whenNoItems() {
+    String text = menuTextWithDeadline("Без категории");
+
+    assertThrows(TelegramMessageException.class, () -> MenuTextParser.parseMenu(text));
+  }
+
+  @Test
   void parseMenu_throwsDuplicateCategory_whenCategoryHeaderRepeated() {
     String text =
         menuTextWithDeadline("Первое:\nСуп\nВторое:\nПлов\nСалаты:\nЦезарь\nВторое:\nБулочка");

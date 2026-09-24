@@ -23,7 +23,7 @@ public class GetAllOrdersCommandHandler extends AbstractHandler implements Comma
     sendMessage(
         user,
         Messages.ATTENDANCE_SHEET.getText(
-            user.getCity().getValue(), orderService.getAllOrdersGropedByDate(user.getCity())),
+            user.getCity().getValue(), orderService.getAllOrdersGroupedByDate(user.getCity())),
         getMessageId(update),
         sender);
   }

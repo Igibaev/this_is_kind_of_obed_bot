@@ -2,8 +2,7 @@
 package kz.aday.bot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDate;
 import kz.aday.bot.configuration.PersistenceConfig;
@@ -18,13 +17,13 @@ class OfficeAttendanceServicePersistenceIT extends AbstractDbPersistenceTest {
   private static final LocalDate TODAY = LocalDate.now();
 
   @Test
-  void save_thenFindById_returnsPersistedAttendance() {
+  void save_thenFindByChatId_returnsPersistedAttendance() {
     String chatId = "930000001";
     OfficeAttendance expected = buildAttendance(chatId, City.ALMATA);
     OfficeAttendanceService service = new OfficeAttendanceService();
 
     service.save(chatId, City.ALMATA, true, TODAY);
-    OfficeAttendance found = service.findById(expected.getId());
+    OfficeAttendance found = service.findByChatId(chatId, TODAY);
 
     assertEquals(expected, found);
     assertEquals(TODAY, found.getStorageDate());
@@ -36,22 +35,19 @@ class OfficeAttendanceServicePersistenceIT extends AbstractDbPersistenceTest {
     OfficeAttendance expected = buildAttendance(chatId, City.ASTANA);
     new OfficeAttendanceService().save(chatId, City.ASTANA, true, TODAY);
 
-    OfficeAttendance found = new OfficeAttendanceService().findById(expected.getId());
+    OfficeAttendance found = new OfficeAttendanceService().findByChatId(chatId, TODAY);
 
     assertEquals(expected, found);
   }
 
   @Test
-  void deleteById_removesAttendanceFromStorage() {
+  void findByChatId_returnsNull_whenNoAttendanceOnDate() {
     String chatId = "930000003";
-    OfficeAttendance expected = buildAttendance(chatId, City.ALMATA);
+    buildAttendance(chatId, City.ALMATA);
     OfficeAttendanceService service = new OfficeAttendanceService();
     service.save(chatId, City.ALMATA, true, TODAY);
-    assertTrue(service.existsById(expected.getId()));
 
-    service.deleteById(expected.getId());
-
-    assertFalse(service.existsById(expected.getId()));
+    assertNull(service.findByChatId(chatId, TODAY.minusDays(1)));
   }
 
   private static OfficeAttendance buildAttendance(String chatId, City city) {

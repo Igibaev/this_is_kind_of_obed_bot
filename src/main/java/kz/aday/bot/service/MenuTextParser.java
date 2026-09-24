@@ -19,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MenuTextParser {
+  private static final String LINE_SEPARATOR = "\n";
+  private static final int DEADLINE_LINES_COUNT = 1;
+  private static final char DOT = '.';
 
   private MenuTextParser() {}
 
@@ -46,15 +49,12 @@ public class MenuTextParser {
     List<Item> itemList = new ArrayList<>();
     Category currentCategory = null;
     Set<Category> visitedCategories = EnumSet.noneOf(Category.class);
-    String[] lines = message.split("\n");
-    lines[lines.length - 1] = "";
     int counter = 0;
-    for (String line : lines) {
-      if (line.isBlank()) {
+    for (String rawLine : linesWithoutDeadline(message)) {
+      if (rawLine.isBlank()) {
         continue;
       }
-      line = line.trim();
-      line = removeNonLetterCharacters(line);
+      String line = removeDigitsAndDots(rawLine);
 
       Category category = parseCategory(line);
       if (category != null) {
@@ -90,10 +90,15 @@ public class MenuTextParser {
     }
   }
 
-  private static String removeNonLetterCharacters(String line) {
+  private static List<String> linesWithoutDeadline(String message) {
+    List<String> lines = List.of(message.split(LINE_SEPARATOR));
+    return lines.subList(0, lines.size() - DEADLINE_LINES_COUNT);
+  }
+
+  private static String removeDigitsAndDots(String line) {
     StringBuilder stringBuilder = new StringBuilder();
     for (char letter : line.toCharArray()) {
-      if (!Character.isDigit(letter) && letter != '.') {
+      if (!Character.isDigit(letter) && letter != DOT) {
         stringBuilder.append(letter);
       }
     }
@@ -101,12 +106,9 @@ public class MenuTextParser {
   }
 
   private static Category parseCategory(String line) {
-    if (line.contains(Category.BREAD.getValue())) return Category.BREAD;
-    for (Category category : Category.values()) {
-      if (line.toLowerCase().startsWith(category.getValue().toLowerCase())) {
-        return category;
-      }
+    if (line.contains(Category.BREAD.getValue())) {
+      return Category.BREAD;
     }
-    return null;
+    return Category.from(line);
   }
 }

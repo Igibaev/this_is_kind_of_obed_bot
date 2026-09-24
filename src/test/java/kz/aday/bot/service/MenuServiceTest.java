@@ -3,6 +3,8 @@ package kz.aday.bot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -13,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
@@ -100,5 +103,50 @@ class MenuServiceTest {
     when(repository.getById(eq(City.ALMATA.toString()), any(LocalDate.class))).thenReturn(null);
 
     assertNull(service.findById(City.ALMATA.toString()));
+  }
+
+  @Test
+  void findById_queriesRepositoryWithCityCurrentOrderDate() {
+    Menu menu = new Menu();
+    when(repository.getById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(menu);
+
+    assertSame(menu, service.findById(City.ALMATA.toString()));
+  }
+
+  @Test
+  void findByIdOptional_returnsMenu_whenPresent() {
+    Menu menu = new Menu();
+    when(repository.getById(City.ALMATA.toString(), City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(menu);
+
+    assertEquals(Optional.of(menu), service.findByIdOptional(City.ALMATA.toString()));
+  }
+
+  @Test
+  void findByIdOptional_returnsEmpty_whenAbsent() {
+    assertTrue(service.findByIdOptional(City.ALMATA.toString()).isEmpty());
+  }
+
+  @Test
+  void existsById_queriesRepositoryWithCityCurrentOrderDate() {
+    when(repository.existById(City.ASTANA.toString(), City.ASTANA.getCurrentOrderDate()))
+        .thenReturn(true);
+
+    assertTrue(service.existsById(City.ASTANA.toString()));
+  }
+
+  @Test
+  void deleteById_deletesWithCityCurrentOrderDate() {
+    service.deleteById(City.KARAGANDA.toString());
+
+    verify(repository).deleteById(City.KARAGANDA.toString(), City.KARAGANDA.getCurrentOrderDate());
+  }
+
+  @Test
+  void clearLastWeek_delegatesToRepository() {
+    service.clearLastWeek();
+
+    verify(repository).clearLastWeek();
   }
 }

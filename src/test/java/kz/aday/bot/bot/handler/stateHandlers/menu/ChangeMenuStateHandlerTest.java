@@ -22,6 +22,8 @@ import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.exception.TelegramMessageException;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
+import kz.aday.bot.model.Menu;
+import kz.aday.bot.model.Order;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
@@ -61,7 +63,7 @@ class ChangeMenuStateHandlerTest {
     when(sentMessage.getMessageId()).thenReturn(999);
     when(messageSender.sendMessage(any(), eq(sender))).thenReturn(sentMessage);
     when(userService.findAll()).thenReturn(List.of());
-    when(orderService.findAll()).thenReturn(List.of());
+    when(orderService.findAllOnDate(any())).thenReturn(List.of());
 
     handler = new ChangeMenuStateHandler();
   }
@@ -101,6 +103,27 @@ class ChangeMenuStateHandlerTest {
     assertEquals(
         Messages.MENU_PENDING.getText(user.getCity().getValue()),
         messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_loadsOrdersForCityCurrentOrderDate_andComparesWithOldMenu_whenOrdersExist()
+      throws Exception {
+    User user = adminUser(City.ALMATA);
+    user.setState(State.CHANGE_MENU);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    when(userService.findAll()).thenReturn(List.of(user));
+    Order order = new Order();
+    order.setChatId(user.getId());
+    order.setCity(City.ALMATA);
+    when(orderService.findAllOnDate(City.ALMATA.getCurrentOrderDate())).thenReturn(List.of(order));
+    when(menuService.findById(City.ALMATA.toString())).thenReturn(new Menu());
+    Update update = updateWithText(validMenuText());
+
+    handler.handle(update, sender);
+
+    verify(orderService).findAllOnDate(City.ALMATA.getCurrentOrderDate());
+    verify(menuService).findById(City.ALMATA.toString());
+    verify(menuService).save(any());
   }
 
   @Test

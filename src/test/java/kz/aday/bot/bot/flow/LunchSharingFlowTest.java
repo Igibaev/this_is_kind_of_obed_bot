@@ -12,7 +12,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,8 +27,6 @@ import kz.aday.bot.model.Order;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
-import kz.aday.bot.repository.Repository;
-import kz.aday.bot.service.BaseService;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.RealDispatchers;
 import kz.aday.bot.util.Messages;
@@ -282,14 +279,9 @@ class LunchSharingFlowTest extends AbstractDbPersistenceTest {
     ServiceContainer.getUserService().save(user);
   }
 
-  @SuppressWarnings("unchecked")
-  private static boolean attendanceMarked(String chatId, LocalDate date) throws Exception {
-    Field repositoryField = BaseService.class.getDeclaredField("repository");
-    repositoryField.setAccessible(true);
-    Repository<OfficeAttendance> repository =
-        (Repository<OfficeAttendance>)
-            repositoryField.get(ServiceContainer.getOfficeAttendanceService());
-    OfficeAttendance attendance = repository.getById(chatId + "_" + date, date);
+  private static boolean attendanceMarked(String chatId, LocalDate date) {
+    OfficeAttendance attendance =
+        ServiceContainer.getOfficeAttendanceService().findByChatId(chatId, date);
     return attendance != null && Boolean.TRUE.equals(attendance.getWillCome());
   }
 

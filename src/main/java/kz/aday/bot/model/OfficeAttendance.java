@@ -36,7 +36,11 @@ public class OfficeAttendance implements Id {
 
   @Override
   public String getId() {
-    return chatId + "_" + date;
+    return Id.composeId(chatId, date);
+  }
+
+  public static String buildId(String chatId, LocalDate date) {
+    return Id.composeId(chatId, date);
   }
 
   @Override

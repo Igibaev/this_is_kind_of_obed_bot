@@ -63,7 +63,7 @@ class GetAllOrdersCommandHandlerTest {
   void handle_sendsAttendanceSheet() throws Exception {
     User user = adminUser(City.ALMATA);
     when(userService.findById(CHAT_ID_STRING)).thenReturn(user);
-    when(orderService.getAllOrdersGropedByDate(City.ALMATA)).thenReturn("report body");
+    when(orderService.getAllOrdersGroupedByDate(City.ALMATA)).thenReturn("report body");
     Update update = update();
 
     handler.handle(update, sender);
@@ -81,7 +81,7 @@ class GetAllOrdersCommandHandlerTest {
 
     handler.handle(update, sender);
 
-    verify(orderService, never()).getAllOrdersGropedByDate(any());
+    verify(orderService, never()).getAllOrdersGroupedByDate(any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(Messages.PERMISSION_DENIED.getText(), messageCaptor.getValue().getText());

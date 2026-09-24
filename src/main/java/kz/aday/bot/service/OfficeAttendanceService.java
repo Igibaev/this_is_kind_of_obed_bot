@@ -6,7 +6,8 @@ import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
@@ -15,18 +16,28 @@ import kz.aday.bot.repository.JdbcOfficeAttendanceRepository;
 import kz.aday.bot.repository.Repository;
 import kz.aday.bot.util.StringUtils;
 
-public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
+public class OfficeAttendanceService {
+  static final String NO_DATA_MESSAGE = "Нет данных о посещениях.";
+  private static final String USER_STATS_TEMPLATE = "%s: %d";
+  private static final String STATS_LINE_DELIMITER = "\n";
+  private static final int DAYS_UNTIL_DEFAULT_ATTENDANCE_DATE = 1;
+
+  private final Repository<OfficeAttendance> repository;
 
   public OfficeAttendanceService() {
-    super(new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource()));
+    this(new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource()));
   }
 
   OfficeAttendanceService(Repository<OfficeAttendance> repository) {
-    super(repository);
+    this.repository = repository;
+  }
+
+  public OfficeAttendance findByChatId(String chatId, LocalDate date) {
+    return repository.getById(OfficeAttendance.buildId(chatId, date), date);
   }
 
   public void save(String userId, City city, boolean willCome) {
-    save(userId, city, willCome, LocalDate.now().plusDays(1));
+    save(userId, city, willCome, LocalDate.now().plusDays(DAYS_UNTIL_DEFAULT_ATTENDANCE_DATE));
   }
 
   public void save(String userId, City city, boolean willCome, LocalDate date) {
@@ -35,91 +46,73 @@ public class OfficeAttendanceService extends BaseService<OfficeAttendance> {
     officeAttendance.setCity(city);
     officeAttendance.setWillCome(willCome);
     officeAttendance.setDate(date.toString());
-    save(officeAttendance);
+    repository.save(officeAttendance);
   }
 
   public String getOverallAttendanceStats(City city) {
-    List<OfficeAttendance> attendances =
-        repository.getAll().stream()
-            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
-            .filter(a -> city.equals(a.getCity()))
-            .filter(a -> !isAfter(a, LocalDate.now()))
-            .toList();
-    return formatStats(attendances);
+    return collectStats(city, attendance -> true);
   }
 
   public String getCurrentMonthAttendanceStats(City city) {
-    YearMonth currentMonth = YearMonth.now();
-    LocalDate today = LocalDate.now();
-    List<OfficeAttendance> attendances =
-        repository.getAll().stream()
-            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
-            .filter(a -> city.equals(a.getCity()))
-            .filter(a -> isInMonth(a, currentMonth))
-            .filter(a -> !isAfter(a, today))
-            .toList();
-    return formatStats(attendances);
+    return collectStats(city, inCurrentMonth());
   }
 
   public String getOverallAttendanceStatsForUser(City city, String userId) {
-    List<OfficeAttendance> attendances =
-        repository.getAll().stream()
-            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
-            .filter(a -> city.equals(a.getCity()))
-            .filter(a -> userId.equals(a.getChatId()))
-            .filter(a -> !isAfter(a, LocalDate.now()))
-            .toList();
-    return formatStats(attendances);
+    return collectStats(city, ofUser(userId));
   }
 
   public String getCurrentMonthAttendanceStatsForUser(City city, String userId) {
-    YearMonth currentMonth = YearMonth.now();
+    return collectStats(city, ofUser(userId).and(inCurrentMonth()));
+  }
+
+  private String collectStats(City city, Predicate<OfficeAttendance> extraFilter) {
     LocalDate today = LocalDate.now();
     List<OfficeAttendance> attendances =
         repository.getAll().stream()
             .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
             .filter(a -> city.equals(a.getCity()))
-            .filter(a -> userId.equals(a.getChatId()))
-            .filter(a -> isInMonth(a, currentMonth))
-            .filter(a -> !isAfter(a, today))
+            .filter(a -> parseDate(a).filter(date -> !date.isAfter(today)).isPresent())
+            .filter(extraFilter)
             .toList();
     return formatStats(attendances);
   }
 
-  private boolean isInMonth(OfficeAttendance attendance, YearMonth month) {
+  private static Predicate<OfficeAttendance> ofUser(String userId) {
+    return attendance -> userId.equals(attendance.getChatId());
+  }
+
+  private static Predicate<OfficeAttendance> inCurrentMonth() {
+    YearMonth currentMonth = YearMonth.now();
+    return attendance ->
+        parseDate(attendance).map(YearMonth::from).filter(currentMonth::equals).isPresent();
+  }
+
+  private static Optional<LocalDate> parseDate(OfficeAttendance attendance) {
     if (attendance.getDate() == null) {
-      return false;
+      return Optional.empty();
     }
     try {
-      return YearMonth.from(LocalDate.parse(attendance.getDate())).equals(month);
+      return Optional.of(LocalDate.parse(attendance.getDate()));
     } catch (DateTimeParseException e) {
-      return false;
+      return Optional.empty();
     }
   }
 
-  private boolean isAfter(OfficeAttendance attendance, LocalDate date) {
-    if (attendance.getDate() == null) {
-      return true;
-    }
-    try {
-      return LocalDate.parse(attendance.getDate()).isAfter(date);
-    } catch (DateTimeParseException e) {
-      return true;
-    }
-  }
-
-  private String formatStats(List<OfficeAttendance> attendances) {
+  private static String formatStats(List<OfficeAttendance> attendances) {
     if (attendances.isEmpty()) {
-      return "Нет данных о посещениях.";
+      return NO_DATA_MESSAGE;
     }
-    Map<String, List<OfficeAttendance>> byChatId =
-        attendances.stream().collect(Collectors.groupingBy(OfficeAttendance::getChatId));
-    return byChatId.values().stream()
+    return attendances.stream()
+        .collect(Collectors.groupingBy(OfficeAttendance::getChatId))
+        .values()
+        .stream()
         .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
         .map(
             list ->
                 String.format(
-                    "%s: %d", StringUtils.escapeMarkdown(list.get(0).getUsername()), list.size()))
-        .collect(Collectors.joining("\n"));
+                    USER_STATS_TEMPLATE,
+                    StringUtils.escapeMarkdown(list.get(0).getUsername()),
+                    list.size()))
+        .collect(Collectors.joining(STATS_LINE_DELIMITER));
   }
 }

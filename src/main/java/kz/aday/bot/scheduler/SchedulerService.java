@@ -17,6 +17,7 @@ import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.*;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
+import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
@@ -24,15 +25,23 @@ import kz.aday.bot.util.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.bots.AbsSender;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Slf4j
 public class SchedulerService {
+  private static final String EMPTY_ORDERS = "Список заказов пуст.";
+  private static final String REPORT_MESSAGE = "Список заказов.\n";
+  private static final long INITIAL_DELAY = 0;
+  private static final long NOTIFICATION_PERIOD_SECONDS = 1;
+  private static final long CONSOLIDATION_PERIOD_DAYS = 1;
+
   private final MessageSender messageSender = new MessageSender();
   private final UserService userService = ServiceContainer.getUserService();
   private final MenuService menuService = ServiceContainer.getMenuService();
   private final OrderService orderService = ServiceContainer.getOrderService();
+  private final OfficeAttendanceService officeAttendanceService =
+      ServiceContainer.getOfficeAttendanceService();
   private final TelegramFoodBot telegramFoodBot;
 
   private final Map<String, Boolean> handledNotifications = new ConcurrentHashMap<>();
@@ -45,8 +54,23 @@ public class SchedulerService {
 
   public void start() {
     executorService.scheduleAtFixedRate(
-        this::sendDeadlineIsNearNotification, 0, 1, TimeUnit.SECONDS);
-    executorService.scheduleAtFixedRate(this::closeMenu, 0, 1, TimeUnit.SECONDS);
+        this::sendDeadlineIsNearNotification,
+        INITIAL_DELAY,
+        NOTIFICATION_PERIOD_SECONDS,
+        TimeUnit.SECONDS);
+    executorService.scheduleAtFixedRate(
+        this::closeMenu, INITIAL_DELAY, NOTIFICATION_PERIOD_SECONDS, TimeUnit.SECONDS);
+    executorService.scheduleAtFixedRate(
+        this::consolidateAttendance, INITIAL_DELAY, CONSOLIDATION_PERIOD_DAYS, TimeUnit.DAYS);
+  }
+
+  void consolidateAttendance() {
+    log.debug("Consolidating office attendance");
+    try {
+      officeAttendanceService.consolidatePastMonths();
+    } catch (RuntimeException e) {
+      log.error("Failed to consolidate office attendance: {}", e.getMessage(), e);
+    }
   }
 
   void closeMenu() {
@@ -74,26 +98,24 @@ public class SchedulerService {
                 .filter(o -> !o.getOrderItemList().isEmpty())
                 .collect(Collectors.toList());
         if (orders.isEmpty()) {
-          sendMessageToUser(EMPTY_ORDERS, user, telegramFoodBot);
+          sendMessageToUser(EMPTY_ORDERS, user);
         } else {
           Report report = new Report(user.getCity(), orders);
-          sendMessageToUser(REPORT_MESSAGE + report.printOrderReport(), user, telegramFoodBot);
+          sendMessageToUser(REPORT_MESSAGE + report.printOrderReport(), user);
         }
       }
     }
   }
 
-  /** Отправить уведомления о том что дедлайн прошел меню закрыто */
   private void sendMenuIsClosedNotification(City city) {
     log.debug("send menu is closed notification");
     for (User user : userService.findAll()) {
       if (user.getCity() == city) {
-        sendMessageToUser(Messages.MENU_IS_CLOSED.getText(), user, telegramFoodBot);
+        sendMessageToUser(Messages.MENU_IS_CLOSED.getText(), user);
       }
     }
   }
 
-  /** Отправить уведомления за 10 минут до дедлайна */
   private void sendDeadlineIsNearNotification() {
     log.debug("send deadline isNearNotification");
     for (Menu menu : menuService.findAll()) {
@@ -107,11 +129,11 @@ public class SchedulerService {
             Order order =
                 orderService.findByChatId(user.getId(), user.getCity().getCurrentOrderDate());
             if (order.getStatus() == Status.PENDING) {
-              sendMessageWithMenuToUser(menu, order.getOrderItemList(), user, telegramFoodBot);
+              sendMessageWithMenuToUser(menu, order.getOrderItemList(), user);
               handledNotifications.put(user.getId(), true);
             }
           } else {
-            sendMessageWithMenuToUser(menu, user, telegramFoodBot);
+            sendMessageWithMenuToUser(menu, user);
             handledNotifications.put(user.getId(), true);
           }
         }
@@ -119,62 +141,43 @@ public class SchedulerService {
     }
   }
 
-  private void sendMessageToUser(String messageText, User user, AbsSender absSender) {
-    List<Integer> messagesToDelete = new ArrayList<>();
-    if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
+  private void sendMessageToUser(String messageText, User user) {
+    send(buildMessage(user, messageText), user);
+  }
+
+  private void sendMessageWithMenuToUser(Menu menu, User user) {
+    sendDeadlineIsNearMessage(
+        KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER),
+        user);
+  }
+
+  private void sendMessageWithMenuToUser(Menu menu, Set<Item> orderItems, User user) {
+    sendDeadlineIsNearMessage(
+        KeyboardUtil.createInlineKeyboard(
+            menu.getItemList(), orderItems, CallbackState.ADD_ITEM_TO_ORDER),
+        user);
+  }
+
+  private void sendDeadlineIsNearMessage(ReplyKeyboard keyboard, User user) {
+    SendMessage message = buildMessage(user, Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER.getText());
+    message.setReplyMarkup(keyboard);
+    send(message, user);
+  }
+
+  private static SendMessage buildMessage(User user, String messageText) {
     SendMessage message = new SendMessage();
     message.setChatId(user.getChatId());
     message.setText(messageText);
     message.enableMarkdown(true);
-    try {
-      Message sendedMessage = messageSender.sendMessage(message, absSender);
-      messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);
-
-      user.setLastMessageId(sendedMessage.getMessageId());
-      userService.save(user);
-    } catch (TelegramApiException e) {
-      log.error("Skip sending deadline notification: {}\n {}", e.getMessage(), e);
-    }
+    return message;
   }
 
-  private static final String EMPTY_ORDERS = "Список заказов пуст.";
-
-  private static final String REPORT_MESSAGE = "Список заказов.\n";
-
-  private void sendMessageWithMenuToUser(Menu menu, User user, AbsSender absSender) {
+  private void send(SendMessage message, User user) {
     List<Integer> messagesToDelete = new ArrayList<>();
     if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
-    SendMessage message = new SendMessage();
-    message.setChatId(user.getChatId());
-    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER.getText());
-    message.setReplyMarkup(
-        KeyboardUtil.createInlineKeyboard(menu.getItemList(), CallbackState.ADD_ITEM_TO_ORDER));
-    message.enableMarkdown(true);
     try {
-      Message sendedMessage = messageSender.sendMessage(message, absSender);
-      messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);
-
-      user.setLastMessageId(sendedMessage.getMessageId());
-      userService.save(user);
-    } catch (TelegramApiException e) {
-      log.error("Skip sending deadline notification: {}\n {}", e.getMessage(), e);
-    }
-  }
-
-  private void sendMessageWithMenuToUser(
-      Menu menu, Set<Item> orderItems, User user, AbsSender absSender) {
-    List<Integer> messagesToDelete = new ArrayList<>();
-    if (user.getLastMessageId() != null) messagesToDelete.add(user.getLastMessageId());
-    SendMessage message = new SendMessage();
-    message.setChatId(user.getChatId());
-    message.setText(Messages.DEADLINE_IS_NEAR_MAKE_AN_ORDER.getText());
-    message.setReplyMarkup(
-        KeyboardUtil.createInlineKeyboard(
-            menu.getItemList(), orderItems, CallbackState.ADD_ITEM_TO_ORDER));
-    message.enableMarkdown(true);
-    try {
-      Message sendedMessage = messageSender.sendMessage(message, absSender);
-      messageSender.deleteMessage(user.getChatId(), messagesToDelete, absSender);
+      Message sendedMessage = messageSender.sendMessage(message, telegramFoodBot);
+      messageSender.deleteMessage(user.getChatId(), messagesToDelete, telegramFoodBot);
 
       user.setLastMessageId(sendedMessage.getMessageId());
       userService.save(user);

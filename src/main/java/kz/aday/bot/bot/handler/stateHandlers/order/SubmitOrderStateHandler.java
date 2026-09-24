@@ -45,7 +45,7 @@ public class SubmitOrderStateHandler extends AbstractHandler implements StateHan
               orderService.save(order);
               officeAttendanceService.save(user.getId(), user.getCity(), true);
               sendMessage(
-                  user, Messages.ORDER_WAS_SUBMITED.getText(), getMessageId(update), sender);
+                  user, Messages.ORDER_WAS_SUBMITTED.getText(), getMessageId(update), sender);
             } else {
               sendMessage(user, Messages.OK_RETURN_TO_MENU.getText(), getMessageId(update), sender);
             }

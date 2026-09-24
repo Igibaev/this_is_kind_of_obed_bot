@@ -3,13 +3,16 @@ package kz.aday.bot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import kz.aday.bot.model.AttendanceStat;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.repository.OfficeAttendanceRepository;
@@ -75,6 +78,96 @@ class OfficeAttendanceServiceTest {
     String actual = service.getOverallAttendanceStats(City.ALMATA);
 
     assertEquals("user\\_1: 1", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStats_sumsLeaderboardAndCurrentAttendancesOfSameUser() {
+    when(repository.findLeaderboard(City.ALMATA))
+        .thenReturn(List.of(new AttendanceStat("1", "user1", 5)));
+    when(repository.findAttended(City.ALMATA, OVERALL_STATS_START, LocalDate.now()))
+        .thenReturn(List.of(attendance("1", "user1"), attendance("1", "user1")));
+
+    String actual = service.getOverallAttendanceStats(City.ALMATA);
+
+    assertEquals("user1: 7", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStats_includesUserPresentOnlyInLeaderboard() {
+    when(repository.findLeaderboard(City.ALMATA))
+        .thenReturn(List.of(new AttendanceStat("2", "user2", 4)));
+    when(repository.findAttended(City.ALMATA, OVERALL_STATS_START, LocalDate.now()))
+        .thenReturn(List.of(attendance("1", "user1")));
+
+    String actual = service.getOverallAttendanceStats(City.ALMATA);
+
+    assertEquals("user2: 4\nuser1: 1", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStats_sortsByMergedVisitsDescending() {
+    when(repository.findLeaderboard(City.ALMATA))
+        .thenReturn(
+            List.of(new AttendanceStat("1", "user1", 2), new AttendanceStat("2", "user2", 3)));
+    when(repository.findAttended(City.ALMATA, OVERALL_STATS_START, LocalDate.now()))
+        .thenReturn(List.of(attendance("1", "user1"), attendance("1", "user1")));
+
+    String actual = service.getOverallAttendanceStats(City.ALMATA);
+
+    assertEquals("user1: 4\nuser2: 3", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStatsForUser_sumsUserLeaderboardAndCurrentAttendances() {
+    when(repository.findLeaderboardByChatId(City.ALMATA, USER_ID))
+        .thenReturn(List.of(new AttendanceStat(USER_ID, "user1", 10)));
+    when(repository.findAttendedByChatId(
+            City.ALMATA, USER_ID, OVERALL_STATS_START, LocalDate.now()))
+        .thenReturn(List.of(attendance(USER_ID, "user1")));
+
+    String actual = service.getOverallAttendanceStatsForUser(City.ALMATA, USER_ID);
+
+    assertEquals("user1: 11", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStatsForUser_returnsLeaderboardVisits_whenNoCurrentAttendances() {
+    when(repository.findLeaderboardByChatId(City.ALMATA, USER_ID))
+        .thenReturn(List.of(new AttendanceStat(USER_ID, "user1", 3)));
+
+    String actual = service.getOverallAttendanceStatsForUser(City.ALMATA, USER_ID);
+
+    assertEquals("user1: 3", actual);
+  }
+
+  @Test
+  void getCurrentMonthAttendanceStats_ignoresLeaderboard() {
+    when(repository.findAttended(City.ALMATA, currentMonthStart(), LocalDate.now()))
+        .thenReturn(List.of(attendance("1", "user1")));
+
+    String actual = service.getCurrentMonthAttendanceStats(City.ALMATA);
+
+    assertEquals("user1: 1", actual);
+    verify(repository, never()).findLeaderboard(any());
+  }
+
+  @Test
+  void getCurrentMonthAttendanceStatsForUser_ignoresLeaderboard() {
+    when(repository.findAttendedByChatId(
+            City.ALMATA, USER_ID, currentMonthStart(), LocalDate.now()))
+        .thenReturn(List.of(attendance(USER_ID, "user1")));
+
+    String actual = service.getCurrentMonthAttendanceStatsForUser(City.ALMATA, USER_ID);
+
+    assertEquals("user1: 1", actual);
+    verify(repository, never()).findLeaderboardByChatId(any(), any());
+  }
+
+  @Test
+  void consolidatePastMonths_consolidatesAttendancesBeforeFirstDayOfCurrentMonth() {
+    service.consolidatePastMonths();
+
+    verify(repository).consolidateAttendedBefore(currentMonthStart());
   }
 
   @Test

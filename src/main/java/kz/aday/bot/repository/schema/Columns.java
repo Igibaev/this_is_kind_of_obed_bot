@@ -17,6 +17,7 @@ public final class Columns {
   public static final String ROLE = "role";
   public static final String STATE = "state";
   public static final String WILL_COME = "will_come";
+  public static final String VISITS = "visits";
   public static final String DEADLINE = "deadline";
   public static final String AVAILABLE = "available";
   public static final String NOTIFICATED = "notificated";

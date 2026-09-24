@@ -4,10 +4,12 @@ package kz.aday.bot.scheduler;
 import static kz.aday.bot.testsupport.TestFixtures.menuWithStatus;
 import static kz.aday.bot.testsupport.TestFixtures.readyOrderWithItem;
 import static kz.aday.bot.testsupport.TestFixtures.readyUser;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,6 +25,7 @@ import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
+import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.ServiceContainerMockExtension;
@@ -44,6 +47,7 @@ class SchedulerServiceTest {
   private MenuService menuService;
   private OrderService orderService;
   private UserService userService;
+  private OfficeAttendanceService officeAttendanceService;
   private TelegramFoodBot telegramFoodBot;
   private SchedulerService schedulerService;
 
@@ -52,6 +56,7 @@ class SchedulerServiceTest {
     menuService = services.getMenuService();
     orderService = services.getOrderService();
     userService = services.getUserService();
+    officeAttendanceService = services.getOfficeAttendanceService();
 
     telegramFoodBot = mock(TelegramFoodBot.class);
     Message sentMessage = mock(Message.class);
@@ -123,6 +128,26 @@ class SchedulerServiceTest {
     // then
     verify(telegramFoodBot, never()).execute(any(SendMessage.class));
     verify(orderService, never()).markOrdersAsSubmitted(any(), any());
+  }
+
+  @Test
+  void consolidateAttendance_consolidatesPastMonthsAttendance() {
+    // when
+    schedulerService.consolidateAttendance();
+
+    // then
+    verify(officeAttendanceService).consolidatePastMonths();
+  }
+
+  @Test
+  void consolidateAttendance_givenConsolidationFails_thenDoesNotPropagateException() {
+    // given
+    doThrow(new IllegalStateException("db is down"))
+        .when(officeAttendanceService)
+        .consolidatePastMonths();
+
+    // when / then
+    assertDoesNotThrow(() -> schedulerService.consolidateAttendance());
   }
 
   private List<String> capturedMessageTexts() throws TelegramApiException {

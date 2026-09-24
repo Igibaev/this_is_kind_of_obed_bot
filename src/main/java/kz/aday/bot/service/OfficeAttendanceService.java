@@ -5,9 +5,12 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import kz.aday.bot.configuration.PersistenceConfig;
+import kz.aday.bot.model.AttendanceStat;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.repository.OfficeAttendanceRepository;
@@ -49,42 +52,77 @@ public class OfficeAttendanceService {
   }
 
   public String getOverallAttendanceStats(City city) {
-    return formatStats(repository.findAttended(city, OVERALL_STATS_START, LocalDate.now()));
+    return formatStats(
+        merge(
+            repository.findLeaderboard(city),
+            countByUser(repository.findAttended(city, OVERALL_STATS_START, LocalDate.now()))));
   }
 
   public String getCurrentMonthAttendanceStats(City city) {
-    return formatStats(repository.findAttended(city, currentMonthStart(), LocalDate.now()));
+    return formatStats(
+        countByUser(repository.findAttended(city, currentMonthStart(), LocalDate.now())));
   }
 
   public String getOverallAttendanceStatsForUser(City city, String userId) {
     return formatStats(
-        repository.findAttendedByChatId(city, userId, OVERALL_STATS_START, LocalDate.now()));
+        merge(
+            repository.findLeaderboardByChatId(city, userId),
+            countByUser(
+                repository.findAttendedByChatId(
+                    city, userId, OVERALL_STATS_START, LocalDate.now()))));
   }
 
   public String getCurrentMonthAttendanceStatsForUser(City city, String userId) {
     return formatStats(
-        repository.findAttendedByChatId(city, userId, currentMonthStart(), LocalDate.now()));
+        countByUser(
+            repository.findAttendedByChatId(city, userId, currentMonthStart(), LocalDate.now())));
+  }
+
+  public void consolidatePastMonths() {
+    repository.consolidateAttendedBefore(currentMonthStart());
   }
 
   private static LocalDate currentMonthStart() {
     return YearMonth.now().atDay(FIRST_DAY_OF_MONTH);
   }
 
-  private static String formatStats(Collection<OfficeAttendance> attendances) {
-    if (attendances.isEmpty()) {
-      return NO_DATA_MESSAGE;
-    }
+  private static Collection<AttendanceStat> countByUser(Collection<OfficeAttendance> attendances) {
     return attendances.stream()
         .collect(Collectors.groupingBy(OfficeAttendance::getChatId))
         .values()
         .stream()
-        .sorted(Comparator.<List<OfficeAttendance>>comparingInt(List::size).reversed())
         .map(
             list ->
+                new AttendanceStat(list.get(0).getChatId(), list.get(0).getUsername(), list.size()))
+        .toList();
+  }
+
+  private static Collection<AttendanceStat> merge(
+      Collection<AttendanceStat> first, Collection<AttendanceStat> second) {
+    return Stream.concat(first.stream(), second.stream())
+        .collect(
+            Collectors.toMap(
+                AttendanceStat::getChatId,
+                Function.identity(),
+                (left, right) ->
+                    new AttendanceStat(
+                        left.getChatId(), left.getUsername(), left.getVisits() + right.getVisits()),
+                LinkedHashMap::new))
+        .values();
+  }
+
+  private static String formatStats(Collection<AttendanceStat> stats) {
+    if (stats.isEmpty()) {
+      return NO_DATA_MESSAGE;
+    }
+    return stats.stream()
+        .sorted(Comparator.comparingInt(AttendanceStat::getVisits).reversed())
+        .map(
+            stat ->
                 String.format(
                     USER_STATS_TEMPLATE,
-                    StringUtils.escapeMarkdown(list.get(0).getUsername()),
-                    list.size()))
+                    StringUtils.escapeMarkdown(stat.getUsername()),
+                    stat.getVisits()))
         .collect(Collectors.joining(STATS_LINE_DELIMITER));
   }
 }

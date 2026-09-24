@@ -80,8 +80,7 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     Update createOrder = updateWithChatId(userChatId, State.CREATE_ORDER.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
 
-    CallbackQuery addItem =
-        callbackQueryWithChatId(userChatId, CallbackState.ADD_ITEM_TO_ORDER + ":1");
+    CallbackQuery addItem = callbackQueryWithChatId(userChatId, addItemToOrderCallback(city));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
 
     CallbackQuery submitOrder =
@@ -237,6 +236,7 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     String otherCityChatId = chatId(otherCity, 11).toString();
     resetMenu(city);
     seedReadyAdmin(adminChatId, city);
+    seedReadyUser(Long.parseLong(otherCityChatId), otherCity, User.Role.USER);
 
     Update createMenu = updateWithChatId(adminChatId, State.CREATE_MENU.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createMenu, sender);
@@ -261,6 +261,11 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     assertTrue(
         ServiceContainer.getOrderService().existsByChatId(otherCityChatId, LocalDate.now()),
         "Order from a different city must survive clearing this city's menu");
+  }
+
+  private static String addItemToOrderCallback(City city) {
+    Menu menu = ServiceContainer.getMenuService().findById(city.toString());
+    return CallbackState.ADD_ITEM_TO_ORDER + ":" + menu.getItemList().get(0).getId();
   }
 
   private static City anotherCity(City city) {

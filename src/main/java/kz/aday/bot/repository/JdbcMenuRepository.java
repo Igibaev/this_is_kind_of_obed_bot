@@ -10,7 +10,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.sql.DataSource;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
@@ -29,7 +33,7 @@ public class JdbcMenuRepository implements Repository<Menu> {
       "SELECT id, city, date, status, deadline, available, notificated, message FROM menus";
   private static final String SELECT_MENUS_BY_DATE = SELECT_ALL_MENUS + " WHERE date = ?";
   private static final String SELECT_ITEMS_BY_MENU_ID =
-      "SELECT display_order, name, category FROM menu_items "
+      "SELECT item_id, name, category FROM menu_items "
           + "WHERE menu_id = ? ORDER BY display_order ASC";
   private static final String UPSERT_MENU =
       "INSERT INTO menus (city, date, status, deadline, available, notificated, message) "
@@ -41,9 +45,16 @@ public class JdbcMenuRepository implements Repository<Menu> {
           + "notificated = EXCLUDED.notificated, "
           + "message = EXCLUDED.message "
           + "RETURNING id";
-  private static final String DELETE_ITEMS_BY_MENU_ID = "DELETE FROM menu_items WHERE menu_id = ?";
+  private static final String SELECT_EXISTING_ITEM_IDS_BY_MENU_ID =
+      "SELECT item_id, name FROM menu_items WHERE menu_id = ?";
+  private static final String DELETE_ITEM_BY_ID = "DELETE FROM menu_items WHERE item_id = ?";
+  private static final String SHIFT_DISPLAY_ORDER_TO_TEMP =
+      "UPDATE menu_items SET display_order = -item_id WHERE item_id = ?";
+  private static final String UPDATE_ITEM =
+      "UPDATE menu_items SET display_order = ?, category = ? WHERE item_id = ?";
   private static final String INSERT_ITEM =
-      "INSERT INTO menu_items (menu_id, display_order, name, category) VALUES (?, ?, ?, ?)";
+      "INSERT INTO menu_items (menu_id, display_order, name, category) "
+          + "VALUES (?, ?, ?, ?) RETURNING item_id";
   private static final String DELETE_MENU_BY_CITY_AND_DATE =
       "DELETE FROM menus WHERE city = ? AND date = ?";
 
@@ -193,7 +204,7 @@ public class JdbcMenuRepository implements Repository<Menu> {
         while (resultSet.next()) {
           items.add(
               new Item(
-                  resultSet.getInt("display_order"),
+                  resultSet.getInt("item_id"),
                   resultSet.getString("name"),
                   JdbcMappingSupport.mapEnum(resultSet.getString("category"), Category::valueOf)));
         }
@@ -220,19 +231,67 @@ public class JdbcMenuRepository implements Repository<Menu> {
 
   private void replaceItems(Connection connection, long menuId, List<Item> items)
       throws SQLException {
-    try (PreparedStatement deleteStatement = connection.prepareStatement(DELETE_ITEMS_BY_MENU_ID)) {
-      deleteStatement.setLong(1, menuId);
-      deleteStatement.executeUpdate();
-    }
-    try (PreparedStatement insertStatement = connection.prepareStatement(INSERT_ITEM)) {
-      for (Item item : items) {
-        insertStatement.setLong(1, menuId);
-        insertStatement.setInt(2, item.getId());
-        insertStatement.setString(3, item.getName());
-        insertStatement.setString(4, item.getCategory().name());
-        insertStatement.addBatch();
+    Map<String, Long> existingIdByName = new HashMap<>();
+    try (PreparedStatement statement =
+        connection.prepareStatement(SELECT_EXISTING_ITEM_IDS_BY_MENU_ID)) {
+      statement.setLong(1, menuId);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          existingIdByName.put(resultSet.getString("name"), resultSet.getLong("item_id"));
+        }
       }
-      insertStatement.executeBatch();
+    }
+
+    Set<String> newNames = new HashSet<>();
+    for (Item item : items) {
+      newNames.add(item.getName());
+    }
+
+    try (PreparedStatement statement = connection.prepareStatement(DELETE_ITEM_BY_ID)) {
+      for (Map.Entry<String, Long> existing : existingIdByName.entrySet()) {
+        if (!newNames.contains(existing.getKey())) {
+          statement.setLong(1, existing.getValue());
+          statement.addBatch();
+        }
+      }
+      statement.executeBatch();
+    }
+
+    try (PreparedStatement statement = connection.prepareStatement(SHIFT_DISPLAY_ORDER_TO_TEMP)) {
+      for (Item item : items) {
+        Long existingId = existingIdByName.get(item.getName());
+        if (existingId != null) {
+          statement.setLong(1, existingId);
+          statement.addBatch();
+        }
+      }
+      statement.executeBatch();
+    }
+
+    try (PreparedStatement updateStatement = connection.prepareStatement(UPDATE_ITEM);
+        PreparedStatement insertStatement = connection.prepareStatement(INSERT_ITEM)) {
+      int displayOrder = 0;
+      for (Item item : items) {
+        Long existingId = existingIdByName.get(item.getName());
+        if (existingId != null) {
+          updateStatement.setInt(1, displayOrder);
+          updateStatement.setString(2, item.getCategory().name());
+          updateStatement.setLong(3, existingId);
+          updateStatement.addBatch();
+          item.setId(existingId.intValue());
+        } else {
+          insertStatement.setLong(1, menuId);
+          insertStatement.setInt(2, displayOrder);
+          insertStatement.setString(3, item.getName());
+          insertStatement.setString(4, item.getCategory().name());
+          try (ResultSet resultSet = insertStatement.executeQuery()) {
+            resultSet.next();
+            item.setId(resultSet.getInt("item_id"));
+          }
+        }
+        displayOrder++;
+      }
+      updateStatement.executeBatch();
     }
   }
 

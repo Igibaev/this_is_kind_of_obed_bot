@@ -4,16 +4,21 @@ package kz.aday.bot.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.*;
-import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.repository.JdbcOrderRepository;
+import kz.aday.bot.repository.Repository;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OrderService extends BaseService<Order> {
   public OrderService() {
-    super(new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, "order"));
+    super(new JdbcOrderRepository(PersistenceConfig.getDataSource()));
+  }
+
+  OrderService(Repository<Order> repository) {
+    super(repository);
   }
 
   public Optional<Order> findByChatIdOptional(String chatId, LocalDate date) {
@@ -86,14 +91,11 @@ public class OrderService extends BaseService<Order> {
 
   public void addItemToOrder(Order order, Item item, MenuRules menuRules) {
     if (order.getOrderItemList().contains(item)) {
-      // если пользователь выбрал то что у него уже в заказе, то мы это удалим из заказа
       order.getCategoryItemList().remove(item.getCategory());
       order.getOrderItemList().remove(item);
       return;
     }
     if (order.getCategoryItemList().contains(item.getCategory())) {
-      // если пользователь выбрал что-то другое но из той же категории, то мы удаляем то что было в
-      // категории, и добавляем новое выбранное
       Item itemToRemove =
           order.getOrderItemList().stream()
               .filter(it -> it.getCategory().equals(item.getCategory()))
@@ -108,8 +110,6 @@ public class OrderService extends BaseService<Order> {
     if (disjointCategories != null
         && !disjointCategories.isEmpty()
         && order.getCategoryItemList().containsAll(disjointCategories)) {
-      // если сработало правило, то мы удаляем какое нибудь из категории которые у него взаказе и
-      // добавляем новое выбранное
       Item itemToRemove =
           order.getOrderItemList().stream()
               .filter(it -> it.getCategory().equals(disjointCategories.stream().findAny().get()))
@@ -121,7 +121,6 @@ public class OrderService extends BaseService<Order> {
       order.getCategoryItemList().add(item.getCategory());
       return;
     }
-    // если ничего не выбрал то просто добавляем выбранное
     order.getOrderItemList().add(item);
     order.getCategoryItemList().add(item.getCategory());
   }

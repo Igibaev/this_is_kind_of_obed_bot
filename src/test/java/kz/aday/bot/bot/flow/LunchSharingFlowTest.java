@@ -258,10 +258,15 @@ class LunchSharingFlowTest extends AbstractDbPersistenceTest {
     dispatchers.stateDispatcher.dispatch(chooseCity, sender);
     Update createOrder = updateWithChatId(chatId, State.CREATE_ORDER.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
-    CallbackQuery addItem = callbackQueryWithChatId(chatId, CallbackState.ADD_ITEM_TO_ORDER + ":1");
+    CallbackQuery addItem = callbackQueryWithChatId(chatId, addItemToOrderCallback(city));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
     CallbackQuery submitOrder = callbackQueryWithChatId(chatId, CallbackState.SUBMIT_ORDER.name());
     dispatchers.callbackDispatcher.dispatch(submitOrder, sender);
+  }
+
+  private static String addItemToOrderCallback(City city) {
+    Menu menu = ServiceContainer.getMenuService().findById(city.toString());
+    return CallbackState.ADD_ITEM_TO_ORDER + ":" + menu.getItemList().get(0).getId();
   }
 
   private static void createReadyUser(Long chatId, String name, City city) {

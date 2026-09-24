@@ -6,7 +6,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
 import kz.aday.bot.model.City;
@@ -25,12 +24,9 @@ class OrderServiceTest {
 
   @BeforeEach
   @SuppressWarnings("unchecked")
-  void setUp() throws Exception {
-    service = new OrderService();
+  void setUp() {
     repository = mock(Repository.class);
-    Field repositoryField = BaseService.class.getDeclaredField("repository");
-    repositoryField.setAccessible(true);
-    repositoryField.set(service, repository);
+    service = new OrderService(repository);
   }
 
   @Test

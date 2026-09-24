@@ -3,6 +3,7 @@ package kz.aday.bot.bot.handler.stateHandlers.menu;
 
 import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
 import static kz.aday.bot.testsupport.TestFixtures.adminUser;
+import static kz.aday.bot.testsupport.TestFixtures.menuTextWithDeadline;
 import static kz.aday.bot.testsupport.TestFixtures.updateWithText;
 import static kz.aday.bot.testsupport.TestFixtures.validMenuText;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,12 +17,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.ServiceContainerMockExtension;
+import kz.aday.bot.util.Messages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -85,6 +88,22 @@ class SetMenuStateHandlerTest {
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals(
         "Дедлайн некорректный, исправьте сообщение и отправьте заново.",
+        messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_sendsDuplicateCategoryError_andDoesNotSave_whenCategoryRepeated() throws Exception {
+    User admin = adminUser(City.ALMATA);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(admin));
+    Update update = updateWithText(menuTextWithDeadline("Второе:\nПлов\nВторое:\nБулочка"));
+
+    handler.handle(update, sender);
+
+    verify(menuService, never()).save(any());
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
+    assertEquals(
+        Messages.MENU_CATEGORY_DUPLICATED.getText(Category.SECOND.getValue()),
         messageCaptor.getValue().getText());
   }
 }

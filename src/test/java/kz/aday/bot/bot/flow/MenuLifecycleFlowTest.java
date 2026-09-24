@@ -2,6 +2,7 @@
 package kz.aday.bot.bot.flow;
 
 import static kz.aday.bot.testsupport.TestFixtures.callbackQueryWithChatId;
+import static kz.aday.bot.testsupport.TestFixtures.menuTextWithDeadline;
 import static kz.aday.bot.testsupport.TestFixtures.updateWithChatId;
 import static kz.aday.bot.testsupport.TestFixtures.validMenuText;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,9 +16,11 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.function.Predicate;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.configuration.ServiceContainer;
+import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Order;
@@ -110,15 +113,13 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     dispatchers.stateDispatcher.dispatch(createMenu, sender);
 
     assertFalse(ServiceContainer.getMenuService().existsById(city.toString()));
-    ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(sender, atLeastOnce()).execute(captor.capture());
-    boolean permissionDeniedSent =
-        captor.getAllValues().stream()
-            .anyMatch(
-                message ->
-                    nonAdminChatId.toString().equals(message.getChatId())
-                        && message.getText().startsWith(Messages.PERMISSION_DENIED.getText()));
-    assertTrue(permissionDeniedSent, "Expected non-admin to receive a permission-denied message");
+    assertTrue(
+        anySentMessage(
+            sender,
+            message ->
+                nonAdminChatId.toString().equals(message.getChatId())
+                    && message.getText().startsWith(Messages.PERMISSION_DENIED.getText())),
+        "Expected non-admin to receive a permission-denied message");
   }
 
   @ParameterizedTest
@@ -153,12 +154,9 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
         ServiceContainer.getUserService().findById(adminChatId.toString()).getState(),
         "Admin should be prompted to set a new deadline");
 
-    ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(sender, atLeastOnce()).execute(captor.capture());
-    boolean expiredMessageSent =
-        captor.getAllValues().stream()
-            .anyMatch(message -> message.getText().contains("дедлайн уже прошел"));
-    assertTrue(expiredMessageSent, "Expected an already-expired deadline message");
+    assertTrue(
+        anySentMessage(sender, message -> message.getText().contains("дедлайн уже прошел")),
+        "Expected an already-expired deadline message");
   }
 
   @ParameterizedTest
@@ -182,12 +180,50 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
         State.SET_MENU,
         ServiceContainer.getUserService().findById(adminChatId.toString()).getState(),
         "Admin should remain in SET_MENU waiting for a corrected message");
+    assertTrue(
+        anySentMessage(sender, message -> message.getText().startsWith("Дедлайн некорректный")),
+        "Expected a deadline-parsing error message");
+  }
+
+  @ParameterizedTest
+  @EnumSource(City.class)
+  void menuTextWithRepeatedCategory_isRejected_menuStaysUnsetAndAdminNotified(City city)
+      throws Exception {
+    AbsSender sender = mockSender();
+    RealDispatchers dispatchers = new RealDispatchers();
+    Long adminChatId = chatId(city, 1);
+    resetMenu(city);
+    seedReadyAdmin(adminChatId, city);
+
+    Update createMenu = updateWithChatId(adminChatId, State.CREATE_MENU.getDisplayName());
+    dispatchers.stateDispatcher.dispatch(createMenu, sender);
+
+    Update repeatedCategoryMenuText =
+        updateWithChatId(
+            adminChatId,
+            menuTextWithDeadline("Первое:\nСуп\nВторое:\nПлов\nСалаты:\nЦезарь\nВторое:\nБулочка"));
+    dispatchers.stateDispatcher.dispatch(repeatedCategoryMenuText, sender);
+
+    assertFalse(ServiceContainer.getMenuService().existsById(city.toString()));
+    assertEquals(
+        State.SET_MENU,
+        ServiceContainer.getUserService().findById(adminChatId.toString()).getState(),
+        "Admin should remain in SET_MENU waiting for a corrected message");
+    String expectedError = Messages.MENU_CATEGORY_DUPLICATED.getText(Category.SECOND.getValue());
+    assertTrue(
+        anySentMessage(
+            sender,
+            message ->
+                adminChatId.toString().equals(message.getChatId())
+                    && message.getText().startsWith(expectedError)),
+        "Expected admin to be notified about the repeated category");
+  }
+
+  private static boolean anySentMessage(AbsSender sender, Predicate<SendMessage> condition)
+      throws Exception {
     ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
     verify(sender, atLeastOnce()).execute(captor.capture());
-    boolean parseErrorSent =
-        captor.getAllValues().stream()
-            .anyMatch(message -> message.getText().startsWith("Дедлайн некорректный"));
-    assertTrue(parseErrorSent, "Expected a deadline-parsing error message");
+    return captor.getAllValues().stream().anyMatch(condition);
   }
 
   @ParameterizedTest

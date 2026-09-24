@@ -25,11 +25,10 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
 
   private static final String POOL_STORAGE_PATH = "pool";
   private static final LocalDate FIRST_DATE = LocalDate.of(2099, 9, 1);
+  private static final String TEST_USER_NAME = "pool-test-user";
   private static final LocalDate SECOND_DATE = LocalDate.of(2099, 9, 2);
   private static final String SHARER_CHAT_ID = "959000001";
   private static final String CLAIMER_CHAT_ID = "959000002";
-  private static final String SHARER_USERNAME = "sharer";
-  private static final String CLAIMER_USERNAME = "claimer";
   private static final int LEGACY_ITEM_ID = 7;
 
   private final BaseRepository<SharedOrderItemPool> jsonRepository =
@@ -39,8 +38,8 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
 
   @BeforeAll
   static void createUsers() {
-    ensureUser(SHARER_CHAT_ID, SHARER_USERNAME);
-    ensureUser(CLAIMER_CHAT_ID, CLAIMER_USERNAME);
+    ensureUser(SHARER_CHAT_ID);
+    ensureUser(CLAIMER_CHAT_ID);
   }
 
   @AfterEach
@@ -56,10 +55,9 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
 
   @Test
   void main_migratesEveryPoolFromEveryDateFolder_keepingClaims() {
-    SharedOrderItem unclaimed = entry("m-1", "Плов", Category.SECOND, null, null);
-    SharedOrderItem claimed =
-        entry("m-2", "Салат", Category.SALAD, CLAIMER_CHAT_ID, CLAIMER_USERNAME);
-    SharedOrderItem otherDate = entry("m-3", "Борщ", Category.FIRST, null, null);
+    SharedOrderItem unclaimed = entry("m-1", "Плов", Category.SECOND, null);
+    SharedOrderItem claimed = entry("m-2", "Салат", Category.SALAD, CLAIMER_CHAT_ID);
+    SharedOrderItem otherDate = entry("m-3", "Борщ", Category.FIRST, null);
     jsonRepository.save(pool(City.ALMATA, FIRST_DATE, unclaimed, claimed));
     jsonRepository.save(pool(City.ASTANA, SECOND_DATE, otherDate));
 
@@ -71,7 +69,6 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
         postgresRepository.getById(pool(City.ASTANA, SECOND_DATE).getId(), SECOND_DATE);
     assertEquals(List.of(unclaimed, claimed), migratedAlmaty.getItems());
     assertEquals(CLAIMER_CHAT_ID, migratedAlmaty.getItems().get(1).getClaimedByChatId());
-    assertEquals(CLAIMER_USERNAME, migratedAlmaty.getItems().get(1).getClaimedByUsername());
     assertEquals(SHARER_CHAT_ID, migratedAlmaty.getItems().get(0).getSourceChatId());
     assertEquals(List.of(otherDate), migratedAstana.getItems());
   }
@@ -79,7 +76,7 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
   @Test
   void main_dropsLegacyItemIds() {
     jsonRepository.save(
-        pool(City.KARAGANDA, FIRST_DATE, entry("m-4", "Плов", Category.SECOND, null, null)));
+        pool(City.KARAGANDA, FIRST_DATE, entry("m-4", "Плов", Category.SECOND, null)));
 
     SharedOrderItemPoolJsonToPostgresMigrator.main(new String[0]);
 
@@ -93,7 +90,7 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
 
   @Test
   void main_isIdempotent_whenRunTwice() {
-    SharedOrderItem entry = entry("m-5", "Плов", Category.SECOND, null, null);
+    SharedOrderItem entry = entry("m-5", "Плов", Category.SECOND, null);
     jsonRepository.save(pool(City.ALMATA, SECOND_DATE, entry));
 
     SharedOrderItemPoolJsonToPostgresMigrator.main(new String[0]);
@@ -104,23 +101,15 @@ class SharedOrderItemPoolJsonToPostgresMigratorTest extends AbstractDbPersistenc
     assertEquals(List.of(entry), migrated.getItems());
   }
 
-  private static void ensureUser(String chatId, String preferedName) {
-    TestUsers.ensureExists(PersistenceConfig.getDataSource(), Long.parseLong(chatId), preferedName);
+  private static void ensureUser(String chatId) {
+    TestUsers.ensureExists(
+        PersistenceConfig.getDataSource(), Long.parseLong(chatId), TEST_USER_NAME);
   }
 
   private static SharedOrderItem entry(
-      String entryId,
-      String itemName,
-      Category category,
-      String claimedByChatId,
-      String claimedByUsername) {
+      String entryId, String itemName, Category category, String claimedByChatId) {
     return new SharedOrderItem(
-        entryId,
-        new Item(LEGACY_ITEM_ID, itemName, category),
-        SHARER_CHAT_ID,
-        SHARER_USERNAME,
-        claimedByChatId,
-        claimedByUsername);
+        entryId, new Item(LEGACY_ITEM_ID, itemName, category), SHARER_CHAT_ID, claimedByChatId);
   }
 
   private static SharedOrderItemPool pool(City city, LocalDate date, SharedOrderItem... entries) {

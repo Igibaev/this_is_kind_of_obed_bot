@@ -85,8 +85,8 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     Item item = new Item(1, "Плов", Category.FIRST);
-    SharedOrderItem entry = new SharedOrderItem("e1", item, "9", "otherUser", null, null);
-    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING, "me"))
+    SharedOrderItem entry = new SharedOrderItem("e1", item, "9", null);
+    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING))
         .thenReturn(Optional.of(entry));
     when(orderService.findByChatIdOptional(CHAT_ID_STRING, TARGET_DATE))
         .thenReturn(Optional.empty());
@@ -116,8 +116,8 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
     Item newItem = new Item(2, "Лагман", Category.FIRST);
     Item existingItem = new Item(1, "Плов", Category.FIRST);
-    SharedOrderItem entry = new SharedOrderItem("e1", newItem, "9", "otherUser", null, null);
-    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING, "me"))
+    SharedOrderItem entry = new SharedOrderItem("e1", newItem, "9", null);
+    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING))
         .thenReturn(Optional.of(entry));
     Order existingOrder = new Order();
     existingOrder.setChatId(CHAT_ID_STRING);
@@ -141,11 +141,10 @@ class SharedOrderItemPoolClaimCallbackHandlerTest {
     // given
     User user = readyUser();
     when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
-    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING, "me"))
+    when(sharedOrderItemPoolService.claim(City.ALMATA, TARGET_DATE, "e1", CHAT_ID_STRING))
         .thenReturn(Optional.empty());
     SharedOrderItem remaining =
-        new SharedOrderItem(
-            "e2", new Item(3, "Хлеб", Category.FIRST), "9", "otherUser", null, null);
+        new SharedOrderItem("e2", new Item(3, "Хлеб", Category.FIRST), "9", null);
     when(sharedOrderItemPoolService.getAvailableEntries(City.ALMATA, TARGET_DATE))
         .thenReturn(List.of(remaining));
     CallbackQuery callback = callbackQuery("POOL_CLAIM:e1");

@@ -114,7 +114,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     // then
     verify(orderService).deleteByChatId(CHAT_ID_STRING, tomorrow);
     verify(sharedOrderItemPoolService)
-        .addItems(City.ALMATA, tomorrow, CHAT_ID_STRING, "me", Set.of(item));
+        .addItems(City.ALMATA, tomorrow, CHAT_ID_STRING, Set.of(item));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("расшарен"));
@@ -139,7 +139,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, tomorrow);
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertFalse(messageCaptor.getValue().getText().contains("расшарен"));
@@ -165,8 +165,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService).deleteByChatId(CHAT_ID_STRING, today);
-    verify(sharedOrderItemPoolService)
-        .addItems(City.ALMATA, today, CHAT_ID_STRING, "me", Set.of(item));
+    verify(sharedOrderItemPoolService).addItems(City.ALMATA, today, CHAT_ID_STRING, Set.of(item));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertTrue(messageCaptor.getValue().getText().contains("расшарен"));
@@ -191,7 +190,7 @@ class OfficeAttendanceNoCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, today);
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertFalse(messageCaptor.getValue().getText().contains("расшарен"));

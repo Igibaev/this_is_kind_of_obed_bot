@@ -42,22 +42,21 @@ class SharedOrderItemPoolServiceTest {
     Item first = new Item(1, "Плов", null);
     Item second = new Item(2, "Лагман", null);
     // when
-    service.addItems(City.ALMATA, DATE, "1", "user1", List.of(first, second));
+    service.addItems(City.ALMATA, DATE, "1", List.of(first, second));
     // then
     SharedOrderItemPool saved = capturedPool();
     assertEquals(2, saved.getItems().size());
     assertTrue(saved.getItems().stream().anyMatch(e -> e.getItem().equals(first)));
     assertTrue(saved.getItems().stream().anyMatch(e -> e.getItem().equals(second)));
     assertTrue(saved.getItems().stream().allMatch(e -> "1".equals(e.getSourceChatId())));
-    assertTrue(saved.getItems().stream().allMatch(e -> "user1".equals(e.getSourceUsername())));
     assertTrue(saved.getItems().stream().allMatch(e -> e.getClaimedByChatId() == null));
   }
 
   @Test
   void getAvailableEntries_excludesClaimedItems_whenSomeClaimed() {
     // given
-    SharedOrderItem available = entry("1", "item1", null, null);
-    SharedOrderItem claimed = entry("2", "item2", "5", "user5");
+    SharedOrderItem available = entry("1", "item1", null);
+    SharedOrderItem claimed = entry("2", "item2", "5");
     SharedOrderItemPool sharedOrderItemPool =
         poolWithEntries(City.ALMATA, DATE, available, claimed);
     when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
@@ -70,7 +69,7 @@ class SharedOrderItemPoolServiceTest {
   @Test
   void getAvailableEntries_doesNotReturnEntriesFromAnotherDate_whenPoolsDiffer() {
     // given
-    SharedOrderItem tomorrowEntry = entry("1", "item1", null, null);
+    SharedOrderItem tomorrowEntry = entry("1", "item1", null);
     SharedOrderItemPool tomorrowPool = poolWithEntries(City.ALMATA, OTHER_DATE, tomorrowEntry);
     when(repository.getById(City.ALMATA + "_" + OTHER_DATE, OTHER_DATE)).thenReturn(tomorrowPool);
     when(repository.getById(POOL_ID, DATE)).thenReturn(null);
@@ -83,26 +82,25 @@ class SharedOrderItemPoolServiceTest {
   @Test
   void claim_marksEntryClaimed_whenAvailable() {
     // given
-    SharedOrderItem available = entry("1", "item1", null, null);
+    SharedOrderItem available = entry("1", "item1", null);
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE, available);
     when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
-    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
+    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5");
     // then
     assertTrue(actual.isPresent());
     assertEquals("5", actual.get().getClaimedByChatId());
-    assertEquals("user5", actual.get().getClaimedByUsername());
     verify(repository).save(sharedOrderItemPool);
   }
 
   @Test
   void claim_returnsEmpty_whenAlreadyClaimedByAnother() {
     // given
-    SharedOrderItem claimed = entry("1", "item1", "3", "user3");
+    SharedOrderItem claimed = entry("1", "item1", "3");
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE, claimed);
     when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
-    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
+    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5");
     // then
     assertTrue(actual.isEmpty());
     assertEquals("3", claimed.getClaimedByChatId());
@@ -114,7 +112,7 @@ class SharedOrderItemPoolServiceTest {
     SharedOrderItemPool sharedOrderItemPool = poolWithEntries(City.ALMATA, DATE);
     when(repository.getById(POOL_ID, DATE)).thenReturn(sharedOrderItemPool);
     // when
-    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "unknown", "5", "user5");
+    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "unknown", "5");
     // then
     assertTrue(actual.isEmpty());
   }
@@ -122,12 +120,12 @@ class SharedOrderItemPoolServiceTest {
   @Test
   void claim_returnsEmpty_whenEntryBelongsToAnotherDate() {
     // given
-    SharedOrderItem tomorrowEntry = entry("1", "item1", null, null);
+    SharedOrderItem tomorrowEntry = entry("1", "item1", null);
     SharedOrderItemPool tomorrowPool = poolWithEntries(City.ALMATA, OTHER_DATE, tomorrowEntry);
     when(repository.getById(City.ALMATA + "_" + OTHER_DATE, OTHER_DATE)).thenReturn(tomorrowPool);
     when(repository.getById(POOL_ID, DATE)).thenReturn(null);
     // when
-    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5", "user5");
+    Optional<SharedOrderItem> actual = service.claim(City.ALMATA, DATE, "1", "5");
     // then
     assertTrue(actual.isEmpty());
   }
@@ -138,10 +136,8 @@ class SharedOrderItemPoolServiceTest {
     return captor.getValue();
   }
 
-  private static SharedOrderItem entry(
-      String entryId, String itemName, String claimedByChatId, String claimedByUsername) {
-    return new SharedOrderItem(
-        entryId, new Item(1, itemName, null), "1", "user1", claimedByChatId, claimedByUsername);
+  private static SharedOrderItem entry(String entryId, String itemName, String claimedByChatId) {
+    return new SharedOrderItem(entryId, new Item(1, itemName, null), "1", claimedByChatId);
   }
 
   private static SharedOrderItemPool poolWithEntries(

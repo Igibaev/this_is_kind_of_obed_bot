@@ -336,8 +336,7 @@ class AbstractHandlerTest {
     // then
     assertEquals(List.of(), actual);
     verify(orderService, never()).deleteByChatId(any(), any());
-    verify(sharedOrderItemPoolService, never())
-        .addItems(any(), any(), any(), any(), anyCollection());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), anyCollection());
   }
 
   @Test
@@ -354,8 +353,7 @@ class AbstractHandlerTest {
     // then
     assertEquals(List.of(), actual);
     verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, orderDate);
-    verify(sharedOrderItemPoolService, never())
-        .addItems(any(), any(), any(), any(), anyCollection());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), anyCollection());
   }
 
   @Test
@@ -376,8 +374,7 @@ class AbstractHandlerTest {
     assertEquals(List.of(item), actual);
     verify(orderService).deleteByChatId(CHAT_ID_STRING, orderDate);
     verify(sharedOrderItemPoolService)
-        .addItems(
-            user.getCity(), order.getDate(), user.getId(), user.getPreferedName(), Set.of(item));
+        .addItems(user.getCity(), order.getDate(), user.getId(), Set.of(item));
   }
 
   @Test
@@ -397,8 +394,7 @@ class AbstractHandlerTest {
     // then
     assertEquals(List.of(), actual);
     verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, orderDate);
-    verify(sharedOrderItemPoolService, never())
-        .addItems(any(), any(), any(), any(), anyCollection());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), anyCollection());
   }
 
   @Test
@@ -418,7 +414,7 @@ class AbstractHandlerTest {
     handler.releaseOrderToSharedOrderItemPool(user);
     // then
     verify(sharedOrderItemPoolService)
-        .addItems(eq(City.ALMATA), eq(storedDate), any(), any(), anyCollection());
+        .addItems(eq(City.ALMATA), eq(storedDate), any(), anyCollection());
   }
 
   @Test
@@ -437,8 +433,7 @@ class AbstractHandlerTest {
     handler.releaseOrderToSharedOrderItemPool(user);
     // then
     verify(sharedOrderItemPoolService)
-        .addItems(
-            eq(City.ALMATA), eq(City.ALMATA.getCurrentOrderDate()), any(), any(), anyCollection());
+        .addItems(eq(City.ALMATA), eq(City.ALMATA.getCurrentOrderDate()), any(), anyCollection());
   }
 
   @Test

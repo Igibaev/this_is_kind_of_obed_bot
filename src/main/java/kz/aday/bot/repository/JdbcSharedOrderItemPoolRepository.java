@@ -25,8 +25,8 @@ public class JdbcSharedOrderItemPoolRepository implements Repository<SharedOrder
 
   private static final String ID_SEPARATOR = "_";
   private static final String SELECT_ALL_ENTRIES =
-      "SELECT entry_id, city, date, item_id, name, category, source_chat_id, source_username, "
-          + "claimed_by_chat_id, claimed_by_username FROM shared_order_items";
+      "SELECT entry_id, city, date, item_id, name, category, source_chat_id, claimed_by_chat_id "
+          + "FROM shared_order_items";
   private static final String ORDER_BY_INSERTION = " ORDER BY id";
   private static final String SELECT_ENTRIES_BY_CITY_AND_DATE =
       SELECT_ALL_ENTRIES + " WHERE city = ? AND date = ?" + ORDER_BY_INSERTION;
@@ -35,11 +35,10 @@ public class JdbcSharedOrderItemPoolRepository implements Repository<SharedOrder
   private static final String SELECT_ENTRIES = SELECT_ALL_ENTRIES + ORDER_BY_INSERTION;
   private static final String UPSERT_ENTRY =
       "INSERT INTO shared_order_items (entry_id, city, date, item_id, name, category, "
-          + "source_chat_id, source_username, claimed_by_chat_id, claimed_by_username) "
-          + "VALUES (?, ?, ?, (SELECT item_id FROM menu_items WHERE item_id = ?), ?, ?, ?, ?, ?, ?) "
+          + "source_chat_id, claimed_by_chat_id) "
+          + "VALUES (?, ?, ?, (SELECT item_id FROM menu_items WHERE item_id = ?), ?, ?, ?, ?) "
           + "ON CONFLICT (entry_id) DO UPDATE SET "
-          + "claimed_by_chat_id = EXCLUDED.claimed_by_chat_id, "
-          + "claimed_by_username = EXCLUDED.claimed_by_username "
+          + "claimed_by_chat_id = EXCLUDED.claimed_by_chat_id "
           + "WHERE shared_order_items.claimed_by_chat_id IS NULL";
   private static final String DELETE_ENTRIES_BY_CITY_AND_DATE =
       "DELETE FROM shared_order_items WHERE city = ? AND date = ?";
@@ -169,9 +168,7 @@ public class JdbcSharedOrderItemPoolRepository implements Repository<SharedOrder
         resultSet.getString("entry_id"),
         item,
         readChatId(resultSet, "source_chat_id"),
-        resultSet.getString("source_username"),
-        readChatId(resultSet, "claimed_by_chat_id"),
-        resultSet.getString("claimed_by_username"));
+        readChatId(resultSet, "claimed_by_chat_id"));
   }
 
   private static String readChatId(ResultSet resultSet, String column) throws SQLException {
@@ -190,9 +187,7 @@ public class JdbcSharedOrderItemPoolRepository implements Repository<SharedOrder
     statement.setString(5, item.getName());
     statement.setString(6, item.getCategory() != null ? item.getCategory().name() : null);
     bindNullableLong(statement, 7, parseChatId(entry.getSourceChatId()));
-    statement.setString(8, entry.getSourceUsername());
-    bindNullableLong(statement, 9, parseChatId(entry.getClaimedByChatId()));
-    statement.setString(10, entry.getClaimedByUsername());
+    bindNullableLong(statement, 8, parseChatId(entry.getClaimedByChatId()));
   }
 
   private static Long parseChatId(String chatId) {

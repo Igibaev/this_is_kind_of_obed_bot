@@ -7,9 +7,7 @@ CREATE TABLE shared_order_items (
     name                TEXT NOT NULL,
     category            TEXT,
     source_chat_id      BIGINT REFERENCES users (chat_id),
-    source_username     TEXT,
-    claimed_by_chat_id  BIGINT REFERENCES users (chat_id),
-    claimed_by_username TEXT
+    claimed_by_chat_id  BIGINT REFERENCES users (chat_id)
 );
 
 CREATE INDEX idx_shared_order_items_city_date ON shared_order_items (city, date);

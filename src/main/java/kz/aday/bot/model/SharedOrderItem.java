@@ -12,7 +12,5 @@ public class SharedOrderItem {
   private String entryId;
   private Item item;
   private String sourceChatId;
-  private String sourceUsername;
   private String claimedByChatId;
-  private String claimedByUsername;
 }

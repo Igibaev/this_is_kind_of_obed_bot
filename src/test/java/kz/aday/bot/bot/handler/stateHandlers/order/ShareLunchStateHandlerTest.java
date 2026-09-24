@@ -118,7 +118,7 @@ class ShareLunchStateHandlerTest {
     // then
     verify(orderService).deleteByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate());
     verify(sharedOrderItemPoolService)
-        .addItems(City.ALMATA, order.getDate(), CHAT_ID_STRING, "me", Set.of(item));
+        .addItems(City.ALMATA, order.getDate(), CHAT_ID_STRING, Set.of(item));
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals("Твой заказ расшарен: Плов.", messageCaptor.getValue().getText());
@@ -141,7 +141,7 @@ class ShareLunchStateHandlerTest {
     handler.handle(update, sender);
     // then
     verify(orderService, never()).deleteByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate());
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertEquals("Делиться пока нечем.", messageCaptor.getValue().getText());
@@ -159,6 +159,6 @@ class ShareLunchStateHandlerTest {
     handler.handle(update, sender);
     // then
     verify(orderService, never()).deleteByChatId(any(), any());
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
   }
 }

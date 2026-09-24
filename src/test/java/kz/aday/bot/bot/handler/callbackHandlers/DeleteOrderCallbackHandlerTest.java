@@ -90,7 +90,7 @@ class DeleteOrderCallbackHandlerTest {
     handler.handle(callback, sender);
     // then
     verify(orderService).deleteByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate());
-    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any(), any());
+    verify(sharedOrderItemPoolService, never()).addItems(any(), any(), any(), any());
     ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
     verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender));
     assertFalse(messageCaptor.getValue().getText().contains("расшарен"));

@@ -15,7 +15,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.JdbcMenuRepository;
+import kz.aday.bot.repository.MenuRepository;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +27,8 @@ class MenuServicePersistenceIT extends AbstractDbPersistenceTest {
   private static final LocalDate HISTORICAL_DATE_3 = LocalDate.of(2020, 1, 3);
 
   private final MenuService cleanupService = new MenuService();
-  private final JdbcMenuRepository rawRepository =
-      new JdbcMenuRepository(PersistenceConfig.getDataSource());
+  private final MenuRepository rawRepository =
+      new MenuRepository(PersistenceConfig.getDataSource());
 
   @AfterEach
   void tearDown() {

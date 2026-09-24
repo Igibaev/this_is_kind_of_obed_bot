@@ -142,13 +142,6 @@ class OrderServiceTest {
   }
 
   @Test
-  void clearLastWeek_delegatesToRepository() {
-    service.clearLastWeek();
-
-    verify(repository).clearLastWeek();
-  }
-
-  @Test
   void addItemToOrder_addsItemAndCategory_whenCategoryNotYetChosen() {
     Order order = new Order();
 

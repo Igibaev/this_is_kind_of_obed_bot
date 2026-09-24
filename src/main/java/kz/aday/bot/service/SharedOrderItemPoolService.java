@@ -11,14 +11,14 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.SharedOrderItemPool;
-import kz.aday.bot.repository.JdbcSharedOrderItemPoolRepository;
 import kz.aday.bot.repository.Repository;
+import kz.aday.bot.repository.SharedOrderItemPoolRepository;
 
 public class SharedOrderItemPoolService {
   private final Repository<SharedOrderItemPool> repository;
 
   public SharedOrderItemPoolService() {
-    this(new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
+    this(new SharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
   }
 
   SharedOrderItemPoolService(Repository<SharedOrderItemPool> repository) {

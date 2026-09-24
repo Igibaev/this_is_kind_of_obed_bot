@@ -3,17 +3,14 @@ package kz.aday.bot.service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.format.DateTimeParseException;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
-import kz.aday.bot.repository.JdbcOfficeAttendanceRepository;
-import kz.aday.bot.repository.Repository;
+import kz.aday.bot.repository.OfficeAttendanceRepository;
 import kz.aday.bot.util.StringUtils;
 
 public class OfficeAttendanceService {
@@ -21,14 +18,16 @@ public class OfficeAttendanceService {
   private static final String USER_STATS_TEMPLATE = "%s: %d";
   private static final String STATS_LINE_DELIMITER = "\n";
   private static final int DAYS_UNTIL_DEFAULT_ATTENDANCE_DATE = 1;
+  private static final int FIRST_DAY_OF_MONTH = 1;
+  static final LocalDate OVERALL_STATS_START = LocalDate.EPOCH;
 
-  private final Repository<OfficeAttendance> repository;
+  private final OfficeAttendanceRepository repository;
 
   public OfficeAttendanceService() {
-    this(new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource()));
+    this(new OfficeAttendanceRepository(PersistenceConfig.getDataSource()));
   }
 
-  OfficeAttendanceService(Repository<OfficeAttendance> repository) {
+  OfficeAttendanceService(OfficeAttendanceRepository repository) {
     this.repository = repository;
   }
 
@@ -50,55 +49,28 @@ public class OfficeAttendanceService {
   }
 
   public String getOverallAttendanceStats(City city) {
-    return collectStats(city, attendance -> true);
+    return formatStats(repository.findAttended(city, OVERALL_STATS_START, LocalDate.now()));
   }
 
   public String getCurrentMonthAttendanceStats(City city) {
-    return collectStats(city, inCurrentMonth());
+    return formatStats(repository.findAttended(city, currentMonthStart(), LocalDate.now()));
   }
 
   public String getOverallAttendanceStatsForUser(City city, String userId) {
-    return collectStats(city, ofUser(userId));
+    return formatStats(
+        repository.findAttendedByChatId(city, userId, OVERALL_STATS_START, LocalDate.now()));
   }
 
   public String getCurrentMonthAttendanceStatsForUser(City city, String userId) {
-    return collectStats(city, ofUser(userId).and(inCurrentMonth()));
+    return formatStats(
+        repository.findAttendedByChatId(city, userId, currentMonthStart(), LocalDate.now()));
   }
 
-  private String collectStats(City city, Predicate<OfficeAttendance> extraFilter) {
-    LocalDate today = LocalDate.now();
-    List<OfficeAttendance> attendances =
-        repository.getAll().stream()
-            .filter(a -> Boolean.TRUE.equals(a.getWillCome()))
-            .filter(a -> city.equals(a.getCity()))
-            .filter(a -> parseDate(a).filter(date -> !date.isAfter(today)).isPresent())
-            .filter(extraFilter)
-            .toList();
-    return formatStats(attendances);
+  private static LocalDate currentMonthStart() {
+    return YearMonth.now().atDay(FIRST_DAY_OF_MONTH);
   }
 
-  private static Predicate<OfficeAttendance> ofUser(String userId) {
-    return attendance -> userId.equals(attendance.getChatId());
-  }
-
-  private static Predicate<OfficeAttendance> inCurrentMonth() {
-    YearMonth currentMonth = YearMonth.now();
-    return attendance ->
-        parseDate(attendance).map(YearMonth::from).filter(currentMonth::equals).isPresent();
-  }
-
-  private static Optional<LocalDate> parseDate(OfficeAttendance attendance) {
-    if (attendance.getDate() == null) {
-      return Optional.empty();
-    }
-    try {
-      return Optional.of(LocalDate.parse(attendance.getDate()));
-    } catch (DateTimeParseException e) {
-      return Optional.empty();
-    }
-  }
-
-  private static String formatStats(List<OfficeAttendance> attendances) {
+  private static String formatStats(Collection<OfficeAttendance> attendances) {
     if (attendances.isEmpty()) {
       return NO_DATA_MESSAGE;
     }

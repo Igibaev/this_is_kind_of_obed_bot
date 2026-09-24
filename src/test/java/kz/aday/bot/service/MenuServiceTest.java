@@ -142,11 +142,4 @@ class MenuServiceTest {
 
     verify(repository).deleteById(City.KARAGANDA.toString(), City.KARAGANDA.getCurrentOrderDate());
   }
-
-  @Test
-  void clearLastWeek_delegatesToRepository() {
-    service.clearLastWeek();
-
-    verify(repository).clearLastWeek();
-  }
 }

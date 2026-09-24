@@ -10,7 +10,7 @@ import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.JdbcMenuRepository;
+import kz.aday.bot.repository.MenuRepository;
 import kz.aday.bot.repository.Repository;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +19,7 @@ public class MenuService {
   private final Repository<Menu> repository;
 
   public MenuService() {
-    this(new JdbcMenuRepository(PersistenceConfig.getDataSource()));
+    this(new MenuRepository(PersistenceConfig.getDataSource()));
   }
 
   MenuService(Repository<Menu> repository) {
@@ -65,11 +65,6 @@ public class MenuService {
       }
     }
     return menus;
-  }
-
-  public void clearLastWeek() {
-    repository.clearLastWeek();
-    log.warn("Menus older than last week were cleared.");
   }
 
   private static LocalDate currentOrderDate(String id) {

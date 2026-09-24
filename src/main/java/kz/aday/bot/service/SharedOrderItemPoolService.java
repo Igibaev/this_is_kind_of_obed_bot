@@ -6,16 +6,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.SharedOrderItem;
 import kz.aday.bot.model.SharedOrderItemPool;
-import kz.aday.bot.repository.BaseRepository;
+import kz.aday.bot.repository.JdbcSharedOrderItemPoolRepository;
+import kz.aday.bot.repository.Repository;
 
 public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool> {
   public SharedOrderItemPoolService() {
-    super(new BaseRepository<>(new ConcurrentHashMap<>(), SharedOrderItemPool.class, "pool"));
+    super(new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
+  }
+
+  SharedOrderItemPoolService(Repository<SharedOrderItemPool> repository) {
+    super(repository);
   }
 
   private SharedOrderItemPool getOrCreate(City city, LocalDate date) {

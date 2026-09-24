@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -31,12 +30,9 @@ class SharedOrderItemPoolServiceTest {
 
   @BeforeEach
   @SuppressWarnings("unchecked")
-  void setUp() throws Exception {
-    service = new SharedOrderItemPoolService();
+  void setUp() {
     repository = mock(Repository.class);
-    Field repositoryField = BaseService.class.getDeclaredField("repository");
-    repositoryField.setAccessible(true);
-    repositoryField.set(service, repository);
+    service = new SharedOrderItemPoolService(repository);
   }
 
   @Test

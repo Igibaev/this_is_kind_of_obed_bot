@@ -127,12 +127,16 @@ public final class TestFixtures {
   }
 
   public static String validMenuText() {
+    return menuTextWithDeadline("Второе\nПлов");
+  }
+
+  public static String menuTextWithDeadline(String menuBody) {
     LocalTime now = LocalTime.now();
     LocalTime deadline = now.plusHours(VALID_MENU_DEADLINE_OFFSET_HOURS);
     if (deadline.isBefore(now)) {
       deadline = END_OF_DAY_FALLBACK_DEADLINE;
     }
-    return "Второе\nПлов\n\nДедлайн " + deadline.format(DateTimeFormatter.ofPattern("HH:mm"));
+    return menuBody + "\n\nДедлайн " + deadline.format(DateTimeFormatter.ofPattern("HH:mm"));
   }
 
   public static Update update() {

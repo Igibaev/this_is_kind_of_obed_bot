@@ -61,7 +61,7 @@ class OrderFlowTest extends AbstractDbPersistenceTest {
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
 
     CallbackQuery addItem =
-        callbackQueryWithChatId(USER_CHAT_ID, CallbackState.ADD_ITEM_TO_ORDER + ":1");
+        callbackQueryWithChatId(USER_CHAT_ID, addItemToOrderCallback(City.ALMATA));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
 
     CallbackQuery submitOrder =
@@ -74,16 +74,27 @@ class OrderFlowTest extends AbstractDbPersistenceTest {
 
     assertTrue(orderExistsAndReady(USER_CHAT_ID, City.ALMATA.getCurrentOrderDate()));
 
+    Order userOrder =
+        ServiceContainer.getOrderService()
+            .findByChatId(USER_CHAT_ID.toString(), City.ALMATA.getCurrentOrderDate());
+    assertTrue(
+        userOrder.getOrderItemList().stream().anyMatch(item -> "Плов".equals(item.getName())),
+        "Expected Иван's order to contain Плов, but was: " + userOrder.getOrderItemList());
+
     ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
     verify(sender, atLeastOnce()).execute(captor.capture());
-    boolean reportSentToAdmin =
+    List<String> messagesToAdmin =
         captor.getAllValues().stream()
-            .anyMatch(
-                message ->
-                    ADMIN_CHAT_ID.toString().equals(message.getChatId())
-                        && message.getText().contains("Иван")
-                        && message.getText().contains("Плов"));
-    assertTrue(reportSentToAdmin, "Expected admin report to list Иван's Плов order");
+            .filter(message -> ADMIN_CHAT_ID.toString().equals(message.getChatId()))
+            .map(SendMessage::getText)
+            .toList();
+    boolean reportSentToAdmin =
+        messagesToAdmin.stream()
+            .anyMatch(text -> text.contains("Иван") && text.contains("Плов"));
+    assertTrue(
+        reportSentToAdmin,
+        "Expected admin report to list Иван's Плов order. Messages sent to admin: "
+            + messagesToAdmin);
   }
 
   @Test
@@ -145,7 +156,8 @@ class OrderFlowTest extends AbstractDbPersistenceTest {
     Update createOrder = updateWithChatId(chatId, State.CREATE_ORDER.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
 
-    CallbackQuery addItem = callbackQueryWithChatId(chatId, CallbackState.ADD_ITEM_TO_ORDER + ":1");
+    CallbackQuery addItem =
+        callbackQueryWithChatId(chatId, addItemToOrderCallback(City.ALMATA));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
 
@@ -173,7 +185,8 @@ class OrderFlowTest extends AbstractDbPersistenceTest {
     Update createOrder = updateWithChatId(chatId, State.CREATE_ORDER.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
 
-    CallbackQuery addItem = callbackQueryWithChatId(chatId, CallbackState.ADD_ITEM_TO_ORDER + ":1");
+    CallbackQuery addItem =
+        callbackQueryWithChatId(chatId, addItemToOrderCallback(City.ALMATA));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
 
     CallbackQuery submitOrder = callbackQueryWithChatId(chatId, CallbackState.SUBMIT_ORDER.name());
@@ -194,6 +207,11 @@ class OrderFlowTest extends AbstractDbPersistenceTest {
                 message ->
                     message.getText().startsWith(Messages.MENU_DEADLINE_IS_PASSED.getText()));
     assertTrue(deadlinePassedMessageSent, "Expected a deadline-passed message to be sent");
+  }
+
+  private static String addItemToOrderCallback(City city) {
+    Menu menu = ServiceContainer.getMenuService().findById(city.toString());
+    return CallbackState.ADD_ITEM_TO_ORDER + ":" + menu.getItemList().get(0).getId();
   }
 
   private boolean orderExistsAndReady(Long chatId, LocalDate date) {

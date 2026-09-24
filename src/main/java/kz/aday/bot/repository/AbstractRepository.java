@@ -28,7 +28,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
   protected static final RowMapper<Item> ITEM_MAPPER =
       (resultSet, rowNum) ->
           new Item(
-              resultSet.getObject(Columns.ITEM_ID, Integer.class),
+              itemIdValue(resultSet),
               resultSet.getString(Columns.NAME),
               enumValue(resultSet, Columns.CATEGORY, Category.class));
 
@@ -90,6 +90,11 @@ public abstract class AbstractRepository<T> implements Repository<T> {
       ResultSet resultSet, String column, Class<E> type) throws SQLException {
     String value = resultSet.getString(column);
     return value != null ? Enum.valueOf(type, value) : null;
+  }
+
+  protected static Integer itemIdValue(ResultSet resultSet) throws SQLException {
+    Long value = resultSet.getObject(Columns.ITEM_ID, Long.class);
+    return value != null ? value.intValue() : null;
   }
 
   protected static String chatIdValue(ResultSet resultSet, String column) throws SQLException {

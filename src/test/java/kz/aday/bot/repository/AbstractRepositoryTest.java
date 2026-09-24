@@ -107,7 +107,7 @@ class AbstractRepositoryTest {
 
   @Test
   void itemMapper_readsIdNameAndCategory() throws SQLException {
-    when(resultSet.getObject(Columns.ITEM_ID, Integer.class)).thenReturn(ITEM_ID);
+    when(resultSet.getObject(Columns.ITEM_ID, Long.class)).thenReturn((long) ITEM_ID);
     when(resultSet.getString(Columns.NAME)).thenReturn(ITEM_NAME);
     when(resultSet.getString(Columns.CATEGORY)).thenReturn(Category.SECOND.name());
 

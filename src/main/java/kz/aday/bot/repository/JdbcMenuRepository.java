@@ -33,7 +33,7 @@ public class JdbcMenuRepository implements Repository<Menu> {
       "SELECT id, city, date, status, deadline, available, notificated, message FROM menus";
   private static final String SELECT_MENUS_BY_DATE = SELECT_ALL_MENUS + " WHERE date = ?";
   private static final String SELECT_ITEMS_BY_MENU_ID =
-      "SELECT display_order, name, category FROM menu_items "
+      "SELECT item_id, name, category FROM menu_items "
           + "WHERE menu_id = ? ORDER BY display_order ASC";
   private static final String UPSERT_MENU =
       "INSERT INTO menus (city, date, status, deadline, available, notificated, message) "
@@ -53,7 +53,8 @@ public class JdbcMenuRepository implements Repository<Menu> {
   private static final String UPDATE_ITEM =
       "UPDATE menu_items SET display_order = ?, category = ? WHERE item_id = ?";
   private static final String INSERT_ITEM =
-      "INSERT INTO menu_items (menu_id, display_order, name, category) VALUES (?, ?, ?, ?)";
+      "INSERT INTO menu_items (menu_id, display_order, name, category) "
+          + "VALUES (?, ?, ?, ?) RETURNING item_id";
   private static final String DELETE_MENU_BY_CITY_AND_DATE =
       "DELETE FROM menus WHERE city = ? AND date = ?";
 
@@ -203,7 +204,7 @@ public class JdbcMenuRepository implements Repository<Menu> {
         while (resultSet.next()) {
           items.add(
               new Item(
-                  resultSet.getInt("display_order"),
+                  resultSet.getInt("item_id"),
                   resultSet.getString("name"),
                   JdbcMappingSupport.mapEnum(resultSet.getString("category"), Category::valueOf)));
         }
@@ -269,23 +270,28 @@ public class JdbcMenuRepository implements Repository<Menu> {
 
     try (PreparedStatement updateStatement = connection.prepareStatement(UPDATE_ITEM);
         PreparedStatement insertStatement = connection.prepareStatement(INSERT_ITEM)) {
+      int displayOrder = 0;
       for (Item item : items) {
         Long existingId = existingIdByName.get(item.getName());
         if (existingId != null) {
-          updateStatement.setInt(1, item.getId());
+          updateStatement.setInt(1, displayOrder);
           updateStatement.setString(2, item.getCategory().name());
           updateStatement.setLong(3, existingId);
           updateStatement.addBatch();
+          item.setId(existingId.intValue());
         } else {
           insertStatement.setLong(1, menuId);
-          insertStatement.setInt(2, item.getId());
+          insertStatement.setInt(2, displayOrder);
           insertStatement.setString(3, item.getName());
           insertStatement.setString(4, item.getCategory().name());
-          insertStatement.addBatch();
+          try (ResultSet resultSet = insertStatement.executeQuery()) {
+            resultSet.next();
+            item.setId(resultSet.getInt("item_id"));
+          }
         }
+        displayOrder++;
       }
       updateStatement.executeBatch();
-      insertStatement.executeBatch();
     }
   }
 

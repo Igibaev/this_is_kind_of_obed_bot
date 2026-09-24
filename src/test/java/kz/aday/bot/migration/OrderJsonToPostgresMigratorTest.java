@@ -4,6 +4,8 @@ package kz.aday.bot.migration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
@@ -20,6 +23,7 @@ import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.repository.BaseRepository;
 import kz.aday.bot.repository.JdbcOrderRepository;
+import kz.aday.bot.repository.JsonFileStorageSupport;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.AfterEach;
@@ -27,13 +31,15 @@ import org.junit.jupiter.api.Test;
 
 class OrderJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
 
+  private static final String ORDER_STORAGE_PATH = "order";
   private static final LocalDate TODAY = LocalDate.now();
   private static final LocalDate YESTERDAY = TODAY.minusDays(1);
   private static final String FIRST_CHAT_ID = "980000010";
   private static final String SECOND_CHAT_ID = "980000011";
+  private static final String LEGACY_CHAT_ID = "980000012";
 
   private final BaseRepository<Order> jsonRepository =
-      new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, "order");
+      new BaseRepository<>(new ConcurrentHashMap<>(), Order.class, ORDER_STORAGE_PATH);
   private final JdbcOrderRepository postgresRepository =
       new JdbcOrderRepository(PersistenceConfig.getDataSource());
 
@@ -41,8 +47,10 @@ class OrderJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
   void cleanUpMigratedOrders() {
     jsonRepository.deleteById(FIRST_CHAT_ID + "_" + TODAY, TODAY);
     jsonRepository.deleteById(SECOND_CHAT_ID + "_" + YESTERDAY, YESTERDAY);
+    jsonRepository.deleteById(LEGACY_CHAT_ID + "_" + TODAY, TODAY);
     postgresRepository.deleteById(FIRST_CHAT_ID + "_" + TODAY, TODAY);
     postgresRepository.deleteById(SECOND_CHAT_ID + "_" + YESTERDAY, YESTERDAY);
+    postgresRepository.deleteById(LEGACY_CHAT_ID + "_" + TODAY, TODAY);
   }
 
   @Test
@@ -92,6 +100,37 @@ class OrderJsonToPostgresMigratorTest extends AbstractDbPersistenceTest {
     OrderJsonToPostgresMigrator.main(new String[0]);
 
     assertNull(findOrderItemId(FIRST_CHAT_ID, TODAY, "Плов"));
+  }
+
+  @Test
+  void main_backfillsDateFromFolder_whenJsonOrderIsMissingDateField() throws Exception {
+    TestUsers.ensureExists(
+        PersistenceConfig.getDataSource(), Long.parseLong(LEGACY_CHAT_ID), "Legacy");
+    Path folder =
+        Path.of(BotConfig.getBotStorePath()).resolve(ORDER_STORAGE_PATH).resolve(TODAY.toString());
+    Files.createDirectories(folder);
+    Files.writeString(
+        folder.resolve(LEGACY_CHAT_ID + "_" + TODAY + JsonFileStorageSupport.JSON),
+        "{\"chatId\":\""
+            + LEGACY_CHAT_ID
+            + "\",\"city\":\"ALMATA\",\"status\":\"READY\",\"orderItemList\":[],"
+            + "\"categoryItemList\":[]}");
+
+    OrderJsonToPostgresMigrator.main(new String[0]);
+
+    assertEquals(TODAY, findStoredDate(LEGACY_CHAT_ID));
+  }
+
+  private static LocalDate findStoredDate(String chatId) throws SQLException {
+    String sql = "SELECT date FROM orders WHERE chat_id = ?";
+    try (Connection connection = PersistenceConfig.getDataSource().getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setLong(1, Long.parseLong(chatId));
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getObject("date", LocalDate.class);
+      }
+    }
   }
 
   private static Set<String> itemNames(Order order) {

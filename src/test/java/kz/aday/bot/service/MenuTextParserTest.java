@@ -28,8 +28,7 @@ class MenuTextParserTest {
         List.of("Суп", "Плов", "Цезарь", "Булочка", Category.BREAD.getValue()),
         items.stream().map(Item::getName).toList());
     assertEquals(
-        List.of(
-            Category.FIRST, Category.SECOND, Category.SALAD, Category.BAKERY, Category.BREAD),
+        List.of(Category.FIRST, Category.SECOND, Category.SALAD, Category.BAKERY, Category.BREAD),
         items.stream().map(Item::getCategory).toList());
   }
 

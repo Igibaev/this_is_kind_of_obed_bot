@@ -43,11 +43,4 @@ public class OfficeAttendance implements Id {
   public LocalDate getStorageDate() {
     return LocalDate.parse(date);
   }
-
-  @Override
-  public void backfillDateIfMissing(LocalDate folderDate) {
-    if (date == null) {
-      date = folderDate.toString();
-    }
-  }
 }

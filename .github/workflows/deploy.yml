@@ -95,7 +95,6 @@ jobs:
         env:
           IMAGE_NAME: ${{ needs.build.outputs.image_name }}:latest
           CONTAINER_NAME: obed-bot
-          DATA_PATH: /opt/obed-bot/data
           LOGS_PATH: /opt/obed-bot/logs
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           BOT_NAME: ${{ secrets.BOT_NAME }}

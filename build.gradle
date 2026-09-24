@@ -13,7 +13,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
     implementation 'org.telegram:telegrambots:6.9.0'
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'ch.qos.logback:logback-classic:1.5.12'
@@ -41,18 +40,6 @@ dependencies {
 test {
     useJUnitPlatform()
     environment 'BOT_MAIN_USER_CHAT_ID', '1'
-
-    def testStoreDir = "$buildDir/test-data"
-    environment 'BOT_STORE_PATH', testStoreDir
-
-    doFirst {
-        delete testStoreDir
-        mkdir testStoreDir
-    }
-
-    doLast {
-        delete testStoreDir
-    }
 }
 
 java {

@@ -38,11 +38,4 @@ public class Order implements Id {
   public LocalDate getStorageDate() {
     return date;
   }
-
-  @Override
-  public void backfillDateIfMissing(LocalDate folderDate) {
-    if (date == null) {
-      date = folderDate;
-    }
-  }
 }

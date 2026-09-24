@@ -34,12 +34,6 @@ public class BotConfig {
     return getProperty("BOT_TIME_ZONE");
   }
 
-  public static String getBotStorePath() {
-    String value = System.getenv("BOT_STORE_PATH");
-
-    return value == null || value.isBlank() ? "/app/data" : value;
-  }
-
   public static String getMainUserChatId() {
     return getProperty("BOT_MAIN_USER_CHAT_ID");
   }

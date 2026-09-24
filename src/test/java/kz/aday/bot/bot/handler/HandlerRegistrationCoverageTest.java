@@ -92,7 +92,6 @@ class HandlerRegistrationCoverageTest {
         "/getlogs",
         "/getallorders",
         "/feedback",
-        "/exportdata",
         "/changeorders",
         "/cancel"
       })

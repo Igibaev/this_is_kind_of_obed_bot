@@ -80,8 +80,7 @@ class MenuLifecycleFlowTest extends AbstractDbPersistenceTest {
     Update createOrder = updateWithChatId(userChatId, State.CREATE_ORDER.getDisplayName());
     dispatchers.stateDispatcher.dispatch(createOrder, sender);
 
-    CallbackQuery addItem =
-        callbackQueryWithChatId(userChatId, addItemToOrderCallback(city));
+    CallbackQuery addItem = callbackQueryWithChatId(userChatId, addItemToOrderCallback(city));
     dispatchers.callbackDispatcher.dispatch(addItem, sender);
 
     CallbackQuery submitOrder =

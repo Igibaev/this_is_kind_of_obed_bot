@@ -54,7 +54,7 @@ public class ChangeMenuStateHandler extends AbstractHandler implements StateHand
                 .map(User::getId)
                 .collect(Collectors.toSet());
         List<Order> orders =
-            orderService.findAll().stream()
+            orderService.findAllOnDate(user.getCity().getCurrentOrderDate()).stream()
                 .filter(o -> o.getCity() == user.getCity())
                 .filter(o -> users.contains(o.getChatId()))
                 .toList();

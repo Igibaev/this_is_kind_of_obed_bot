@@ -2,8 +2,10 @@
 package kz.aday.bot.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -14,10 +16,11 @@ import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.repository.Repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class OfficeAttendanceServiceTest {
 
-  private static final String NO_DATA_MESSAGE = "Нет данных о посещениях.";
+  private static final String NO_DATA_MESSAGE = OfficeAttendanceService.NO_DATA_MESSAGE;
 
   private Repository<OfficeAttendance> repository;
   private OfficeAttendanceService service;
@@ -174,6 +177,120 @@ class OfficeAttendanceServiceTest {
     String actual = service.getCurrentMonthAttendanceStats(City.ALMATA);
     // then
     assertEquals(NO_DATA_MESSAGE, actual);
+  }
+
+  @Test
+  void getOverallAttendanceStatsForUser_countsOnlyRequestedUser() {
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ALMATA, true, "2026-01-05"),
+                attendance("1", "user1", City.ALMATA, true, "2026-02-05"),
+                attendance("2", "user2", City.ALMATA, true, "2026-01-05")));
+
+    String actual = service.getOverallAttendanceStatsForUser(City.ALMATA, "1");
+
+    assertEquals("user1: 2", actual);
+  }
+
+  @Test
+  void getOverallAttendanceStatsForUser_excludesOtherCityNotComingAndFutureDates() {
+    String tomorrow = LocalDate.now().plusDays(1).toString();
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ASTANA, true, "2026-01-05"),
+                attendance("1", "user1", City.ALMATA, false, "2026-01-05"),
+                attendance("1", "user1", City.ALMATA, true, tomorrow)));
+
+    String actual = service.getOverallAttendanceStatsForUser(City.ALMATA, "1");
+
+    assertEquals(NO_DATA_MESSAGE, actual);
+  }
+
+  @Test
+  void getOverallAttendanceStatsForUser_returnsNoDataMessage_whenUserHasNoAttendances() {
+    when(repository.getAll())
+        .thenReturn(List.of(attendance("2", "user2", City.ALMATA, true, "2026-01-05")));
+
+    String actual = service.getOverallAttendanceStatsForUser(City.ALMATA, "1");
+
+    assertEquals(NO_DATA_MESSAGE, actual);
+  }
+
+  @Test
+  void getCurrentMonthAttendanceStatsForUser_countsOnlyRequestedUserInCurrentMonth() {
+    LocalDate today = LocalDate.now();
+    String pastMonthDate = YearMonth.now().minusMonths(1).atDay(1).toString();
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ALMATA, true, today.toString()),
+                attendance("1", "user1", City.ALMATA, true, pastMonthDate),
+                attendance("2", "user2", City.ALMATA, true, today.toString())));
+
+    String actual = service.getCurrentMonthAttendanceStatsForUser(City.ALMATA, "1");
+
+    assertEquals("user1: 1", actual);
+  }
+
+  @Test
+  void getCurrentMonthAttendanceStatsForUser_returnsNoDataMessage_whenOnlyOtherMonths() {
+    String pastMonthDate = YearMonth.now().minusMonths(1).atDay(1).toString();
+    when(repository.getAll())
+        .thenReturn(List.of(attendance("1", "user1", City.ALMATA, true, pastMonthDate)));
+
+    String actual = service.getCurrentMonthAttendanceStatsForUser(City.ALMATA, "1");
+
+    assertEquals(NO_DATA_MESSAGE, actual);
+  }
+
+  @Test
+  void getOverallAttendanceStats_excludesMalformedDates() {
+    when(repository.getAll())
+        .thenReturn(
+            List.of(
+                attendance("1", "user1", City.ALMATA, true, null),
+                attendance("2", "user2", City.ALMATA, true, "not-a-date")));
+
+    String actual = service.getOverallAttendanceStats(City.ALMATA);
+
+    assertEquals(NO_DATA_MESSAGE, actual);
+  }
+
+  @Test
+  void save_persistsAttendanceForGivenDate() {
+    LocalDate date = LocalDate.of(2026, 3, 10);
+
+    service.save("1", City.ALMATA, false, date);
+
+    OfficeAttendance saved = capturedAttendance();
+    assertEquals("1", saved.getChatId());
+    assertEquals(City.ALMATA, saved.getCity());
+    assertEquals(false, saved.getWillCome());
+    assertEquals(date.toString(), saved.getDate());
+  }
+
+  @Test
+  void save_withoutDate_persistsAttendanceForTomorrow() {
+    service.save("1", City.ALMATA, true);
+
+    assertEquals(LocalDate.now().plusDays(1).toString(), capturedAttendance().getDate());
+  }
+
+  @Test
+  void findByChatId_queriesRepositoryByCompositeIdAndDate() {
+    LocalDate date = LocalDate.of(2026, 3, 10);
+    OfficeAttendance expected = attendance("1", "user1", City.ALMATA, true, date.toString());
+    when(repository.getById("1_" + date, date)).thenReturn(expected);
+
+    assertSame(expected, service.findByChatId("1", date));
+  }
+
+  private OfficeAttendance capturedAttendance() {
+    ArgumentCaptor<OfficeAttendance> captor = ArgumentCaptor.forClass(OfficeAttendance.class);
+    verify(repository).save(captor.capture());
+    return captor.getValue();
   }
 
   private static OfficeAttendance attendance(

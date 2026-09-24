@@ -28,10 +28,13 @@ public class JdbcOrderRepository implements Repository<Order> {
       "SELECT o.id, u.prefered_name AS username, o.city, o.status, o.submitted_at "
           + "FROM orders o JOIN users u ON u.chat_id = o.chat_id "
           + "WHERE o.chat_id = ? AND o.date = ?";
+
   private static final String SELECT_ALL_ORDERS =
       "SELECT o.id, o.chat_id, u.prefered_name AS username, o.city, o.date, o.status, "
           + "o.submitted_at FROM orders o JOIN users u ON u.chat_id = o.chat_id";
+
   private static final String SELECT_ORDERS_BY_DATE = SELECT_ALL_ORDERS + " WHERE o.date = ?";
+
   private static final String UPSERT_ORDER =
       "INSERT INTO orders (chat_id, city, status, date, submitted_at) "
           + "VALUES (?, ?, ?, ?, ?) "
@@ -40,19 +43,26 @@ public class JdbcOrderRepository implements Repository<Order> {
           + "status = EXCLUDED.status, "
           + "submitted_at = EXCLUDED.submitted_at "
           + "RETURNING id";
+
   private static final String SELECT_ITEMS_BY_ORDER_ID =
       "SELECT item_id, name, category FROM order_items WHERE order_id = ?";
+
   private static final String DELETE_ITEMS_BY_ORDER_ID =
       "DELETE FROM order_items WHERE order_id = ?";
+
   private static final String INSERT_ITEM =
       "INSERT INTO order_items (order_id, item_id, name, category) "
           + "VALUES (?, (SELECT item_id FROM menu_items WHERE item_id = ?), ?, ?)";
+
   private static final String SELECT_CATEGORIES_BY_ORDER_ID =
       "SELECT category FROM order_categories WHERE order_id = ?";
+
   private static final String DELETE_CATEGORIES_BY_ORDER_ID =
       "DELETE FROM order_categories WHERE order_id = ?";
+
   private static final String INSERT_CATEGORY =
       "INSERT INTO order_categories (order_id, category) VALUES (?, ?)";
+
   private static final String DELETE_ORDER_BY_CHAT_ID_AND_DATE =
       "DELETE FROM orders WHERE chat_id = ? AND date = ?";
 

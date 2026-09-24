@@ -31,7 +31,11 @@ public class Order implements Id {
 
   @Override
   public String getId() {
-    return chatId + "_" + date;
+    return buildId(chatId, date);
+  }
+
+  public static String buildId(String chatId, LocalDate date) {
+    return Id.composeId(chatId, date);
   }
 
   @Override

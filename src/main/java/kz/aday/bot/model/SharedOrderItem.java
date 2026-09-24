@@ -13,4 +13,8 @@ public class SharedOrderItem {
   private Item item;
   private String sourceChatId;
   private String claimedByChatId;
+
+  public boolean isAvailable() {
+    return claimedByChatId == null;
+  }
 }

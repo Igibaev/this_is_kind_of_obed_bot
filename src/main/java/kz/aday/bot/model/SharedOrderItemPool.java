@@ -16,7 +16,11 @@ public class SharedOrderItemPool implements Id {
 
   @Override
   public String getId() {
-    return city + "_" + date;
+    return buildId(city, date);
+  }
+
+  public static String buildId(City city, LocalDate date) {
+    return Id.composeId(city, date);
   }
 
   @Override

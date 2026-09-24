@@ -68,7 +68,6 @@ public class SchedulerService {
         this::cleanAllStorages, initialDelay, period, TimeUnit.SECONDS);
   }
 
-  /** Закрыть меню, закрыть все заказы */
   void closeMenu() {
     log.debug("Closing Menu");
     for (Menu menu : menuService.findAll()) {
@@ -203,10 +202,9 @@ public class SchedulerService {
     }
   }
 
-  /** Отчистить всю текстовую БД кроме юзеров */
   private void cleanAllStorages() {
     log.debug("cleaning all storages");
-    menuService.deleteAll();
-    orderService.deleteAll();
+    menuService.clearLastWeek();
+    orderService.clearLastWeek();
   }
 }

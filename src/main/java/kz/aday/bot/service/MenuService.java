@@ -1,6 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,49 +12,50 @@ import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.repository.JdbcMenuRepository;
 import kz.aday.bot.repository.Repository;
+import lombok.extern.slf4j.Slf4j;
 
-public class MenuService extends BaseService<Menu> {
+@Slf4j
+public class MenuService {
+  private final Repository<Menu> repository;
+
   public MenuService() {
-    super(new JdbcMenuRepository(PersistenceConfig.getDataSource()));
+    this(new JdbcMenuRepository(PersistenceConfig.getDataSource()));
   }
 
   MenuService(Repository<Menu> repository) {
-    super(repository);
+    this.repository = repository;
   }
 
-  @Override
-  public Menu save(Menu entity) {
-    if (entity.getDate() == null) {
-      entity.setDate(entity.getCity().getCurrentOrderDate().toString());
+  public Menu save(Menu menu) {
+    if (menu.getDate() == null) {
+      menu.setDate(menu.getCity().getCurrentOrderDate().toString());
     }
-    Menu existing = findById(entity.getId());
+    Menu existing = findById(menu.getId());
     if (existing != null && existing.getStatus() == Status.DEADLINE) {
       deleteById(existing.getId());
     }
-    return super.save(entity);
+    repository.save(menu);
+    log.info("Saved menu with ID: {}", menu.getId());
+    return menu;
   }
 
-  @Override
   public Menu findById(String id) {
-    return repository.getById(id, City.valueOf(id).getCurrentOrderDate());
+    return repository.getById(id, currentOrderDate(id));
   }
 
-  @Override
   public Optional<Menu> findByIdOptional(String id) {
     return Optional.ofNullable(findById(id));
   }
 
-  @Override
   public boolean existsById(String id) {
-    return repository.existById(id, City.valueOf(id).getCurrentOrderDate());
+    return repository.existById(id, currentOrderDate(id));
   }
 
-  @Override
   public void deleteById(String id) {
-    repository.deleteById(id, City.valueOf(id).getCurrentOrderDate());
+    repository.deleteById(id, currentOrderDate(id));
+    log.warn("Menu with ID {} was deleted.", id);
   }
 
-  @Override
   public Collection<Menu> findAll() {
     List<Menu> menus = new ArrayList<>();
     for (City city : City.values()) {
@@ -63,5 +65,14 @@ public class MenuService extends BaseService<Menu> {
       }
     }
     return menus;
+  }
+
+  public void clearLastWeek() {
+    repository.clearLastWeek();
+    log.warn("Menus older than last week were cleared.");
+  }
+
+  private static LocalDate currentOrderDate(String id) {
+    return City.valueOf(id).getCurrentOrderDate();
   }
 }

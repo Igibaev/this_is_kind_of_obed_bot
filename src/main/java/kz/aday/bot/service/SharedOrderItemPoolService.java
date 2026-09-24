@@ -14,24 +14,15 @@ import kz.aday.bot.model.SharedOrderItemPool;
 import kz.aday.bot.repository.JdbcSharedOrderItemPoolRepository;
 import kz.aday.bot.repository.Repository;
 
-public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool> {
+public class SharedOrderItemPoolService {
+  private final Repository<SharedOrderItemPool> repository;
+
   public SharedOrderItemPoolService() {
-    super(new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
+    this(new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource()));
   }
 
   SharedOrderItemPoolService(Repository<SharedOrderItemPool> repository) {
-    super(repository);
-  }
-
-  private SharedOrderItemPool getOrCreate(City city, LocalDate date) {
-    SharedOrderItemPool existing = repository.getById(city + "_" + date, date);
-    if (existing != null) {
-      return existing;
-    }
-    SharedOrderItemPool sharedOrderItemPool = new SharedOrderItemPool();
-    sharedOrderItemPool.setCity(city);
-    sharedOrderItemPool.setDate(date);
-    return sharedOrderItemPool;
+    this.repository = repository;
   }
 
   public void addItems(City city, LocalDate date, String sourceChatId, Collection<Item> items) {
@@ -41,12 +32,12 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
           .getItems()
           .add(new SharedOrderItem(UUID.randomUUID().toString(), item, sourceChatId, null));
     }
-    save(sharedOrderItemPool);
+    repository.save(sharedOrderItemPool);
   }
 
   public List<SharedOrderItem> getAvailableEntries(City city, LocalDate date) {
     return getOrCreate(city, date).getItems().stream()
-        .filter(entry -> entry.getClaimedByChatId() == null)
+        .filter(SharedOrderItem::isAvailable)
         .toList();
   }
 
@@ -55,13 +46,26 @@ public class SharedOrderItemPoolService extends BaseService<SharedOrderItemPool>
     SharedOrderItemPool sharedOrderItemPool = getOrCreate(city, date);
     Optional<SharedOrderItem> entry =
         sharedOrderItemPool.getItems().stream()
-            .filter(e -> e.getEntryId().equals(entryId) && e.getClaimedByChatId() == null)
+            .filter(SharedOrderItem::isAvailable)
+            .filter(e -> e.getEntryId().equals(entryId))
             .findFirst();
     entry.ifPresent(
         e -> {
           e.setClaimedByChatId(claimerChatId);
-          save(sharedOrderItemPool);
+          repository.save(sharedOrderItemPool);
         });
     return entry;
+  }
+
+  private SharedOrderItemPool getOrCreate(City city, LocalDate date) {
+    SharedOrderItemPool existing =
+        repository.getById(SharedOrderItemPool.buildId(city, date), date);
+    if (existing != null) {
+      return existing;
+    }
+    SharedOrderItemPool sharedOrderItemPool = new SharedOrderItemPool();
+    sharedOrderItemPool.setCity(city);
+    sharedOrderItemPool.setDate(date);
+    return sharedOrderItemPool;
   }
 }

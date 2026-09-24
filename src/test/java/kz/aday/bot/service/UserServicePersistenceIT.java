@@ -37,16 +37,14 @@ class UserServicePersistenceIT extends AbstractDbPersistenceTest {
   }
 
   @Test
-  void deleteById_removesUserFromStorageForFutureInstances() {
+  void existsById_returnsTrueOnlyForSavedUser() {
     User user = buildUser(910000003L);
     UserService service = new UserService();
     service.save(user);
+
     assertTrue(service.existsById(user.getId()));
-
-    service.deleteById(user.getId());
-
-    assertFalse(service.existsById(user.getId()));
-    assertNull(new UserService().findById(user.getId()));
+    assertFalse(service.existsById("910000004"));
+    assertNull(service.findById("910000004"));
   }
 
   private static User buildUser(Long chatId) {

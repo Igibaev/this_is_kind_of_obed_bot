@@ -13,7 +13,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
@@ -25,14 +28,13 @@ import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.Test;
 
-class JdbcOrderRepositoryTest extends AbstractDbPersistenceTest {
+class OrderRepositoryTest extends AbstractDbPersistenceTest {
 
   private static final LocalDate TODAY = LocalDate.now();
 
-  private final JdbcOrderRepository repository =
-      new JdbcOrderRepository(PersistenceConfig.getDataSource());
-  private final JdbcMenuRepository menuRepository =
-      new JdbcMenuRepository(PersistenceConfig.getDataSource());
+  private final OrderRepository repository = new OrderRepository(PersistenceConfig.getDataSource());
+  private final MenuRepository menuRepository =
+      new MenuRepository(PersistenceConfig.getDataSource());
 
   @Test
   void getById_returnsNull_whenOrderWasNeverSaved() {
@@ -139,6 +141,43 @@ class JdbcOrderRepositoryTest extends AbstractDbPersistenceTest {
 
     assertTrue(orders.contains(today));
     assertFalse(orders.contains(tomorrow));
+  }
+
+  @Test
+  void getAllByDate_loadsOwnItemsAndCategories_forEachOrder() {
+    String chatId1 = "960000010";
+    String chatId2 = "960000011";
+    ensureUser(chatId1);
+    ensureUser(chatId2);
+    Order first = buildOrder(chatId1, City.ALMATA, TODAY);
+    first.getOrderItemList().add(new Item(1, "Плов", Category.SECOND));
+    first.getCategoryItemList().add(Category.SECOND);
+    Order second = buildOrder(chatId2, City.ALMATA, TODAY);
+    second.getOrderItemList().add(new Item(2, "Салат", Category.SALAD));
+    second.getOrderItemList().add(new Item(3, "Борщ", Category.FIRST));
+    second.getCategoryItemList().add(Category.SALAD);
+    second.getCategoryItemList().add(Category.FIRST);
+    repository.save(first);
+    repository.save(second);
+
+    Map<String, Order> ordersByChatId =
+        repository.getAll(TODAY).stream()
+            .collect(Collectors.toMap(Order::getChatId, Function.identity()));
+
+    assertEquals(first, ordersByChatId.get(chatId1));
+    assertEquals(second, ordersByChatId.get(chatId2));
+  }
+
+  @Test
+  void getById_returnsEmptyItemsAndCategories_whenOrderHasNone() {
+    String chatId = "960000012";
+    ensureUser(chatId);
+    repository.save(buildOrder(chatId, City.ASTANA, TODAY));
+
+    Order found = repository.getById(chatId + "_" + TODAY, TODAY);
+
+    assertTrue(found.getOrderItemList().isEmpty());
+    assertTrue(found.getCategoryItemList().isEmpty());
   }
 
   private static void ensureUser(String chatId) {

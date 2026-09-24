@@ -15,10 +15,9 @@ import kz.aday.bot.model.User;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.Test;
 
-class JdbcUserRepositoryTest extends AbstractDbPersistenceTest {
+class UserRepositoryTest extends AbstractDbPersistenceTest {
 
-  private final JdbcUserRepository repository =
-      new JdbcUserRepository(PersistenceConfig.getDataSource());
+  private final UserRepository repository = new UserRepository(PersistenceConfig.getDataSource());
 
   @Test
   void existById_returnsFalse_whenUserWasNeverSaved() {

@@ -23,7 +23,7 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.OfficeAttendance;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.model.User;
-import kz.aday.bot.repository.JdbcOfficeAttendanceRepository;
+import kz.aday.bot.repository.OfficeAttendanceRepository;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.RealDispatchers;
 import kz.aday.bot.util.Messages;
@@ -38,8 +38,8 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 class OfficeAttendanceFlowTest extends AbstractDbPersistenceTest {
 
   private static final String NO_DATA_MESSAGE = "Нет данных о посещениях.";
-  private static final JdbcOfficeAttendanceRepository ATTENDANCE_REPOSITORY =
-      new JdbcOfficeAttendanceRepository(PersistenceConfig.getDataSource());
+  private static final OfficeAttendanceRepository ATTENDANCE_REPOSITORY =
+      new OfficeAttendanceRepository(PersistenceConfig.getDataSource());
 
   @Test
   void todayYes_savesForToday_andShowsInBothOverallAndMyStats() throws Exception {

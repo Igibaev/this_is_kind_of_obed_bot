@@ -15,7 +15,7 @@ import kz.aday.bot.model.Item;
 import kz.aday.bot.model.MenuRules;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.JdbcOrderRepository;
+import kz.aday.bot.repository.OrderRepository;
 import kz.aday.bot.repository.Repository;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +29,7 @@ public class OrderService {
   private final Repository<Order> repository;
 
   public OrderService() {
-    this(new JdbcOrderRepository(PersistenceConfig.getDataSource()));
+    this(new OrderRepository(PersistenceConfig.getDataSource()));
   }
 
   OrderService(Repository<Order> repository) {
@@ -65,11 +65,6 @@ public class OrderService {
   public Order saveDraft(Order order) {
     order.setStatus(Status.PENDING);
     return save(order);
-  }
-
-  public void clearLastWeek() {
-    repository.clearLastWeek();
-    log.warn("Orders older than last week were cleared.");
   }
 
   public void markOrdersAsSubmitted(City city, LocalDate date) {

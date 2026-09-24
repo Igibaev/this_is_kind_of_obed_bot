@@ -4,6 +4,7 @@ package kz.aday.bot.repository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -21,8 +22,9 @@ import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import kz.aday.bot.testsupport.TestUsers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessException;
 
-class JdbcSharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
+class SharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
 
   private static final LocalDate BASE_DATE = LocalDate.of(2099, 7, 1);
   private static final String TEST_USER_NAME = "pool-test-user";
@@ -30,11 +32,12 @@ class JdbcSharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
   private static final String FIRST_CLAIMER_CHAT_ID = "957000002";
   private static final String SECOND_CLAIMER_CHAT_ID = "957000003";
   private static final int MISSING_MENU_ITEM_ID = 999999;
+  private static final String UNKNOWN_USER_CHAT_ID = "957999999";
 
-  private final JdbcSharedOrderItemPoolRepository repository =
-      new JdbcSharedOrderItemPoolRepository(PersistenceConfig.getDataSource());
-  private final JdbcMenuRepository menuRepository =
-      new JdbcMenuRepository(PersistenceConfig.getDataSource());
+  private final SharedOrderItemPoolRepository repository =
+      new SharedOrderItemPoolRepository(PersistenceConfig.getDataSource());
+  private final MenuRepository menuRepository =
+      new MenuRepository(PersistenceConfig.getDataSource());
 
   @BeforeAll
   static void createUsers() {
@@ -236,14 +239,17 @@ class JdbcSharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
   }
 
   @Test
-  void clearStorageAndClearLastWeek_keepSavedPools() {
+  void save_rollsBackWholePool_whenOneEntryFails() {
     LocalDate date = BASE_DATE.plusDays(17);
-    repository.save(pool(City.ALMATA, date, entry("e-17-1", "Плов", Category.SECOND)));
+    SharedOrderItem valid = entry("e-17-1", "Плов", Category.SECOND);
+    SharedOrderItem invalid =
+        new SharedOrderItem(
+            "e-17-2", new Item(null, "Салат", Category.SALAD), UNKNOWN_USER_CHAT_ID, null);
 
-    repository.clearStorage();
-    repository.clearLastWeek();
+    assertThrows(
+        DataAccessException.class, () -> repository.save(pool(City.ALMATA, date, valid, invalid)));
 
-    assertTrue(repository.existById(poolId(City.ALMATA, date), date));
+    assertNull(repository.getById(poolId(City.ALMATA, date), date));
   }
 
   private static void ensureUser(String chatId) {

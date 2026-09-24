@@ -15,4 +15,8 @@ public interface Id {
   static String composeId(Object owner, Object date) {
     return owner + COMPOSITE_ID_SEPARATOR + date;
   }
+
+  static String ownerOf(String compositeId) {
+    return compositeId.substring(0, compositeId.indexOf(COMPOSITE_ID_SEPARATOR));
+  }
 }

@@ -1,10 +1,7 @@
 /* (C) 2024 Igibaev */
 package kz.aday.bot.scheduler;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,25 +44,9 @@ public class SchedulerService {
   }
 
   public void start() {
-    planCleanTask();
     executorService.scheduleAtFixedRate(
         this::sendDeadlineIsNearNotification, 0, 1, TimeUnit.SECONDS);
     executorService.scheduleAtFixedRate(this::closeMenu, 0, 1, TimeUnit.SECONDS);
-  }
-
-  private void planCleanTask() {
-    LocalDateTime now = LocalDateTime.now();
-    LocalDateTime next = now.with(LocalTime.MIDNIGHT);
-    if (now.isAfter(next)) {
-      next = next.plusDays(1);
-    }
-
-    Duration duration = Duration.between(now, next);
-    long initialDelay = duration.getSeconds();
-
-    long period = TimeUnit.DAYS.toSeconds(1);
-    executorService.scheduleAtFixedRate(
-        this::cleanAllStorages, initialDelay, period, TimeUnit.SECONDS);
   }
 
   void closeMenu() {
@@ -200,11 +181,5 @@ public class SchedulerService {
     } catch (TelegramApiException e) {
       log.error("Skip sending deadline notification: {}\n {}", e.getMessage(), e);
     }
-  }
-
-  private void cleanAllStorages() {
-    log.debug("cleaning all storages");
-    menuService.clearLastWeek();
-    orderService.clearLastWeek();
   }
 }

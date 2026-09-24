@@ -16,6 +16,9 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import kz.aday.bot.configuration.PersistenceConfig;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
@@ -25,7 +28,7 @@ import kz.aday.bot.model.Status;
 import kz.aday.bot.testsupport.AbstractDbPersistenceTest;
 import org.junit.jupiter.api.Test;
 
-class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
+class MenuRepositoryTest extends AbstractDbPersistenceTest {
 
   private static final LocalDate DATE_1 = LocalDate.of(2031, 3, 1);
   private static final LocalDate DATE_2 = LocalDate.of(2031, 3, 2);
@@ -39,9 +42,9 @@ class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
   private static final LocalDate DATE_10 = LocalDate.of(2031, 3, 10);
   private static final LocalDate DATE_11 = LocalDate.of(2031, 3, 11);
   private static final LocalDate DATE_12 = LocalDate.of(2031, 3, 12);
+  private static final LocalDate DATE_13 = LocalDate.of(2031, 3, 13);
 
-  private final JdbcMenuRepository repository =
-      new JdbcMenuRepository(PersistenceConfig.getDataSource());
+  private final MenuRepository repository = new MenuRepository(PersistenceConfig.getDataSource());
 
   @Test
   void getById_returnsNull_whenMenuWasNeverSaved() {
@@ -165,14 +168,32 @@ class JdbcMenuRepositoryTest extends AbstractDbPersistenceTest {
   }
 
   @Test
-  void clearLastWeekAndClearStorage_doNotDeleteAnyData() {
-    Menu menu = buildMenu(City.ASTANA, DATE_11);
+  void getAllByDate_loadsOwnItemsInDisplayOrder_forEachMenu() {
+    Menu almaty = buildMenu(City.ALMATA, DATE_13);
+    almaty.setItemList(
+        List.of(new Item(0, "Борщ", Category.FIRST), new Item(1, "Хлеб", Category.BREAD)));
+    Menu astana = buildMenu(City.ASTANA, DATE_13);
+    astana.setItemList(List.of(new Item(0, "Салат", Category.SALAD)));
+    repository.save(almaty);
+    repository.save(astana);
+
+    Map<City, Menu> menusByCity =
+        repository.getAll(DATE_13).stream()
+            .collect(Collectors.toMap(Menu::getCity, Function.identity()));
+
+    assertItemFieldsMatchInOrder(almaty.getItemList(), menusByCity.get(City.ALMATA).getItemList());
+    assertItemFieldsMatchInOrder(astana.getItemList(), menusByCity.get(City.ASTANA).getItemList());
+  }
+
+  @Test
+  void getById_returnsEmptyItemList_whenMenuHasNoItems() {
+    Menu menu = buildMenu(City.KARAGANDA, DATE_11);
+    menu.setItemList(List.of());
     repository.save(menu);
 
-    repository.clearLastWeek();
-    repository.clearStorage();
+    Menu found = repository.getById(City.KARAGANDA.toString(), DATE_11);
 
-    assertTrue(repository.existById(City.ASTANA.toString(), DATE_11));
+    assertTrue(found.getItemList().isEmpty());
   }
 
   private static long findItemId(City city, LocalDate date, String name) throws SQLException {

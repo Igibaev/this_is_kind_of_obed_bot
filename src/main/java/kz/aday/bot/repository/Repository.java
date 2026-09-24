@@ -15,9 +15,5 @@ public interface Repository<T> {
 
   void save(T t);
 
-  void clearLastWeek();
-
   void deleteById(String id, LocalDate date);
-
-  void clearStorage();
 }

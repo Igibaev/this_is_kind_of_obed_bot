@@ -3,19 +3,24 @@ package kz.aday.bot.bot.handler.stateHandlers.menu;
 
 import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
 import static kz.aday.bot.testsupport.TestFixtures.adminUser;
+import static kz.aday.bot.testsupport.TestFixtures.menuTextWithDeadline;
 import static kz.aday.bot.testsupport.TestFixtures.updateWithText;
 import static kz.aday.bot.testsupport.TestFixtures.validMenuText;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.exception.TelegramMessageException;
+import kz.aday.bot.model.Category;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
@@ -96,5 +101,21 @@ class ChangeMenuStateHandlerTest {
     assertEquals(
         Messages.MENU_PENDING.getText(user.getCity().getValue()),
         messageCaptor.getValue().getText());
+  }
+
+  @Test
+  void handle_throwsDuplicateCategory_andDoesNotSave_whenCategoryRepeated() {
+    User user = adminUser(City.ALMATA);
+    user.setState(State.CHANGE_MENU);
+    when(userService.findByIdOptional(CHAT_ID_STRING)).thenReturn(Optional.of(user));
+    Update update = updateWithText(menuTextWithDeadline("Второе:\nПлов\nВторое:\nБулочка"));
+
+    TelegramMessageException exception =
+        assertThrows(TelegramMessageException.class, () -> handler.handle(update, sender));
+
+    assertEquals(
+        Messages.MENU_CATEGORY_DUPLICATED.getText(Category.SECOND.getValue()),
+        exception.getMessage());
+    verify(menuService, never()).save(any());
   }
 }

@@ -5,12 +5,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import kz.aday.bot.exception.TelegramMessageException;
 import kz.aday.bot.model.Category;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
+import kz.aday.bot.util.Messages;
 import kz.aday.bot.util.TimeFormatterExtractor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +45,7 @@ public class MenuTextParser {
 
     List<Item> itemList = new ArrayList<>();
     Category currentCategory = null;
+    Set<Category> visitedCategories = EnumSet.noneOf(Category.class);
     String[] lines = message.split("\n");
     lines[lines.length - 1] = "";
     int counter = 0;
@@ -54,6 +58,7 @@ public class MenuTextParser {
 
       Category category = parseCategory(line);
       if (category != null) {
+        markCategoryVisited(visitedCategories, category);
         if (category == Category.BREAD) {
           itemList.add(new Item(counter++, category.getValue(), category));
           continue;
@@ -74,6 +79,15 @@ public class MenuTextParser {
     menu.setItemList(itemList);
     menu.setStatus(Status.PENDING);
     return menu;
+  }
+
+  private static void markCategoryVisited(Set<Category> visitedCategories, Category category)
+      throws TelegramMessageException {
+    if (!visitedCategories.add(category)) {
+      log.error("Category is duplicated [{}]", category);
+      throw new TelegramMessageException(
+          Messages.MENU_CATEGORY_DUPLICATED.getText(category.getValue()));
+    }
   }
 
   private static String removeNonLetterCharacters(String line) {

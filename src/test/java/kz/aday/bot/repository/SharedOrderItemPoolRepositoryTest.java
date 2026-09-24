@@ -27,6 +27,8 @@ import org.springframework.dao.DataAccessException;
 class SharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
 
   private static final LocalDate BASE_DATE = LocalDate.of(2099, 7, 1);
+  private static final LocalDate DELETION_CUTOFF = LocalDate.of(1985, 6, 1);
+  private static final LocalDate BEFORE_DELETION_CUTOFF = DELETION_CUTOFF.minusDays(1);
   private static final String TEST_USER_NAME = "pool-test-user";
   private static final String SOURCE_CHAT_ID = "957000001";
   private static final String FIRST_CLAIMER_CHAT_ID = "957000002";
@@ -250,6 +252,37 @@ class SharedOrderItemPoolRepositoryTest extends AbstractDbPersistenceTest {
         DataAccessException.class, () -> repository.save(pool(City.ALMATA, date, valid, invalid)));
 
     assertNull(repository.getById(poolId(City.ALMATA, date), date));
+  }
+
+  @Test
+  void deleteBefore_removesPoolsOfEveryCityDatedBeforeCutoff() {
+    LocalDate earlier = BEFORE_DELETION_CUTOFF.minusDays(1);
+    repository.save(pool(City.ALMATA, BEFORE_DELETION_CUTOFF, entry("d-1-1", "Плов", null)));
+    repository.save(pool(City.ASTANA, earlier, entry("d-1-2", "Борщ", null)));
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertNull(
+        repository.getById(poolId(City.ALMATA, BEFORE_DELETION_CUTOFF), BEFORE_DELETION_CUTOFF));
+    assertNull(repository.getById(poolId(City.ASTANA, earlier), earlier));
+  }
+
+  @Test
+  void deleteBefore_keepsPoolsDatedOnOrAfterCutoff() {
+    LocalDate afterCutoff = DELETION_CUTOFF.plusDays(1);
+    SharedOrderItem onCutoffEntry = entry("d-2-1", "Плов", Category.SECOND);
+    SharedOrderItem afterCutoffEntry = entry("d-2-2", "Салат", Category.SALAD);
+    repository.save(pool(City.KARAGANDA, DELETION_CUTOFF, onCutoffEntry));
+    repository.save(pool(City.KARAGANDA, afterCutoff, afterCutoffEntry));
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertEquals(
+        List.of(onCutoffEntry),
+        repository.getById(poolId(City.KARAGANDA, DELETION_CUTOFF), DELETION_CUTOFF).getItems());
+    assertEquals(
+        List.of(afterCutoffEntry),
+        repository.getById(poolId(City.KARAGANDA, afterCutoff), afterCutoff).getItems());
   }
 
   private static void ensureUser(String chatId) {

@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -27,12 +28,14 @@ import kz.aday.bot.model.User;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.ServiceContainerMockExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -41,6 +44,7 @@ class SchedulerServiceTest {
 
   private static final String REPORT_HEADER_TEXT = "Список заказов.";
   private static final String EMPTY_ORDERS_TEXT = "Список заказов пуст.";
+  private static final String STORAGE_FAILURE = "db is down";
 
   @RegisterExtension ServiceContainerMockExtension services = new ServiceContainerMockExtension();
 
@@ -48,6 +52,7 @@ class SchedulerServiceTest {
   private OrderService orderService;
   private UserService userService;
   private OfficeAttendanceService officeAttendanceService;
+  private SharedOrderItemPoolService poolService;
   private TelegramFoodBot telegramFoodBot;
   private SchedulerService schedulerService;
 
@@ -57,6 +62,7 @@ class SchedulerServiceTest {
     orderService = services.getOrderService();
     userService = services.getUserService();
     officeAttendanceService = services.getOfficeAttendanceService();
+    poolService = services.getPoolService();
 
     telegramFoodBot = mock(TelegramFoodBot.class);
     Message sentMessage = mock(Message.class);
@@ -131,23 +137,66 @@ class SchedulerServiceTest {
   }
 
   @Test
-  void consolidateAttendance_consolidatesPastMonthsAttendance() {
+  void cleanUpStorage_consolidatesAttendanceThenDeletesOrdersPoolsAndMenusInThatOrder() {
     // when
-    schedulerService.consolidateAttendance();
+    schedulerService.cleanUpStorage();
 
     // then
-    verify(officeAttendanceService).consolidatePastMonths();
+    InOrder inOrder = inOrder(officeAttendanceService, orderService, poolService, menuService);
+    inOrder.verify(officeAttendanceService).consolidatePastMonths();
+    inOrder.verify(orderService).deleteOutdated();
+    inOrder.verify(poolService).deleteOutdated();
+    inOrder.verify(menuService).deleteOutdated();
   }
 
   @Test
-  void consolidateAttendance_givenConsolidationFails_thenDoesNotPropagateException() {
+  void cleanUpStorage_givenAttendanceConsolidationFails_thenStillDeletesOutdatedData() {
     // given
-    doThrow(new IllegalStateException("db is down"))
+    doThrow(new IllegalStateException(STORAGE_FAILURE))
         .when(officeAttendanceService)
         .consolidatePastMonths();
 
+    // when
+    schedulerService.cleanUpStorage();
+
+    // then
+    verify(orderService).deleteOutdated();
+    verify(poolService).deleteOutdated();
+    verify(menuService).deleteOutdated();
+  }
+
+  @Test
+  void cleanUpStorage_givenOrdersDeletionFails_thenStillDeletesPoolsAndMenus() {
+    // given
+    doThrow(new IllegalStateException(STORAGE_FAILURE)).when(orderService).deleteOutdated();
+
+    // when
+    schedulerService.cleanUpStorage();
+
+    // then
+    verify(poolService).deleteOutdated();
+    verify(menuService).deleteOutdated();
+  }
+
+  @Test
+  void cleanUpStorage_givenPoolsDeletionFails_thenStillDeletesMenus() {
+    // given
+    doThrow(new IllegalStateException(STORAGE_FAILURE)).when(poolService).deleteOutdated();
+
+    // when
+    schedulerService.cleanUpStorage();
+
+    // then
+    verify(menuService).deleteOutdated();
+  }
+
+  @Test
+  void cleanUpStorage_givenMenusDeletionFails_thenDoesNotPropagateException() {
+    // given
+    doThrow(new IllegalStateException(STORAGE_FAILURE)).when(menuService).deleteOutdated();
+
     // when / then
-    assertDoesNotThrow(() -> schedulerService.consolidateAttendance());
+    assertDoesNotThrow(() -> schedulerService.cleanUpStorage());
   }
 
   private List<String> capturedMessageTexts() throws TelegramApiException {

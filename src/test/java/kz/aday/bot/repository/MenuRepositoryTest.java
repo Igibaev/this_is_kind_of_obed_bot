@@ -43,6 +43,8 @@ class MenuRepositoryTest extends AbstractDbPersistenceTest {
   private static final LocalDate DATE_11 = LocalDate.of(2031, 3, 11);
   private static final LocalDate DATE_12 = LocalDate.of(2031, 3, 12);
   private static final LocalDate DATE_13 = LocalDate.of(2031, 3, 13);
+  private static final LocalDate DELETION_CUTOFF = LocalDate.of(1985, 6, 1);
+  private static final LocalDate BEFORE_DELETION_CUTOFF = DELETION_CUTOFF.minusDays(1);
 
   private final MenuRepository repository = new MenuRepository(PersistenceConfig.getDataSource());
 
@@ -194,6 +196,54 @@ class MenuRepositoryTest extends AbstractDbPersistenceTest {
     Menu found = repository.getById(City.KARAGANDA.toString(), DATE_11);
 
     assertTrue(found.getItemList().isEmpty());
+  }
+
+  @Test
+  void deleteBefore_removesMenusOfEveryCityDatedBeforeCutoff() {
+    repository.save(buildMenu(City.ALMATA, BEFORE_DELETION_CUTOFF));
+    repository.save(buildMenu(City.ASTANA, BEFORE_DELETION_CUTOFF.minusDays(1)));
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertNull(repository.getById(City.ALMATA.toString(), BEFORE_DELETION_CUTOFF));
+    assertNull(repository.getById(City.ASTANA.toString(), BEFORE_DELETION_CUTOFF.minusDays(1)));
+  }
+
+  @Test
+  void deleteBefore_keepsMenusDatedOnOrAfterCutoff() {
+    Menu onCutoff = buildMenu(City.KARAGANDA, DELETION_CUTOFF);
+    Menu afterCutoff = buildMenu(City.KARAGANDA, DELETION_CUTOFF.plusDays(1));
+    repository.save(onCutoff);
+    repository.save(afterCutoff);
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertEquals(onCutoff, repository.getById(City.KARAGANDA.toString(), DELETION_CUTOFF));
+    assertEquals(
+        afterCutoff, repository.getById(City.KARAGANDA.toString(), DELETION_CUTOFF.plusDays(1)));
+  }
+
+  @Test
+  void deleteBefore_removesItemsOfDeletedMenu() throws SQLException {
+    LocalDate date = BEFORE_DELETION_CUTOFF.minusDays(2);
+    repository.save(buildMenu(City.ASTANA, date));
+    long itemId = findItemId(City.ASTANA, date, "Плов");
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertEquals(0, countItemsById(itemId));
+  }
+
+  private static int countItemsById(long itemId) throws SQLException {
+    String sql = "SELECT COUNT(*) AS items FROM menu_items WHERE item_id = ?";
+    try (Connection connection = PersistenceConfig.getDataSource().getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setLong(1, itemId);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getInt("items");
+      }
+    }
   }
 
   private static long findItemId(City city, LocalDate date, String name) throws SQLException {

@@ -11,18 +11,17 @@ import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.repository.MenuRepository;
-import kz.aday.bot.repository.Repository;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MenuService {
-  private final Repository<Menu> repository;
+  private final MenuRepository repository;
 
   public MenuService() {
     this(new MenuRepository(PersistenceConfig.getDataSource()));
   }
 
-  MenuService(Repository<Menu> repository) {
+  MenuService(MenuRepository repository) {
     this.repository = repository;
   }
 
@@ -65,6 +64,10 @@ public class MenuService {
       }
     }
     return menus;
+  }
+
+  public void deleteOutdated() {
+    repository.deleteBefore(LocalDate.now());
   }
 
   private static LocalDate currentOrderDate(String id) {

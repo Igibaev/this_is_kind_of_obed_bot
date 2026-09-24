@@ -38,6 +38,8 @@ public class SharedOrderItemPoolRepository extends AbstractRepository<SharedOrde
           + "WHERE shared_order_items.claimed_by_chat_id IS NULL";
   private static final String DELETE_ENTRIES_BY_CITY_AND_DATE =
       "DELETE FROM shared_order_items WHERE city = ? AND date = ?";
+  private static final String DELETE_ENTRIES_BEFORE =
+      "DELETE FROM shared_order_items WHERE date < ?";
 
   public SharedOrderItemPoolRepository(DataSource dataSource) {
     super(dataSource);
@@ -71,6 +73,11 @@ public class SharedOrderItemPoolRepository extends AbstractRepository<SharedOrde
   public void deleteById(String id, LocalDate date) {
     int deleted = jdbcTemplate.update(DELETE_ENTRIES_BY_CITY_AND_DATE, Id.ownerOf(id), date);
     log.info("Deleted [{}] shared order item(s) of pool [{}] for date [{}]", deleted, id, date);
+  }
+
+  public void deleteBefore(LocalDate cutoff) {
+    int deleted = jdbcTemplate.update(DELETE_ENTRIES_BEFORE, cutoff);
+    log.info("Deleted [{}] shared order item(s) before [{}]", deleted, cutoff);
   }
 
   private List<SharedOrderItemPool> loadPools(String sql, Object... args) {

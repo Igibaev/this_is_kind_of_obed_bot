@@ -19,6 +19,7 @@ import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
 import kz.aday.bot.service.OfficeAttendanceService;
 import kz.aday.bot.service.OrderService;
+import kz.aday.bot.service.SharedOrderItemPoolService;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.util.KeyboardUtil;
 import kz.aday.bot.util.Messages;
@@ -34,7 +35,11 @@ public class SchedulerService {
   private static final String REPORT_MESSAGE = "Список заказов.\n";
   private static final long INITIAL_DELAY = 0;
   private static final long NOTIFICATION_PERIOD_SECONDS = 1;
-  private static final long CONSOLIDATION_PERIOD_DAYS = 1;
+  private static final long CLEANUP_PERIOD_DAYS = 1;
+  private static final String ATTENDANCE_CONSOLIDATION_TASK = "office attendance consolidation";
+  private static final String OUTDATED_MENUS_DELETION_TASK = "outdated menus deletion";
+  private static final String OUTDATED_ORDERS_DELETION_TASK = "outdated orders deletion";
+  private static final String OUTDATED_POOLS_DELETION_TASK = "outdated shared order items deletion";
 
   private final MessageSender messageSender = new MessageSender();
   private final UserService userService = ServiceContainer.getUserService();
@@ -42,6 +47,7 @@ public class SchedulerService {
   private final OrderService orderService = ServiceContainer.getOrderService();
   private final OfficeAttendanceService officeAttendanceService =
       ServiceContainer.getOfficeAttendanceService();
+  private final SharedOrderItemPoolService poolService = ServiceContainer.getPoolService();
   private final TelegramFoodBot telegramFoodBot;
 
   private final Map<String, Boolean> handledNotifications = new ConcurrentHashMap<>();
@@ -61,15 +67,22 @@ public class SchedulerService {
     executorService.scheduleAtFixedRate(
         this::closeMenu, INITIAL_DELAY, NOTIFICATION_PERIOD_SECONDS, TimeUnit.SECONDS);
     executorService.scheduleAtFixedRate(
-        this::consolidateAttendance, INITIAL_DELAY, CONSOLIDATION_PERIOD_DAYS, TimeUnit.DAYS);
+        this::cleanUpStorage, INITIAL_DELAY, CLEANUP_PERIOD_DAYS, TimeUnit.DAYS);
   }
 
-  void consolidateAttendance() {
-    log.debug("Consolidating office attendance");
+  void cleanUpStorage() {
+    runSafely(ATTENDANCE_CONSOLIDATION_TASK, officeAttendanceService::consolidatePastMonths);
+    runSafely(OUTDATED_ORDERS_DELETION_TASK, orderService::deleteOutdated);
+    runSafely(OUTDATED_POOLS_DELETION_TASK, poolService::deleteOutdated);
+    runSafely(OUTDATED_MENUS_DELETION_TASK, menuService::deleteOutdated);
+  }
+
+  private static void runSafely(String taskName, Runnable task) {
+    log.debug("Running [{}]", taskName);
     try {
-      officeAttendanceService.consolidatePastMonths();
+      task.run();
     } catch (RuntimeException e) {
-      log.error("Failed to consolidate office attendance: {}", e.getMessage(), e);
+      log.error("Failed to run [{}]: {}", taskName, e.getMessage(), e);
     }
   }
 

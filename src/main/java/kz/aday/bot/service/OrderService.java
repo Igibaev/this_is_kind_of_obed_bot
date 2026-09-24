@@ -16,7 +16,6 @@ import kz.aday.bot.model.MenuRules;
 import kz.aday.bot.model.Order;
 import kz.aday.bot.model.Status;
 import kz.aday.bot.repository.OrderRepository;
-import kz.aday.bot.repository.Repository;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,13 +25,13 @@ public class OrderService {
   static final String ORDERED_PEOPLE_TEMPLATE = "*%s* в офисе заказали еду:*%s*\n%s\n";
   private static final String USERNAME_DELIMITER = ",";
 
-  private final Repository<Order> repository;
+  private final OrderRepository repository;
 
   public OrderService() {
     this(new OrderRepository(PersistenceConfig.getDataSource()));
   }
 
-  OrderService(Repository<Order> repository) {
+  OrderService(OrderRepository repository) {
     this.repository = repository;
   }
 
@@ -88,6 +87,10 @@ public class OrderService {
       result.append(printAttendanceSheetByOrders(orders, date));
     }
     return result.toString();
+  }
+
+  public void deleteOutdated() {
+    repository.deleteBefore(LocalDate.now().minusDays(ORDER_HISTORY_DAYS));
   }
 
   public void addItemToOrder(Order order, Item item, MenuRules menuRules) {

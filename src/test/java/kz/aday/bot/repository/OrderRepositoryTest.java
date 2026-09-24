@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test;
 class OrderRepositoryTest extends AbstractDbPersistenceTest {
 
   private static final LocalDate TODAY = LocalDate.now();
+  private static final LocalDate DELETION_CUTOFF = LocalDate.of(1985, 6, 1);
+  private static final LocalDate BEFORE_DELETION_CUTOFF = DELETION_CUTOFF.minusDays(1);
 
   private final OrderRepository repository = new OrderRepository(PersistenceConfig.getDataSource());
   private final MenuRepository menuRepository =
@@ -178,6 +180,77 @@ class OrderRepositoryTest extends AbstractDbPersistenceTest {
 
     assertTrue(found.getOrderItemList().isEmpty());
     assertTrue(found.getCategoryItemList().isEmpty());
+  }
+
+  @Test
+  void deleteBefore_removesOrdersDatedBeforeCutoff() {
+    String chatId = "960000101";
+    ensureUser(chatId);
+    repository.save(buildOrder(chatId, City.ALMATA, BEFORE_DELETION_CUTOFF));
+    repository.save(buildOrder(chatId, City.ASTANA, BEFORE_DELETION_CUTOFF.minusDays(1)));
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertNull(repository.getById(chatId + "_" + BEFORE_DELETION_CUTOFF, BEFORE_DELETION_CUTOFF));
+    LocalDate earlier = BEFORE_DELETION_CUTOFF.minusDays(1);
+    assertNull(repository.getById(chatId + "_" + earlier, earlier));
+  }
+
+  @Test
+  void deleteBefore_keepsOrdersDatedOnOrAfterCutoff() {
+    String chatId = "960000102";
+    ensureUser(chatId);
+    LocalDate afterCutoff = DELETION_CUTOFF.plusDays(1);
+    Order onCutoff = buildOrder(chatId, City.ALMATA, DELETION_CUTOFF);
+    Order after = buildOrder(chatId, City.ALMATA, afterCutoff);
+    repository.save(onCutoff);
+    repository.save(after);
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertEquals(onCutoff, repository.getById(chatId + "_" + DELETION_CUTOFF, DELETION_CUTOFF));
+    assertEquals(after, repository.getById(chatId + "_" + afterCutoff, afterCutoff));
+  }
+
+  @Test
+  void deleteBefore_removesItemsAndCategoriesOfDeletedOrder() throws SQLException {
+    String chatId = "960000103";
+    ensureUser(chatId);
+    Order order = buildOrder(chatId, City.KARAGANDA, BEFORE_DELETION_CUTOFF);
+    order.getOrderItemList().add(new Item(1, "Плов", Category.SECOND));
+    order.getCategoryItemList().add(Category.SECOND);
+    repository.save(order);
+    long orderId = findOrderId(chatId, BEFORE_DELETION_CUTOFF);
+
+    repository.deleteBefore(DELETION_CUTOFF);
+
+    assertEquals(0, countRowsByOrderId("order_items", orderId));
+    assertEquals(0, countRowsByOrderId("order_categories", orderId));
+  }
+
+  private static long findOrderId(String chatId, LocalDate date) throws SQLException {
+    String sql = "SELECT id FROM orders WHERE chat_id = ? AND date = ?";
+    try (Connection connection = PersistenceConfig.getDataSource().getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setLong(1, Long.parseLong(chatId));
+      statement.setObject(2, date);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getLong("id");
+      }
+    }
+  }
+
+  private static int countRowsByOrderId(String table, long orderId) throws SQLException {
+    String sql = "SELECT COUNT(*) AS total FROM " + table + " WHERE order_id = ?";
+    try (Connection connection = PersistenceConfig.getDataSource().getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setLong(1, orderId);
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getInt("total");
+      }
+    }
   }
 
   private static void ensureUser(String chatId) {

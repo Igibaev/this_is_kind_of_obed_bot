@@ -19,19 +19,18 @@ import java.util.Optional;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Menu;
 import kz.aday.bot.model.Status;
-import kz.aday.bot.repository.Repository;
+import kz.aday.bot.repository.MenuRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class MenuServiceTest {
 
-  private Repository<Menu> repository;
+  private MenuRepository repository;
   private MenuService service;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
-    repository = mock(Repository.class);
+    repository = mock(MenuRepository.class);
     service = new MenuService(repository);
   }
 
@@ -141,5 +140,12 @@ class MenuServiceTest {
     service.deleteById(City.KARAGANDA.toString());
 
     verify(repository).deleteById(City.KARAGANDA.toString(), City.KARAGANDA.getCurrentOrderDate());
+  }
+
+  @Test
+  void deleteOutdated_deletesMenusBeforeToday() {
+    service.deleteOutdated();
+
+    verify(repository).deleteBefore(LocalDate.now());
   }
 }

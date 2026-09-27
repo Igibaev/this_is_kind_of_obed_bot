@@ -9,27 +9,24 @@ import kz.aday.bot.configuration.BotConfig;
 import kz.aday.bot.scheduler.SchedulerService;
 import org.reflections.Reflections;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public class TelegramFoodBotApplication {
 
   public static void main(String[] args) {
-    try {
-      TelegramFoodBot telegramFoodBot =
-          new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
-      addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
-      SchedulerService schedulerService = new SchedulerService(telegramFoodBot);
-      schedulerService.start();
+    new StartupGuard(System::exit).run(TelegramFoodBotApplication::start);
+  }
 
-      TimeZone.setDefault(TimeZone.getTimeZone(BotConfig.getBotTimeZone()));
-      TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-      botsApi.registerBot(telegramFoodBot);
-    } catch (TelegramApiException e) {
-      e.printStackTrace();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  private static void start() throws Exception {
+    TelegramFoodBot telegramFoodBot =
+        new TelegramFoodBot(BotConfig.getBotName(), BotConfig.getBotToken());
+    addCommandsAutomatically(telegramFoodBot, AbstractHandler.class.getPackageName());
+    SchedulerService schedulerService = new SchedulerService(telegramFoodBot);
+    schedulerService.start();
+
+    TimeZone.setDefault(TimeZone.getTimeZone(BotConfig.getBotTimeZone()));
+    TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
+    botsApi.registerBot(telegramFoodBot);
   }
 
   /**

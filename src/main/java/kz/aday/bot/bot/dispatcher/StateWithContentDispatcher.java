@@ -2,6 +2,8 @@
 package kz.aday.bot.bot.dispatcher;
 
 import java.util.HashSet;
+import kz.aday.bot.configuration.FeatureToggles;
+import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -10,7 +12,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class StateWithContentDispatcher extends AbstractStateDispatcher {
 
   public StateWithContentDispatcher(UserService userService) {
-    super(new HashSet<>(), userService);
+    this(userService, ServiceContainer.getFeatureToggles());
+  }
+
+  public StateWithContentDispatcher(UserService userService, FeatureToggles featureToggles) {
+    super(new HashSet<>(), userService, featureToggles);
   }
 
   @Override

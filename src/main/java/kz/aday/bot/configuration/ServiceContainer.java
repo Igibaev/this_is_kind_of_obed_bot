@@ -39,6 +39,14 @@ public class ServiceContainer {
     return SharedOrderItemPoolServiceHolder.INSTANCE;
   }
 
+  public static FeatureToggles getFeatureToggles() {
+    return FeatureTogglesHolder.INSTANCE;
+  }
+
+  private static final class FeatureTogglesHolder {
+    private static final FeatureToggles INSTANCE = FeatureToggles.defaults();
+  }
+
   private static final class UserServiceHolder {
     private static final UserService INSTANCE = new UserService();
   }

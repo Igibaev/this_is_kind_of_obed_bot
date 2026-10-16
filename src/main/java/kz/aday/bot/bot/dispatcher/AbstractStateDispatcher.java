@@ -4,6 +4,7 @@ package kz.aday.bot.bot.dispatcher;
 import java.util.Set;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.model.User;
 import kz.aday.bot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +17,13 @@ public abstract class AbstractStateDispatcher extends AbstractDispatcher<StateHa
       "Некорректный state или текст команды";
 
   protected final UserService userService;
+  private final FeatureToggles featureToggles;
 
-  protected AbstractStateDispatcher(Set<StateHandler> handlers, UserService userService) {
+  protected AbstractStateDispatcher(
+      Set<StateHandler> handlers, UserService userService, FeatureToggles featureToggles) {
     super(handlers);
     this.userService = userService;
+    this.featureToggles = featureToggles;
   }
 
   public void dispatch(Update update, AbsSender sender) throws Exception {
@@ -54,6 +58,10 @@ public abstract class AbstractStateDispatcher extends AbstractDispatcher<StateHa
     log.debug("Processing state: [{}]", state);
 
     String finalState = state;
+    if (featureToggles.isStateTextDisabled(state)) {
+      log.warn("Disabled state: [{}]", finalState);
+      throw unmatchedHandlerException(finalState);
+    }
     boolean matched =
         tryDispatch(state, StateHandler::canHandle, handler -> handler.handle(update, sender));
     if (!matched) {

@@ -11,9 +11,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.testsupport.TestFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -89,6 +92,40 @@ class CallbackDispatcherTest {
     Exception thrown = assertThrows(Exception.class, () -> dispatcher.dispatch(callback, sender));
     // then
     assertSame(original, thrown);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"POOL_CLAIM:e1", "ATTENDANCE_YES:TODAY", "ATTENDANCE_DAY_TOMORROW"})
+  void dispatch_throwsUnknownCommandWithoutCallingHandler_whenCallbackIsDisabled(String data)
+      throws Exception {
+    // given
+    CallbackQuery callback = TestFixtures.callbackQuery(data);
+    when(callback.getMessage().getText()).thenReturn("previous bot message");
+    CallbackHandler handler = mock(CallbackHandler.class);
+    when(handler.canHandle(callback)).thenReturn(true);
+    dispatcher.addHandler(handler);
+    // when
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> dispatcher.dispatch(callback, sender));
+    // then
+    assertEquals(
+        "Неизвестная команда [previous bot message]. Вернитесь в меню /return",
+        exception.getMessage());
+    verify(handler, never()).handle(callback, sender);
+  }
+
+  @Test
+  void dispatch_callsHandlerForDisabledByDefaultCallback_whenAllFeaturesEnabled() throws Exception {
+    // given
+    CallbackDispatcher enabledDispatcher = new CallbackDispatcher(FeatureToggles.allEnabled());
+    CallbackQuery callback = TestFixtures.callbackQuery("POOL_CLAIM:e1");
+    CallbackHandler handler = mock(CallbackHandler.class);
+    when(handler.canHandle(callback)).thenReturn(true);
+    enabledDispatcher.addHandler(handler);
+    // when
+    enabledDispatcher.dispatch(callback, sender);
+    // then
+    verify(handler).handle(callback, sender);
   }
 
   @Test

@@ -5,11 +5,13 @@ import static kz.aday.bot.testsupport.TestFixtures.CHAT_ID_STRING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.service.UserService;
 import kz.aday.bot.testsupport.TestFixtures;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,6 +100,59 @@ class StateWithContentDispatcherTest {
     Update update = TestFixtures.updateWithChatId(null, "some text");
     // when / then
     assertThrows(IllegalArgumentException.class, () -> dispatcher.dispatch(update, sender));
+  }
+
+  @Test
+  void dispatch_throwsUnknownCommand_whenRawTextIsDisabledState() throws Exception {
+    // given
+    String disabledText = State.STATISTICS_MENU.getDisplayName();
+    when(userService.existsById(CHAT_ID_STRING)).thenReturn(false);
+    StateHandler handler = mock(StateHandler.class);
+    when(handler.canHandle(disabledText)).thenReturn(true);
+    dispatcher.addHandler(handler);
+    Update update = TestFixtures.updateWithText(disabledText);
+    // when
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> dispatcher.dispatch(update, sender));
+    // then
+    assertEquals(
+        "Неизвестная команда [" + disabledText + "]. Вернитесь в меню /return",
+        exception.getMessage());
+    verify(handler, never()).handle(update, sender);
+  }
+
+  @Test
+  void dispatch_throwsUnknownCommand_whenPersistedStateIsDisabled() throws Exception {
+    // given
+    String disabledText = State.SHARE_LUNCH.getDisplayName();
+    when(userService.existsById(CHAT_ID_STRING)).thenReturn(true);
+    when(userService.findById(CHAT_ID_STRING))
+        .thenReturn(TestFixtures.readyUserWithState(State.SHARE_LUNCH));
+    StateHandler handler = mock(StateHandler.class);
+    when(handler.canHandle(disabledText)).thenReturn(true);
+    dispatcher.addHandler(handler);
+    Update update = TestFixtures.updateWithText("Да");
+    // when
+    assertThrows(RuntimeException.class, () -> dispatcher.dispatch(update, sender));
+    // then
+    verify(handler, never()).handle(update, sender);
+  }
+
+  @Test
+  void dispatch_routesDisabledByDefaultState_whenAllFeaturesEnabled() throws Exception {
+    // given
+    StateWithContentDispatcher enabledDispatcher =
+        new StateWithContentDispatcher(userService, FeatureToggles.allEnabled());
+    String text = State.STATISTICS_MENU.getDisplayName();
+    when(userService.existsById(CHAT_ID_STRING)).thenReturn(false);
+    StateHandler handler = mock(StateHandler.class);
+    when(handler.canHandle(text)).thenReturn(true);
+    enabledDispatcher.addHandler(handler);
+    Update update = TestFixtures.updateWithText(text);
+    // when
+    enabledDispatcher.dispatch(update, sender);
+    // then
+    verify(handler).handle(update, sender);
   }
 
   @Test

@@ -4,6 +4,7 @@ package kz.aday.bot.testsupport;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.service.MenuService;
 import kz.aday.bot.service.MessageSender;
@@ -39,6 +40,11 @@ public final class ServiceContainerMockExtension implements BeforeEachCallback, 
         .when(ServiceContainer::getOfficeAttendanceService)
         .thenReturn(officeAttendanceService);
     mockedServiceContainer.when(ServiceContainer::getPoolService).thenReturn(poolService);
+    useFeatureToggles(FeatureToggles.defaults());
+  }
+
+  public void useFeatureToggles(FeatureToggles featureToggles) {
+    mockedServiceContainer.when(ServiceContainer::getFeatureToggles).thenReturn(featureToggles);
   }
 
   @Override

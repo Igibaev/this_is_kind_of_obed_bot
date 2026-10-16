@@ -36,6 +36,7 @@ import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.State;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
 import kz.aday.bot.model.Menu;
@@ -54,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -77,6 +79,11 @@ class AbstractHandlerTest {
   private static final Integer PREVIOUS_USER_MESSAGE_ID = 6;
 
   private static final List<String> USER_BASE_ITEMS =
+      List.of(
+          State.PROFILE_MENU.getDisplayName(),
+          State.MENU_CATEGORY_ORDER.getDisplayName(),
+          State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
+  private static final List<String> USER_BASE_ITEMS_ALL_FEATURES_ENABLED =
       List.of(
           State.PROFILE_MENU.getDisplayName(),
           State.MENU_CATEGORY_ORDER.getDisplayName(),
@@ -468,9 +475,40 @@ class AbstractHandlerTest {
     // when
     List<String> actual = handler.getOrderMenuItems(user);
     // then
-    List<String> expected =
-        concat(List.of(State.VIEW_POOL.getDisplayName()), testCase.extraItems());
-    assertEquals(expected, actual);
+    assertEquals(testCase.extraItems(), actual);
+  }
+
+  @Test
+  void getOrderMenuItems_givenDefaultFeatureToggles_whenCalled_thenHidesPoolAndShareLunch() {
+    // given
+    User user = userWithRole(User.Role.USER);
+    stubMenu(Status.DEADLINE);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(true);
+    // when
+    List<String> actual = handler.getOrderMenuItems(user);
+    // then
+    assertFalse(actual.contains(State.VIEW_POOL.getDisplayName()));
+    assertFalse(actual.contains(State.SHARE_LUNCH.getDisplayName()));
+  }
+
+  @Test
+  void getOrderMenuItems_givenAllFeaturesEnabled_whenCalled_thenShowsPoolAndShareLunch() {
+    // given
+    AbstractHandler enabledHandler = handlerWithAllFeaturesEnabled();
+    User user = userWithRole(User.Role.USER);
+    stubMenu(Status.DEADLINE);
+    when(orderService.existsByChatId(CHAT_ID_STRING, City.ALMATA.getCurrentOrderDate()))
+        .thenReturn(true);
+    // when
+    List<String> actual = enabledHandler.getOrderMenuItems(user);
+    // then
+    assertEquals(
+        List.of(
+            State.VIEW_POOL.getDisplayName(),
+            State.GET_ORDER.getDisplayName(),
+            State.SHARE_LUNCH.getDisplayName()),
+        actual);
   }
 
   @Test
@@ -483,8 +521,7 @@ class AbstractHandlerTest {
     // when
     List<String> actual = handler.getOrderMenuItems(user);
     // then
-    assertEquals(
-        List.of(State.VIEW_POOL.getDisplayName(), State.GET_ORDER.getDisplayName()), actual);
+    assertEquals(List.of(State.GET_ORDER.getDisplayName()), actual);
   }
 
   @Test
@@ -501,7 +538,6 @@ class AbstractHandlerTest {
     // then
     assertEquals(
         List.of(
-            State.VIEW_POOL.getDisplayName(),
             State.VIEW_MENU_TODAY.getDisplayName(),
             State.CREATE_ORDER.getDisplayName(),
             State.RANDOM_ORDER.getDisplayName(),
@@ -520,11 +556,7 @@ class AbstractHandlerTest {
     List<String> actual = handler.getOrderMenuItems(user);
     // then
     assertEquals(
-        List.of(
-            State.VIEW_POOL.getDisplayName(),
-            State.CREATE_ORDER.getDisplayName(),
-            State.GET_ORDER.getDisplayName()),
-        actual);
+        List.of(State.CREATE_ORDER.getDisplayName(), State.GET_ORDER.getDisplayName()), actual);
   }
 
   @Test
@@ -536,6 +568,32 @@ class AbstractHandlerTest {
     ReplyKeyboard actual = handler.getUserMenuKeyboard(user);
     // then
     assertEquals(USER_BASE_ITEMS, buttonTexts(actual));
+  }
+
+  @Test
+  void
+      getUserMenuKeyboard_givenDefaultFeatureToggles_whenCalled_thenHidesStatisticsAndOfficeAttendance() {
+    // given
+    User user = userWithRole(User.Role.USER);
+    stubMenu(null);
+    // when
+    List<String> actual = buttonTexts(handler.getUserMenuKeyboard(user));
+    // then
+    assertFalse(actual.contains(State.STATISTICS_MENU.getDisplayName()));
+    assertFalse(actual.contains(State.SET_OFFICE_ATTENDANCE.getDisplayName()));
+  }
+
+  @Test
+  void
+      getUserMenuKeyboard_givenAllFeaturesEnabled_whenCalled_thenShowsStatisticsAndOfficeAttendance() {
+    // given
+    AbstractHandler enabledHandler = handlerWithAllFeaturesEnabled();
+    User user = userWithRole(User.Role.USER);
+    stubMenu(null);
+    // when
+    ReplyKeyboard actual = enabledHandler.getUserMenuKeyboard(user);
+    // then
+    assertEquals(USER_BASE_ITEMS_ALL_FEATURES_ENABLED, buttonTexts(actual));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -613,7 +671,7 @@ class AbstractHandlerTest {
             "deadline menu, with order",
             Status.DEADLINE,
             Status.READY,
-            List.of(State.GET_ORDER.getDisplayName(), State.SHARE_LUNCH.getDisplayName())),
+            List.of(State.GET_ORDER.getDisplayName())),
         new MenuKeyboardCase("pending menu", Status.PENDING, null, List.of()),
         new MenuKeyboardCase("deleted menu", Status.DELETED, null, List.of()),
         new MenuKeyboardCase("over-changing menu", Status.OVER_CHANGING, null, List.of()));
@@ -717,20 +775,14 @@ class AbstractHandlerTest {
   }
 
   @Test
-  void sendStatisticsCard_givenAdmin_whenCalled_thenSendsAdminAndPersonalStatsButtons()
+  void sendStatisticsCard_givenAllFeaturesEnabledAndAdmin_whenCalled_thenSendsAllStatsButtons()
       throws TelegramApiException {
     // given
+    AbstractHandler enabledHandler = handlerWithAllFeaturesEnabled();
     User user = userWithRole(User.Role.ADMIN);
-    user.setChatId(OTHER_CHAT_ID);
-    AbsSender sender = mock(AbsSender.class);
-    Message sentMessage = mock(Message.class);
-    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
-    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
     // when
-    handler.sendStatisticsCard(user, null, sender);
+    List<String> actual = sendStatisticsCardButtons(enabledHandler, user);
     // then
-    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
     assertEquals(
         List.of(
             State.GET_MY_ATTENDANCE_STATS.getDisplayName(),
@@ -738,30 +790,36 @@ class AbstractHandlerTest {
             State.GET_ATTENDANCE_STATS.getDisplayName(),
             State.GET_ATTENDANCE_STATS_MONTH.getDisplayName(),
             State.BACK_TO_MENU.getDisplayName()),
-        buttonTexts(messageCaptor.getValue().getReplyMarkup()));
+        actual);
   }
 
   @Test
-  void sendStatisticsCard_givenUser_whenCalled_thenSendsOnlyPersonalStatsButtons()
+  void sendStatisticsCard_givenAllFeaturesEnabledAndUser_whenCalled_thenSendsOnlyPersonalStats()
       throws TelegramApiException {
     // given
+    AbstractHandler enabledHandler = handlerWithAllFeaturesEnabled();
     User user = userWithRole(User.Role.USER);
-    user.setChatId(OTHER_CHAT_ID);
-    AbsSender sender = mock(AbsSender.class);
-    Message sentMessage = mock(Message.class);
-    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
-    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
     // when
-    handler.sendStatisticsCard(user, null, sender);
+    List<String> actual = sendStatisticsCardButtons(enabledHandler, user);
     // then
-    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
     assertEquals(
         List.of(
             State.GET_MY_ATTENDANCE_STATS.getDisplayName(),
             State.GET_MY_ATTENDANCE_STATS_MONTH.getDisplayName(),
             State.BACK_TO_MENU.getDisplayName()),
-        buttonTexts(messageCaptor.getValue().getReplyMarkup()));
+        actual);
+  }
+
+  @ParameterizedTest
+  @EnumSource(User.Role.class)
+  void sendStatisticsCard_givenDefaultFeatureToggles_whenCalled_thenSendsOnlyBackButton(
+      User.Role role) throws TelegramApiException {
+    // given
+    User user = userWithRole(role);
+    // when
+    List<String> actual = sendStatisticsCardButtons(handler, user);
+    // then
+    assertEquals(List.of(State.BACK_TO_MENU.getDisplayName()), actual);
   }
 
   @Test
@@ -783,10 +841,7 @@ class AbstractHandlerTest {
     SendMessage actualMessage = messageCaptor.getValue();
     assertEquals(Messages.CATEGORY_PROMPT.getText(), actualMessage.getText());
     assertEquals(
-        List.of(
-            State.VIEW_POOL.getDisplayName(),
-            State.CREATE_ORDER.getDisplayName(),
-            State.BACK_TO_MENU.getDisplayName()),
+        List.of(State.CREATE_ORDER.getDisplayName(), State.BACK_TO_MENU.getDisplayName()),
         buttonTexts(actualMessage.getReplyMarkup()));
   }
 
@@ -889,6 +944,24 @@ class AbstractHandlerTest {
     menu.setDeadline(deadline);
     when(menuService.existsById(CITY_KEY)).thenReturn(true);
     when(menuService.findById(CITY_KEY)).thenReturn(menu);
+  }
+
+  private AbstractHandler handlerWithAllFeaturesEnabled() {
+    services.useFeatureToggles(FeatureToggles.allEnabled());
+    return new AbstractHandler() {};
+  }
+
+  private List<String> sendStatisticsCardButtons(AbstractHandler target, User user)
+      throws TelegramApiException {
+    user.setChatId(OTHER_CHAT_ID);
+    AbsSender sender = mock(AbsSender.class);
+    Message sentMessage = mock(Message.class);
+    when(sentMessage.getMessageId()).thenReturn(SENT_MESSAGE_ID);
+    when(messageSender.sendMessage(any(), eq(sender), eq(true))).thenReturn(sentMessage);
+    target.sendStatisticsCard(user, null, sender);
+    ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+    verify(messageSender).sendMessage(messageCaptor.capture(), eq(sender), eq(true));
+    return buttonTexts(messageCaptor.getValue().getReplyMarkup());
   }
 
   private static List<String> adminBaseItems(List<String> crudItems) {

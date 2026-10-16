@@ -13,6 +13,7 @@ import kz.aday.bot.bot.TelegramFoodBot;
 import kz.aday.bot.bot.dispatcher.DispatcherRegistry;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackState;
 import kz.aday.bot.bot.handler.stateHandlers.State;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.configuration.ServiceContainer;
 import kz.aday.bot.model.City;
 import kz.aday.bot.model.Item;
@@ -50,13 +51,10 @@ public abstract class AbstractHandler {
       ServiceContainer.getOfficeAttendanceService();
   protected final SharedOrderItemPoolService sharedOrderItemPoolService =
       ServiceContainer.getPoolService();
+  protected final FeatureToggles featureToggles = ServiceContainer.getFeatureToggles();
 
   public boolean canHandle(CallbackQuery callback, CallbackState state) {
-    String[] data = callback.getData().split(":");
-    if (data.length == 0) {
-      throw new IllegalArgumentException("There is no callback");
-    }
-    return state.name().equals(data[0].trim());
+    return state.name().equals(CallbackState.extractName(callback.getData()));
   }
 
   public Long getChatId(CallbackQuery update) {
@@ -239,9 +237,9 @@ public abstract class AbstractHandler {
     boolean isAdmin = user.getRole() == ADMIN;
     items.add(State.PROFILE_MENU.getDisplayName());
     items.add(State.MENU_CATEGORY_ORDER.getDisplayName());
-    items.add(State.STATISTICS_MENU.getDisplayName());
+    addIfEnabled(items, State.STATISTICS_MENU);
     items.add(State.WHO_WILL_COME_TO_OFFICE.getDisplayName());
-    items.add(State.SET_OFFICE_ATTENDANCE.getDisplayName());
+    addIfEnabled(items, State.SET_OFFICE_ATTENDANCE);
 
     if (isAdmin) {
       items.add(State.SEND_MESSAGE_TO_ALL_USERS.getDisplayName());
@@ -273,7 +271,7 @@ public abstract class AbstractHandler {
 
   public List<String> getOrderMenuItems(User user) {
     List<String> items = new ArrayList<>();
-    items.add(State.VIEW_POOL.getDisplayName());
+    addIfEnabled(items, State.VIEW_POOL);
 
     Optional<Menu> menu = menuService.findByIdOptional(user.getCity().toString());
     if (menu.isEmpty()) {
@@ -287,7 +285,7 @@ public abstract class AbstractHandler {
         case DEADLINE -> {
           items.add(State.GET_ORDER.getDisplayName());
           if (isOrderExist(user)) {
-            items.add(State.SHARE_LUNCH.getDisplayName());
+            addIfEnabled(items, State.SHARE_LUNCH);
           }
         }
         default -> {}
@@ -350,11 +348,11 @@ public abstract class AbstractHandler {
       throws TelegramApiException {
     boolean isAdmin = user.getRole() == ADMIN;
     List<String> items = new ArrayList<>();
-    items.add(State.GET_MY_ATTENDANCE_STATS.getDisplayName());
-    items.add(State.GET_MY_ATTENDANCE_STATS_MONTH.getDisplayName());
+    addIfEnabled(items, State.GET_MY_ATTENDANCE_STATS);
+    addIfEnabled(items, State.GET_MY_ATTENDANCE_STATS_MONTH);
     if (isAdmin) {
-      items.add(State.GET_ATTENDANCE_STATS.getDisplayName());
-      items.add(State.GET_ATTENDANCE_STATS_MONTH.getDisplayName());
+      addIfEnabled(items, State.GET_ATTENDANCE_STATS);
+      addIfEnabled(items, State.GET_ATTENDANCE_STATS_MONTH);
     }
     items.add(State.BACK_TO_MENU.getDisplayName());
     sendMessageWithKeyboard(
@@ -364,6 +362,12 @@ public abstract class AbstractHandler {
         messageId,
         sender,
         true);
+  }
+
+  private void addIfEnabled(List<String> items, State state) {
+    if (featureToggles.isEnabled(state)) {
+      items.add(state.getDisplayName());
+    }
   }
 
   public void sendMessageWithKeyboard(

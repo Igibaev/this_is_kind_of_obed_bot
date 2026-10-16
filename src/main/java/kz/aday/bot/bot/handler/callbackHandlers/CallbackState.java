@@ -33,9 +33,20 @@ public enum CallbackState {
 
   POOL_CLAIM("Забрать");
 
+  private static final String DATA_DELIMITER = ":";
+  private static final String MISSING_CALLBACK_MESSAGE = "There is no callback";
+
   @Getter private String displayName;
 
   CallbackState(String state) {
     this.displayName = state;
+  }
+
+  public static String extractName(String data) {
+    String[] parts = data.split(DATA_DELIMITER);
+    if (parts.length == 0) {
+      throw new IllegalArgumentException(MISSING_CALLBACK_MESSAGE);
+    }
+    return parts[0].trim();
   }
 }

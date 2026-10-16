@@ -15,17 +15,20 @@ import kz.aday.bot.bot.handler.AbstractHandler;
 import kz.aday.bot.bot.handler.callbackHandlers.CallbackHandler;
 import kz.aday.bot.bot.handler.commandHandlers.CommandHandler;
 import kz.aday.bot.bot.handler.stateHandlers.StateHandler;
+import kz.aday.bot.configuration.FeatureToggles;
 import kz.aday.bot.configuration.ServiceContainer;
 import org.reflections.Reflections;
 
 public final class RealDispatchers implements DispatcherRegistrationTarget {
 
-  public final CallbackDispatcher callbackDispatcher = new CallbackDispatcher();
+  public final CallbackDispatcher callbackDispatcher =
+      new CallbackDispatcher(FeatureToggles.allEnabled());
   public final CommandDispatcher commandDispatcher = new CommandDispatcher();
   public final StateDispatcher stateDispatcher =
-      new StateDispatcher(ServiceContainer.getUserService());
+      new StateDispatcher(ServiceContainer.getUserService(), FeatureToggles.allEnabled());
   public final StateWithContentDispatcher stateWithContentDispatcher =
-      new StateWithContentDispatcher(ServiceContainer.getUserService());
+      new StateWithContentDispatcher(
+          ServiceContainer.getUserService(), FeatureToggles.allEnabled());
 
   public RealDispatchers() {
     for (AbstractHandler handler : instantiateAllHandlers()) {
